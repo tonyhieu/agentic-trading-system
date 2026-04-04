@@ -1,0 +1,250 @@
+name: Create Strategy Snapshot
+
+on:
+  # Manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      strategy_name:
+        description: 'Name of the strategy to snapshot (e.g., momentum-trader, mean-reversion-v2)'
+        required: true
+        type: string
+      strategy_path:
+        description: 'Path to strategy files (relative to repo root, e.g., strategies/momentum-trader)'
+        required: true
+        type: string
+      
+  # Automatic trigger when pushing to snapshots/* branches
+  push:
+    branches:
+      - 'snapshots/**'
+
+permissions:
+  contents: read
+
+jobs:
+  create-snapshot:
+    name: Create and Upload Strategy Snapshot
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Get full history for commit info
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Generate snapshot metadata
+        id: metadata
+        run: |
+          # Generate timestamp in ISO 8601 format
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          
+          # Get commit SHA (short)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          
+          # Determine strategy name and path
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            STRATEGY_NAME="${{ github.event.inputs.strategy_name }}"
+            STRATEGY_PATH="${{ github.event.inputs.strategy_path }}"
+          else
+            # Extract strategy name from branch (snapshots/strategy-name -> strategy-name)
+            STRATEGY_NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
+            STRATEGY_PATH="strategies/${STRATEGY_NAME}"
+          fi
+          
+          echo "strategy_name=$STRATEGY_NAME" >> $GITHUB_OUTPUT
+          echo "strategy_path=$STRATEGY_PATH" >> $GITHUB_OUTPUT
+          
+          # Create snapshot directory name
+          SNAPSHOT_DIR="${TIMESTAMP}-${COMMIT_SHA}"
+          echo "snapshot_dir=$SNAPSHOT_DIR" >> $GITHUB_OUTPUT
+          
+          echo "📸 Creating snapshot for strategy: $STRATEGY_NAME"
+          echo "📁 Strategy path: $STRATEGY_PATH"
+          echo "🕐 Timestamp: $TIMESTAMP"
+          echo "🔖 Commit: $COMMIT_SHA"
+      
+      - name: Verify strategy path exists
+        run: |
+          STRATEGY_PATH="${{ steps.metadata.outputs.strategy_path }}"
+          
+          if [ ! -d "$STRATEGY_PATH" ]; then
+            echo "❌ Error: Strategy path '$STRATEGY_PATH' does not exist!"
+            echo "Available directories:"
+            ls -la
+            exit 1
+          fi
+          
+          echo "✅ Strategy path verified: $STRATEGY_PATH"
+          echo "Contents:"
+          ls -la "$STRATEGY_PATH"
+      
+      - name: Create snapshot structure
+        run: |
+          STRATEGY_NAME="${{ steps.metadata.outputs.strategy_name }}"
+          STRATEGY_PATH="${{ steps.metadata.outputs.strategy_path }}"
+          SNAPSHOT_DIR="${{ steps.metadata.outputs.snapshot_dir }}"
+          
+          # Create snapshot directory structure
+          SNAPSHOT_ROOT="snapshot-temp/${STRATEGY_NAME}/${SNAPSHOT_DIR}"
+          mkdir -p "${SNAPSHOT_ROOT}/code"
+          mkdir -p "${SNAPSHOT_ROOT}/results"
+          
+          echo "📦 Created snapshot structure at: $SNAPSHOT_ROOT"
+          
+          # Copy strategy code files
+          echo "📄 Copying strategy code..."
+          cp -r "${STRATEGY_PATH}"/*.py "${SNAPSHOT_ROOT}/code/" 2>/dev/null || echo "No .py files found"
+          cp -r "${STRATEGY_PATH}"/*.ipynb "${SNAPSHOT_ROOT}/code/" 2>/dev/null || echo "No .ipynb files found"
+          cp -r "${STRATEGY_PATH}"/requirements.txt "${SNAPSHOT_ROOT}/code/" 2>/dev/null || echo "No requirements.txt found"
+          
+          # Copy backtesting results if they exist
+          echo "📊 Copying backtesting results..."
+          cp -r "${STRATEGY_PATH}"/results/*.json "${SNAPSHOT_ROOT}/results/" 2>/dev/null || echo "No JSON results found"
+          cp -r "${STRATEGY_PATH}"/results/*.csv "${SNAPSHOT_ROOT}/results/" 2>/dev/null || echo "No CSV results found"
+          cp -r "${STRATEGY_PATH}"/results/*.png "${SNAPSHOT_ROOT}/results/" 2>/dev/null || echo "No PNG charts found"
+          
+          # If no results directory, copy any result files from strategy root
+          if [ -d "${STRATEGY_PATH}/results" ]; then
+            cp -r "${STRATEGY_PATH}"/results/* "${SNAPSHOT_ROOT}/results/" 2>/dev/null || true
+          fi
+          
+          echo "SNAPSHOT_ROOT=${SNAPSHOT_ROOT}" >> $GITHUB_ENV
+      
+      - name: Generate metadata.json
+        run: |
+          STRATEGY_NAME="${{ steps.metadata.outputs.strategy_name }}"
+          TIMESTAMP="${{ steps.metadata.outputs.timestamp }}"
+          COMMIT_SHA="${{ steps.metadata.outputs.commit_sha }}"
+          SNAPSHOT_ROOT="${SNAPSHOT_ROOT}"
+          
+          # Count files
+          CODE_FILES=$(find "${SNAPSHOT_ROOT}/code" -type f | wc -l | xargs)
+          RESULT_FILES=$(find "${SNAPSHOT_ROOT}/results" -type f | wc -l | xargs)
+          
+          # Calculate total size
+          TOTAL_SIZE=$(du -sh "${SNAPSHOT_ROOT}" | cut -f1)
+          
+          # Extract performance metrics from results if available
+          BACKTEST_RESULTS="${SNAPSHOT_ROOT}/results/backtest-results.json"
+          PERFORMANCE_METRICS="{}"
+          
+          if [ -f "$BACKTEST_RESULTS" ]; then
+            PERFORMANCE_METRICS=$(cat "$BACKTEST_RESULTS" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    metrics = {
+        'total_return': data.get('total_return', 'N/A'),
+        'sharpe_ratio': data.get('sharpe_ratio', 'N/A'),
+        'max_drawdown': data.get('max_drawdown', 'N/A'),
+        'win_rate': data.get('win_rate', 'N/A')
+    }
+    print(json.dumps(metrics))
+except:
+    print('{}')
+" || echo "{}")
+          fi
+          
+          # Create metadata.json
+          cat > "${SNAPSHOT_ROOT}/metadata.json" << EOF
+{
+  "strategy_name": "${STRATEGY_NAME}",
+  "snapshot_timestamp": "${TIMESTAMP}",
+  "commit_sha": "${COMMIT_SHA}",
+  "commit_sha_full": "$(git rev-parse HEAD)",
+  "branch": "${{ github.ref_name }}",
+  "repository": "${{ github.repository }}",
+  "triggered_by": "${{ github.event_name }}",
+  "actor": "${{ github.actor }}",
+  "workflow_run_id": "${{ github.run_id }}",
+  "snapshot_stats": {
+    "code_files": ${CODE_FILES},
+    "result_files": ${RESULT_FILES},
+    "total_size": "${TOTAL_SIZE}"
+  },
+  "performance_metrics": ${PERFORMANCE_METRICS},
+  "created_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}
+EOF
+          
+          echo "✅ Created metadata.json:"
+          cat "${SNAPSHOT_ROOT}/metadata.json"
+      
+      - name: Display snapshot contents
+        run: |
+          echo "📋 Snapshot contents:"
+          tree "${SNAPSHOT_ROOT}" || find "${SNAPSHOT_ROOT}" -type f
+          
+          echo ""
+          echo "📊 Snapshot summary:"
+          du -sh "${SNAPSHOT_ROOT}"
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Upload snapshot to S3
+        run: |
+          STRATEGY_NAME="${{ steps.metadata.outputs.strategy_name }}"
+          SNAPSHOT_DIR="${{ steps.metadata.outputs.snapshot_dir }}"
+          BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}"
+          
+          # S3 path: strategies/{strategy-name}/{timestamp}-{commit}/
+          S3_PATH="s3://${BUCKET_NAME}/strategies/${STRATEGY_NAME}/${SNAPSHOT_DIR}/"
+          
+          echo "☁️ Uploading snapshot to S3..."
+          echo "📍 Destination: ${S3_PATH}"
+          
+          # Upload with sync (preserves directory structure)
+          aws s3 sync "${SNAPSHOT_ROOT}/" "${S3_PATH}" \
+            --storage-class STANDARD \
+            --no-progress
+          
+          echo "✅ Upload complete!"
+          echo ""
+          echo "📦 Snapshot location: ${S3_PATH}"
+          echo "🔗 Strategy: ${STRATEGY_NAME}"
+          echo "🕐 Timestamp: ${{ steps.metadata.outputs.timestamp }}"
+          echo "🔖 Commit: ${{ steps.metadata.outputs.commit_sha }}"
+      
+      - name: Verify upload
+        run: |
+          STRATEGY_NAME="${{ steps.metadata.outputs.strategy_name }}"
+          SNAPSHOT_DIR="${{ steps.metadata.outputs.snapshot_dir }}"
+          BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}"
+          
+          S3_PATH="s3://${BUCKET_NAME}/strategies/${STRATEGY_NAME}/${SNAPSHOT_DIR}/"
+          
+          echo "🔍 Verifying uploaded files..."
+          aws s3 ls "${S3_PATH}" --recursive
+          
+          # Check that metadata.json exists
+          if aws s3 ls "${S3_PATH}metadata.json" > /dev/null 2>&1; then
+            echo "✅ Snapshot verification successful!"
+          else
+            echo "❌ Verification failed: metadata.json not found"
+            exit 1
+          fi
+      
+      - name: Snapshot summary
+        if: always()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📸 SNAPSHOT SUMMARY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Strategy: ${{ steps.metadata.outputs.strategy_name }}"
+          echo "Timestamp: ${{ steps.metadata.outputs.timestamp }}"
+          echo "Commit: ${{ steps.metadata.outputs.commit_sha }}"
+          echo "S3 Path: s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.metadata.outputs.strategy_name }}/${{ steps.metadata.outputs.snapshot_dir }}/"
+          echo "Status: ${{ job.status }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
