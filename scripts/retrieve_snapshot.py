@@ -15,7 +15,9 @@ import json
 import os
 import subprocess
 import sys
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class SnapshotRetriever:
     def __init__(self, bucket_name=None, region=None):
@@ -24,6 +26,23 @@ class SnapshotRetriever:
         
         if not self.bucket_name:
             raise ValueError("Set S3_BUCKET_NAME environment variable")
+        
+        # Check if AWS CLI is installed
+        try:
+            subprocess.run(['aws', '--version'], capture_output=True, check=True)
+        except FileNotFoundError:
+            print("\nERROR: AWS CLI is not installed!\n")
+            print("Please install AWS CLI:")
+            print("  macOS:   brew install awscli")
+            print("  Linux:   pip install awscli")
+            print("  Windows: https://aws.amazon.com/cli/\n")
+            print("After installing, configure it with:")
+            print("  aws configure")
+            print("\nOr set environment variables:")
+            print("  export AWS_ACCESS_KEY_ID='...'")
+            print("  export AWS_SECRET_ACCESS_KEY='...'")
+            print("  export AWS_REGION='us-east-1'")
+            sys.exit(1)
     
     def _run_aws(self, cmd):
         try:
