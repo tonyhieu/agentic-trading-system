@@ -1,0 +1,383 @@
+# SKILLS: Strategy Snapshot System
+
+This document provides instructions for autonomous agents on how to create snapshots of trading strategies using our automated backup system.
+
+## 📸 What is a Snapshot?
+
+A snapshot is a timestamped backup of your trading strategy that includes:
+- **Code files** (.py, .ipynb, requirements.txt)
+- **Backtesting results** (JSON, CSV, charts)
+- **Metadata** (commit SHA, timestamp, performance metrics)
+
+Snapshots are automatically uploaded to AWS S3 and retained for 30 days. They provide a reliable backup separate from the GitHub repository, preventing data loss from force pushes.
+
+---
+
+## 🚀 How to Create a Snapshot
+
+There are two methods to create a snapshot: **Manual** and **Automatic**.
+
+### Method 1: Manual Snapshot (Recommended for Testing)
+
+Use this method when you want to manually trigger a snapshot for a specific strategy.
+
+#### Step 1: Prepare Your Strategy
+
+Ensure your strategy follows this directory structure:
+
+```
+strategies/
+└── your-strategy-name/
+    ├── strategy_file.py          # Your strategy code
+    ├── requirements.txt           # Python dependencies (optional)
+    └── results/                   # Backtesting results (optional)
+        ├── backtest-results.json  # Performance metrics
+        ├── trade-history.csv      # Trade log
+        └── charts.png             # Visualization (optional)
+```
+
+**Important Notes:**
+- Place your strategy in the `strategies/` directory
+- Use a descriptive, kebab-case name (e.g., `momentum-trader`, `mean-reversion-v2`)
+- Include a `results/backtest-results.json` file for automatic metric extraction
+
+#### Step 2: Trigger Manual Snapshot via GitHub Actions
+
+1. Go to your repository on GitHub
+2. Navigate to **Actions** tab
+3. Click **"Create Strategy Snapshot"** workflow (left sidebar)
+4. Click **"Run workflow"** button (right side)
+5. Fill in the inputs:
+   - **Strategy name:** `your-strategy-name` (e.g., `momentum-trader`)
+   - **Strategy path:** `strategies/your-strategy-name`
+6. Click **"Run workflow"** (green button)
+
+#### Step 3: Monitor Progress
+
+1. The workflow will appear in the workflow runs list
+2. Click on it to see real-time progress
+3. Wait for the green checkmark (✅) indicating success
+4. Review the workflow logs to see:
+   - Snapshot timestamp and commit SHA
+   - Files included in the snapshot
+   - S3 upload location
+
+#### Step 4: Verify Snapshot
+
+The workflow automatically verifies that your snapshot was uploaded successfully. Check the final step for the S3 path:
+
+```
+s3://your-bucket-name/strategies/your-strategy-name/2026-04-04T12-30-45Z-abc1234/
+```
+
+---
+
+### Method 2: Automatic Snapshot (Recommended for Production)
+
+Use this method to automatically create snapshots when you push code to special branches.
+
+#### Step 1: Create a Snapshot Branch
+
+```bash
+# From your local repository
+git checkout -b snapshots/your-strategy-name
+
+# Example:
+git checkout -b snapshots/momentum-trader-v2
+```
+
+Branch naming convention: `snapshots/{strategy-name}`
+
+#### Step 2: Add or Update Your Strategy
+
+```bash
+# Make sure your strategy is in the strategies/ directory
+mkdir -p strategies/your-strategy-name
+cp your_code.py strategies/your-strategy-name/
+
+# Add backtesting results
+mkdir -p strategies/your-strategy-name/results
+cp backtest-results.json strategies/your-strategy-name/results/
+
+# Commit your changes
+git add strategies/your-strategy-name/
+git commit -m "Add momentum trading strategy with backtest results"
+```
+
+#### Step 3: Push to Trigger Snapshot
+
+```bash
+git push origin snapshots/your-strategy-name
+```
+
+This automatically triggers the snapshot workflow! The system will:
+- Detect the push to a `snapshots/*` branch
+- Extract the strategy name from the branch name
+- Package and upload the snapshot to S3
+
+#### Step 4: Check GitHub Actions
+
+1. Go to the **Actions** tab on GitHub
+2. You'll see the workflow running automatically
+3. Wait for completion and verify success
+
+---
+
+## 📋 Strategy Naming Conventions
+
+Follow these naming conventions for consistency:
+
+| Component | Format | Example |
+|-----------|--------|---------|
+| Strategy directory | `kebab-case` | `momentum-trader`, `mean-reversion-v2` |
+| Branch name | `snapshots/{strategy-name}` | `snapshots/momentum-trader` |
+| Python files | `snake_case.py` | `momentum_strategy.py` |
+| Results files | Specific names | `backtest-results.json`, `trade-history.csv` |
+
+---
+
+## 📊 Backtest Results Format
+
+For automatic performance metric extraction, use this JSON structure in `backtest-results.json`:
+
+```json
+{
+  "strategy_name": "Your Strategy Name",
+  "backtest_date": "2026-04-04T12:00:00Z",
+  "parameters": {
+    "param1": "value1",
+    "param2": "value2"
+  },
+  "performance": {
+    "total_return": 15.34,
+    "sharpe_ratio": 1.42,
+    "max_drawdown": -8.67,
+    "win_rate": 58.33,
+    "total_trades": 24,
+    "final_equity": 115340.00
+  },
+  "period": {
+    "start_date": "2025-04-04",
+    "end_date": "2026-04-04",
+    "trading_days": 252
+  }
+}
+```
+
+**Key Fields:**
+- `total_return`: Percentage return (e.g., 15.34 = 15.34%)
+- `sharpe_ratio`: Risk-adjusted return metric
+- `max_drawdown`: Maximum percentage loss from peak
+- `win_rate`: Percentage of profitable trades
+
+The snapshot system will automatically extract these metrics and include them in the snapshot metadata.
+
+---
+
+## 🔍 Retrieving Snapshots
+
+Snapshots are stored in S3 with the following structure:
+
+```
+s3://bucket-name/strategies/{strategy-name}/{timestamp}-{commit-sha}/
+├── code/
+│   ├── momentum_strategy.py
+│   └── requirements.txt
+├── results/
+│   ├── backtest-results.json
+│   └── trade-history.csv
+└── metadata.json
+```
+
+### Option 1: View via AWS Console
+
+1. Log in to AWS Console
+2. Navigate to S3 service
+3. Open your bucket (e.g., `agentic-trading-snapshots-*`)
+4. Browse to `strategies/your-strategy-name/`
+5. Select a timestamped snapshot folder
+6. Download files as needed
+
+### Option 2: Use AWS CLI
+
+```bash
+# List all snapshots for a strategy
+aws s3 ls s3://your-bucket-name/strategies/your-strategy-name/
+
+# Download a specific snapshot
+aws s3 sync s3://your-bucket-name/strategies/your-strategy-name/2026-04-04T12-30-45Z-abc1234/ ./local-folder/
+
+# Download just the metadata
+aws s3 cp s3://your-bucket-name/strategies/your-strategy-name/2026-04-04T12-30-45Z-abc1234/metadata.json ./
+```
+
+### Option 3: Use GitHub Actions (Future Enhancement)
+
+A snapshot retrieval workflow will be added in the future to download snapshots directly through GitHub Actions.
+
+---
+
+## 🎯 Quick Reference
+
+### Manual Snapshot Command Sequence
+
+```bash
+# 1. Ensure strategy is in place
+ls strategies/your-strategy-name/
+
+# 2. Go to GitHub → Actions → Create Strategy Snapshot → Run workflow
+# 3. Input: strategy_name = "your-strategy-name"
+# 4. Input: strategy_path = "strategies/your-strategy-name"
+# 5. Click "Run workflow"
+```
+
+### Automatic Snapshot Command Sequence
+
+```bash
+# 1. Create snapshot branch
+git checkout -b snapshots/your-strategy-name
+
+# 2. Add your strategy
+mkdir -p strategies/your-strategy-name/results
+cp your_code.py strategies/your-strategy-name/
+cp backtest-results.json strategies/your-strategy-name/results/
+
+# 3. Commit and push
+git add strategies/your-strategy-name/
+git commit -m "Add strategy with results"
+git push origin snapshots/your-strategy-name
+
+# 4. Check GitHub Actions for status
+```
+
+---
+
+## ⚠️ Important Notes
+
+### Do's ✅
+- **Always** include meaningful backtest results in your snapshots
+- **Use** descriptive strategy names (e.g., `momentum-trader-v2`, not `strategy1`)
+- **Verify** your strategy structure before triggering a snapshot
+- **Check** the Actions tab to confirm successful uploads
+- **Include** a `requirements.txt` file for reproducibility
+
+### Don'ts ❌
+- **Don't** commit large data files (> 100MB) to the repository
+- **Don't** include API keys or credentials in strategy code
+- **Don't** use special characters in strategy names (stick to lowercase, hyphens)
+- **Don't** rely solely on snapshots for version control (still use git commits)
+- **Don't** manually delete snapshots from S3 (they auto-expire after 30 days)
+
+---
+
+## 🐛 Troubleshooting
+
+### Snapshot Failed: "Strategy path does not exist"
+
+**Cause:** The specified path doesn't exist in the repository.
+
+**Solution:**
+1. Verify your strategy exists: `ls strategies/your-strategy-name/`
+2. Check that the path matches exactly (case-sensitive)
+3. Ensure you've committed and pushed your code before running the workflow
+
+### Snapshot Failed: "AWS credentials error"
+
+**Cause:** GitHub secrets are not configured correctly.
+
+**Solution:**
+1. Contact repository administrator
+2. Verify these secrets exist in GitHub Settings → Secrets:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REGION`
+   - `S3_BUCKET_NAME`
+
+### No Performance Metrics in Metadata
+
+**Cause:** `backtest-results.json` is missing or incorrectly formatted.
+
+**Solution:**
+1. Add `results/backtest-results.json` to your strategy directory
+2. Follow the JSON structure shown in "Backtest Results Format" section
+3. Validate JSON syntax: `cat backtest-results.json | python3 -m json.tool`
+
+### Snapshot Missing Files
+
+**Cause:** Files weren't in the expected locations or weren't committed.
+
+**Solution:**
+1. Ensure all files are in the strategy directory
+2. Commit all files: `git add strategies/your-strategy-name/`
+3. Push before triggering snapshot: `git push`
+4. Re-run the snapshot workflow
+
+---
+
+## 📞 Support
+
+For issues with the snapshot system:
+
+1. Check the **GitHub Actions logs** for detailed error messages
+2. Review this SKILLS.md document for best practices
+3. Consult the **AWS Setup Guide** (docs/AWS_SETUP_GUIDE.md) for infrastructure issues
+4. Check the **Implementation Plan** (docs/IMPLEMENTATION_PLAN.md) for system architecture
+
+---
+
+## 🎓 Example Workflow
+
+Here's a complete example of adding a new strategy and creating a snapshot:
+
+```bash
+# 1. Create your strategy locally
+mkdir -p strategies/rsi-reversal-strategy/results
+
+# 2. Write your strategy code
+cat > strategies/rsi-reversal-strategy/rsi_strategy.py << EOF
+# Your strategy code here
+def calculate_rsi(prices, period=14):
+    # RSI calculation
+    pass
+EOF
+
+# 3. Create backtest results
+cat > strategies/rsi-reversal-strategy/results/backtest-results.json << EOF
+{
+  "strategy_name": "RSI Reversal Strategy",
+  "performance": {
+    "total_return": 22.5,
+    "sharpe_ratio": 1.8,
+    "max_drawdown": -6.2,
+    "win_rate": 65.0
+  }
+}
+EOF
+
+# 4. Create requirements file
+cat > strategies/rsi-reversal-strategy/requirements.txt << EOF
+pandas>=2.0.0
+numpy>=1.24.0
+ta-lib>=0.4.0
+EOF
+
+# 5. Commit your strategy
+git add strategies/rsi-reversal-strategy/
+git commit -m "Add RSI reversal strategy with backtest results"
+git push origin main
+
+# 6. Create automatic snapshot via branch
+git checkout -b snapshots/rsi-reversal-strategy
+git push origin snapshots/rsi-reversal-strategy
+
+# 7. Verify in GitHub Actions
+# Go to Actions tab and check for successful completion
+
+# 8. Done! Your strategy is safely backed up to S3
+```
+
+---
+
+**Last Updated:** 2026-04-04  
+**System Version:** 1.0  
+**Retention Policy:** 30 days

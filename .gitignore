@@ -1,0 +1,51 @@
+# Environment variables
+.env
+.env.local
+
+# AWS credentials (never commit!)
+accessKeys.csv
+credentials.csv
+**/aws-credentials.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# Downloaded snapshots (use retrieval script to get from S3)
+snapshots/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large data files
+*.csv.gz
+*.parquet
+*.hdf5
+*.h5
+
+# Temporary files
+*.tmp
+*.bak
+temp/
+tmp/
