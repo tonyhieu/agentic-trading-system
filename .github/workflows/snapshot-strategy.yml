@@ -1,0 +1,118 @@
+name: Create Strategy Snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      strategy_name:
+        description: 'Name of the strategy'
+        required: true
+        type: string
+      strategy_path:
+        description: 'Path to strategy files'
+        required: true
+        type: string
+  push:
+    branches:
+      - 'snapshots/**'
+
+permissions:
+  contents: read
+
+jobs:
+  create-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Generate metadata
+        id: meta
+        run: |
+          echo "timestamp=$(date -u +%Y-%m-%dT%H-%M-%SZ)" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.strategy_name }}" >> $GITHUB_OUTPUT
+            echo "path=${{ github.event.inputs.strategy_path }}" >> $GITHUB_OUTPUT
+          else
+            NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
+            echo "name=$NAME" >> $GITHUB_OUTPUT
+            echo "path=strategies/$NAME" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Verify strategy
+        run: |
+          if [ ! -d "${{ steps.meta.outputs.path }}" ]; then
+            echo "Error: Strategy not found at ${{ steps.meta.outputs.path }}"
+            exit 1
+          fi
+          echo "Strategy verified"
+      
+      - name: Create snapshot
+        run: |
+          DIR="${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}"
+          ROOT="snapshot-temp/${{ steps.meta.outputs.name }}/${DIR}"
+          mkdir -p "$ROOT/code" "$ROOT/results"
+          find "${{ steps.meta.outputs.path }}" -maxdepth 1 -name "*.py" -exec cp {} "$ROOT/code/" \; 2>/dev/null || true
+          find "${{ steps.meta.outputs.path }}" -maxdepth 1 -name "*.ipynb" -exec cp {} "$ROOT/code/" \; 2>/dev/null || true
+          [ -f "${{ steps.meta.outputs.path }}/requirements.txt" ] && cp "${{ steps.meta.outputs.path }}/requirements.txt" "$ROOT/code/" || true
+          [ -d "${{ steps.meta.outputs.path }}/results" ] && find "${{ steps.meta.outputs.path }}/results" -type f -exec cp {} "$ROOT/results/" \; 2>/dev/null || true
+          echo "ROOT=$ROOT" >> $GITHUB_ENV
+      
+      - name: Create metadata
+        env:
+          STRATEGY_NAME: ${{ steps.meta.outputs.name }}
+          TIMESTAMP: ${{ steps.meta.outputs.timestamp }}
+          COMMIT_SHA: ${{ steps.meta.outputs.commit }}
+          COMMIT_SHA_FULL: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGERED_BY: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+        run: python3 scripts/generate_metadata.py
+      
+      - name: Display snapshot
+        run: |
+          echo "Snapshot contents:"
+          find "$ROOT" -type f
+          du -sh "$ROOT"
+      
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Upload to S3
+        run: |
+          S3="s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
+          echo "Uploading to $S3"
+          aws s3 sync "$ROOT/" "$S3" --storage-class STANDARD --no-progress
+          echo "Upload complete"
+      
+      - name: Verify
+        run: |
+          S3="s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
+          aws s3 ls "$S3" --recursive
+          if aws s3 ls "${S3}metadata.json" >/dev/null 2>&1; then
+            echo "Verified successfully"
+          else
+            echo "Verification failed"
+            exit 1
+          fi
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "Strategy: ${{ steps.meta.outputs.name }}"
+          echo "Timestamp: ${{ steps.meta.outputs.timestamp }}"
+          echo "Status: ${{ job.status }}"
+          echo "=========================================="
