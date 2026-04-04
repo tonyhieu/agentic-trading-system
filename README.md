@@ -6,6 +6,11 @@ Created for Event Horizon Labs as a part of the University of Chicago Project La
 
 This repository provides an iterative feedback loop for autonomous agents to research, develop, and implement trading strategies. Our goal is to create a verifiable environment where agents can autonomously iterate and improve upon trading strategies.
 
+## System Architecture
+
+The following diagram illustrates how the Agentic System interacts with the Exchange and Execution engines to create the strategy feedback loop:
+![System Architecture](./docs/architecture.png)
+
 ## Features
 
 ### Automated Strategy Snapshot System
