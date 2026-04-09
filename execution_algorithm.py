@@ -1,5 +1,9 @@
 from nautilus_trader.execution.algorithm import ExecAlgorithm
+from nautilus_trader.execution.config import ExecAlgorithmConfig
+from nautilus_trader.model.identifiers import ExecAlgorithmId
 
+class SimpleExecutionAlgorithmConfig(ExecAlgorithmConfig):
+    pass
 
 class SimpleExecutionAlgorithm(ExecAlgorithm):
     """
@@ -19,16 +23,15 @@ class SimpleExecutionAlgorithm(ExecAlgorithm):
         """
         self.log.info(f"SimpleExecutionAlgorithm handling order: {order.client_order_id} for {order.quantity}")
         
-        # In a more complex algorithmic execution, you would use:
-        # self.spawn_market(...) or self.spawn_limit(...) to break the order into chunks
-        # and manage them with self.clock.set_timer(...)
-        
         # Here we just pass the order through directly to the matching engine/venue backend
         self.submit_order(order)
 
 
-def get_execution_algorithm():
+def get_execution_algorithm(exec_id: str = "TWAP"):
     """
     Instantiate and return the custom execution algorithm.
     """
-    return SimpleExecutionAlgorithm()
+    config = SimpleExecutionAlgorithmConfig(
+        exec_algorithm_id=ExecAlgorithmId(exec_id)
+    )
+    return SimpleExecutionAlgorithm(config=config)

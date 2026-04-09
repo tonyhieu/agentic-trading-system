@@ -106,7 +106,13 @@ engine.add_data(ticks)
 
 # %%
 # Instantiate and add your strategy
+from nautilus_trader.model.identifiers import ExecAlgorithmId
 strategy = get_trading_strategy(ETHUSDT_BINANCE.id)
+
+# The EMACrossTWAP strategy example hardcodes the algorithm ID to `TWAP`.
+# If you want to use a generic tag, you must update the strategy instance to use it too!
+strategy.twap_exec_algorithm_id = ExecAlgorithmId("MY_GENERIC_ALGO")
+
 engine.add_strategy(strategy=strategy)
 
 # %% [markdown]
@@ -119,7 +125,7 @@ engine.add_strategy(strategy=strategy)
 
 # %%
 # Instantiate and add your execution algorithm
-exec_algorithm = get_execution_algorithm()
+exec_algorithm = get_execution_algorithm(exec_id="MY_GENERIC_ALGO")
 engine.add_exec_algorithm(exec_algorithm)
 
 # %% [markdown]
@@ -144,6 +150,7 @@ engine.run()
 engine.trader.generate_account_report(BINANCE)
 
 # %%
+engine.trader.generate_orders_report()
 engine.trader.generate_order_fills_report()
 
 # %%
