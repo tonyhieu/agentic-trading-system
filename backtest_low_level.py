@@ -144,7 +144,7 @@ engine.run()
 engine.trader.generate_account_report(BINANCE)
 
 # %%
-engine.trader.generate_orders_report().to_csv("order_report.csv")
+engine.trader.generate_orders_report()
 engine.trader.generate_order_fills_report()
 
 # %%
