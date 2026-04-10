@@ -11,6 +11,7 @@ from nautilus_trader.model.data import BarType
 from nautilus_trader.model.data import QuoteTick
 from nautilus_trader.model.data import TradeTick
 from nautilus_trader.model.enums import OrderSide
+from nautilus_trader.model.enums import PositionSide
 from nautilus_trader.model.enums import TimeInForce
 from nautilus_trader.model.identifiers import ExecAlgorithmId
 from nautilus_trader.model.identifiers import InstrumentId
@@ -137,7 +138,7 @@ class EMACrossStrategy(Strategy):
         """
         self.cancel_all_orders(self.config.instrument_id)
         if self.config.close_positions_on_stop:
-            self.close_all_positions(self.config.instrument_id)
+            self.close_all_positions_via_exec_algorithm(self.config.instrument_id)
 
         self.unsubscribe_bars(self.config.bar_type)
         self.log.info("EMACrossStrategy stopped.", color=LogColor.RED)
@@ -264,7 +265,7 @@ class EMACrossStrategy(Strategy):
             if self.portfolio.is_flat(self.config.instrument_id):
                 self.buy()
             elif self.portfolio.is_net_short(self.config.instrument_id):
-                self.close_all_positions(self.config.instrument_id)
+                self.close_all_positions_via_exec_algorithm(self.config.instrument_id)
                 self.buy()
 
         # ------ SELL signal: fast crosses below slow ------
@@ -272,7 +273,7 @@ class EMACrossStrategy(Strategy):
             if self.portfolio.is_flat(self.config.instrument_id):
                 self.sell()
             elif self.portfolio.is_net_long(self.config.instrument_id):
-                self.close_all_positions(self.config.instrument_id)
+                self.close_all_positions_via_exec_algorithm(self.config.instrument_id)
                 self.sell()
 
     def on_data(self, data: Data) -> None:
@@ -334,6 +335,40 @@ class EMACrossStrategy(Strategy):
         )
         self.log.info(f"SELL {order.quantity} {self.config.instrument_id}", color=LogColor.RED)
         self.submit_order(order)
+
+    def close_all_positions_via_exec_algorithm(self, instrument_id: InstrumentId) -> None:
+        """
+        Close all open positions using the configured execution algorithm.
+
+        This mirrors ``close_all_positions`` but keeps ``exec_algorithm_id`` on
+        the generated reduce-only orders so they are routed through the custom
+        execution algorithm.
+        """
+        positions_open = self.cache.positions_open(
+            venue=None,
+            instrument_id=instrument_id,
+            strategy_id=self.id,
+            side=PositionSide.NO_POSITION_SIDE,
+        )
+
+        if not positions_open:
+            self.log.info(f"No {instrument_id.to_str()} open positions to close")
+            return
+
+        for position in positions_open:
+            order: MarketOrder = self.order_factory.market(
+                instrument_id=position.instrument_id,
+                order_side=position.closing_order_side(),
+                quantity=position.quantity,
+                time_in_force=TimeInForce.GTC,
+                reduce_only=True,
+                exec_algorithm_id=self.config.exec_algorithm_id,
+            )
+            self.log.info(
+                f"CLOSE {order.quantity} {position.instrument_id}",
+                color=LogColor.YELLOW,
+            )
+            self.submit_order(order, position_id=position.id)
 
     def _make_qty(self) -> Quantity:
         """Return a ``Quantity`` matched to the instrument's precision."""

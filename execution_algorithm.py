@@ -8,7 +8,7 @@ class SimpleExecutionAlgorithmConfig(ExecAlgorithmConfig):
 class SimpleExecutionAlgorithm(ExecAlgorithm):
     """
     A custom execution algorithm that demonstrates simple order handling.
-    Instead of TWAP, it immediately executes the incoming order in full.
+    It immediately executes the incoming order in full.
     """
 
     def on_start(self) -> None:
@@ -27,7 +27,7 @@ class SimpleExecutionAlgorithm(ExecAlgorithm):
         self.submit_order(order)
 
 
-def get_execution_algorithm(exec_id: str = "TWAP"):
+def get_execution_algorithm(exec_id: str = "MY_GENERIC_ALGO"):
     """
     Instantiate and return the custom execution algorithm.
     """

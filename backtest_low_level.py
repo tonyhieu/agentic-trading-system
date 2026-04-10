@@ -3,7 +3,7 @@
 #
 # Use `BacktestEngine` for direct component access: load market data, wire up
 # strategies and execution algorithms, and run backtests with full control over
-# every step. This tutorial backtests an EMA cross strategy with a TWAP execution
+# every step. This tutorial backtests an EMA cross strategy with a simple execution
 # algorithm on a simulated Binance Spot exchange using historical trade tick data.
 #
 # [View source on GitHub](https://github.com/nautechsystems/nautilus_trader/blob/develop/docs/getting_started/backtest_low_level.py).
@@ -102,7 +102,7 @@ engine.add_data(ticks)
 # %% [markdown]
 # ## Add strategies
 #
-# Configure and add an EMA cross strategy with TWAP execution parameters.
+# Configure and add an EMA cross strategy with simple execution parameters.
 
 # %%
 # Instantiate and add your strategy
@@ -110,12 +110,12 @@ strategy = get_trading_strategy(ETHUSDT_BINANCE.id)
 engine.add_strategy(strategy=strategy)
 
 # %% [markdown]
-# The strategy config references TWAP parameters, but the execution algorithm
+# The strategy config references execution algorithm parameters, and the execution algorithm
 # itself is a separate component.
 #
 # ## Add execution algorithms
 #
-# Add a TWAP execution algorithm to the engine.
+# Add a simple execution algorithm to the engine.
 
 # %%
 # Instantiate and add your execution algorithm
@@ -144,7 +144,7 @@ engine.run()
 engine.trader.generate_account_report(BINANCE)
 
 # %%
-engine.trader.generate_orders_report()
+engine.trader.generate_orders_report().to_csv("order_report.csv")
 engine.trader.generate_order_fills_report()
 
 # %%
