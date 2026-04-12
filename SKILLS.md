@@ -217,7 +217,160 @@ A snapshot retrieval workflow will be added in the future to download snapshots 
 
 ---
 
-## 🎯 Quick Reference
+## 📊 Data Retrieval for Strategy Development
+
+Use the data retrieval system to fetch large datasets (research data, market data, historical bars) from AWS S3 for backtesting.
+
+### Quick Start: Download Data
+
+```bash
+# 1. List available datasets
+python /scripts/data_retriever.py list-datasets
+
+# 2. Fetch manifest to understand structure
+python /scripts/data_retriever.py fetch-manifest us-equities-bars-1m v1.0.0
+
+# 3. Download specific partition
+python /scripts/data_retriever.py sync-partition \
+  us-equities-bars-1m v1.0.0 "date=2026-04-01/symbol=AAPL"
+
+# Data now in: ./data-cache/us-equities-bars-1m/v1.0.0/partitions/...
+```
+
+### Load Data in Python
+
+```python
+import pandas as pd
+import glob
+
+# Find Parquet files for partition
+files = glob.glob(
+  "./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL/**/*.parquet",
+  recursive=True
+)
+
+# Load data
+df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+print(df.head())
+```
+
+### Docker: Isolated Execution
+
+```bash
+docker-compose run agent python /scripts/data_retriever.py list-datasets
+docker-compose run agent python /scripts/data_retriever.py sync-partition \
+  us-equities-bars-1m v1.0.0 "date=2026-04-01/symbol=AAPL"
+```
+
+### Cost Optimization
+
+- **Single partition (1 date, 1 symbol)**: ~5-20 MB, $0.00011
+- **40-day backtest**: 40 partitions, $0.0044 total
+- **Full dataset (40 GB)**: $20+ (avoid!)
+
+**Best practice**: Always use selective partition downloads for large datasets.
+
+### Complete Backtest Integration
+
+```python
+#!/usr/bin/env python3
+import subprocess
+import pandas as pd
+from pathlib import Path
+
+# 1. Download data
+subprocess.run([
+  "python", "/scripts/data_retriever.py", "sync-partition",
+  "us-equities-bars-1m", "v1.0.0", "date=2026-04-01/symbol=AAPL"
+], check=True)
+
+# 2. Load data
+cache_dir = Path("./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL")
+df = pd.read_parquet(list(cache_dir.glob("**/*.parquet"))[0])
+
+# 3. Run backtest
+results = {
+  "total_return": 0.15,
+  "sharpe_ratio": 1.2,
+  "max_drawdown": -0.08
+}
+
+# 4. Save results
+import json
+with open("./results/backtest-results.json", "w") as f:
+  json.dump(results, f)
+
+# 5. Commit and push (creates snapshot)
+# git add results/
+# git commit -m "Backtest with AAPL data"
+# git push origin snapshots/my-strategy
+```
+
+### Data Discovery Contract
+
+All datasets follow this structure:
+
+```
+s3://$S3_BUCKET_NAME/datasets/
+└── {dataset-name}/
+    └── {version}/
+        ├── manifest.json         # Dataset metadata
+        ├── schema.json           # Column definitions
+        ├── checksums.txt         # File integrity
+        └── partitions/
+            ├── date=YYYY-MM-DD/symbol=TICKER/part-000.parquet
+            └── ...
+```
+
+**manifest.json** contains:
+- Dataset name and version
+- Date range available
+- List of symbols
+- Total size in bytes
+- Partition structure
+
+See `docs/DATA_STORAGE_CONTRACT.md` for full specification.
+
+### Advanced: Selective Retrieval
+
+```python
+from datetime import datetime, timedelta
+
+# Strategy: Backtest momentum with 60 days of AAPL + MSFT
+dataset = "us-equities-bars-1m"
+version = "v1.0.0"
+start_date = datetime(2026, 3, 12)
+end_date = datetime(2026, 5, 10)
+
+partitions = []
+current = start_date
+while current <= end_date:
+    for symbol in ["AAPL", "MSFT"]:
+        date_str = current.strftime("%Y-%m-%d")
+        partition = f"date={date_str}/symbol={symbol}"
+        partitions.append(partition)
+    current += timedelta(days=1)
+
+print(f"Downloading {len(partitions)} partitions (~{len(partitions)*10} MB)...")
+for p in partitions:
+    subprocess.run([
+      "python", "/scripts/data_retriever.py", "sync-partition",
+      dataset, version, p
+    ], check=True)
+```
+
+### Troubleshooting Data Retrieval
+
+| Issue | Fix |
+|-------|-----|
+| "S3_BUCKET_NAME not set" | `export S3_BUCKET_NAME=your-bucket` |
+| "Partition not found" | Check manifest for exact path |
+| "Connection timeout" | Verify AWS credentials and region |
+| "Out of disk" | `rm -rf ./data-cache/` to clear cache |
+
+For complete reference: `docs/DATA_OPERATIONS_PLAYBOOK.md` and `docs/AGENT_INTEGRATION_GUIDE.md`
+
+---
 
 ### Manual Snapshot Command Sequence
 

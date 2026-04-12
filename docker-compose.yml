@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Autonomous agent with data retrieval capability
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      DATA_CACHE_DIR: /data-cache
+    volumes:
+      - ./workspace:/workspace
+      - ./data-cache:/data-cache
+      - ./strategies:/strategies
+    working_dir: /workspace
+    command: bash
+
+  # AWS CLI utility container
+  aws:
+    image: amazon/aws-cli:latest
+    environment:
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./workspace:/workspace
+      - ./data-cache:/data-cache
+    working_dir: /workspace
+    entrypoint: aws
+
+  # Python development environment
+  dev:
+    image: python:3.11-slim
+    environment:
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./workspace:/workspace
+      - ./data-cache:/data-cache
+      - ./scripts:/scripts
+      - ./strategies:/strategies
+    working_dir: /workspace
+    command: bash -c "pip install awscli pandas pyarrow && bash"
