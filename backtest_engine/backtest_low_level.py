@@ -1,10 +1,3 @@
-from importlib.util import module_from_spec
-from importlib.util import spec_from_file_location
-from pathlib import Path
-from typing import Any
-from typing import Callable
-from typing import cast
-
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.model import Money
@@ -20,28 +13,8 @@ from nautilus_trader.test_kit.providers import TestDataProvider
 from nautilus_trader.test_kit.providers import TestInstrumentProvider
 
 from execution_algos.simple_execution_strategy import get_execution_algorithm
+from strategies.ema_strategy import get_trading_strategy
 
-
-def _load_symbol(module_name: str, module_path: Path, symbol_name: str) -> Any:
-    spec = spec_from_file_location(module_name, module_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Unable to create module spec for {module_path}")
-
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    try:
-        return getattr(module, symbol_name)
-    except AttributeError as exc:
-        raise ImportError(f"{module_path} does not define '{symbol_name}'") from exc
-
-
-_ROOT_DIR = Path(__file__).resolve().parents[1]
-get_trading_strategy: Callable[..., object] = cast(Callable[..., object], _load_symbol(
-    module_name="ema_trading_strategy",
-    module_path=_ROOT_DIR / "strategies" / "ema-strategy" / "trading_strategy.py",
-    symbol_name="get_trading_strategy",
-))
 
 def run_backtest() -> BacktestEngine:
     """Run the low-level backtest and return the configured engine."""

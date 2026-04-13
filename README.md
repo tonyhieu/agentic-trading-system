@@ -44,7 +44,7 @@ agentic-trading-system/
 │   └── simple_execution_strategy/
 │       └── execution_algorithm.py
 ├── strategies/                      # Trading strategy implementations
-│   └── sample-momentum-strategy/    # Example strategy with results
+│   └── sample_momentum_strategy/    # Example strategy with results
 │       ├── momentum_strategy.py     # Strategy code
 │       ├── requirements.txt         # Dependencies
 │       └── results/                 # Backtesting results
@@ -122,7 +122,7 @@ For administrators setting up the infrastructure:
 
 ## Example Strategy
 
-A sample momentum trading strategy is included in `strategies/sample-momentum-strategy/` to demonstrate:
+A sample momentum trading strategy is included in `strategies/sample_momentum_strategy/` to demonstrate:
 
 - Strategy code structure
 - Backtesting results format
