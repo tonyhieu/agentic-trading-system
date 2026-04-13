@@ -2,8 +2,10 @@ from nautilus_trader.execution.algorithm import ExecAlgorithm
 from nautilus_trader.execution.config import ExecAlgorithmConfig
 from nautilus_trader.model.identifiers import ExecAlgorithmId
 
+
 class SimpleExecutionAlgorithmConfig(ExecAlgorithmConfig):
     pass
+
 
 class SimpleExecutionAlgorithm(ExecAlgorithm):
     """
@@ -21,9 +23,11 @@ class SimpleExecutionAlgorithm(ExecAlgorithm):
         """
         Intercepts incoming orders from strategies.
         """
-        self.log.info(f"SimpleExecutionAlgorithm handling order: {order.client_order_id} for {order.quantity}")
-        
-        # Here we just pass the order through directly to the matching engine/venue backend
+        self.log.info(
+            f"SimpleExecutionAlgorithm handling order: {order.client_order_id} for {order.quantity}"
+        )
+
+        # Pass the order directly to the venue backend.
         self.submit_order(order)
 
 
@@ -31,7 +35,5 @@ def get_execution_algorithm(exec_id: str = "MY_GENERIC_ALGO"):
     """
     Instantiate and return the custom execution algorithm.
     """
-    config = SimpleExecutionAlgorithmConfig(
-        exec_algorithm_id=ExecAlgorithmId(exec_id)
-    )
+    config = SimpleExecutionAlgorithmConfig(exec_algorithm_id=ExecAlgorithmId(exec_id))
     return SimpleExecutionAlgorithm(config=config)

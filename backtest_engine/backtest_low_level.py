@@ -19,6 +19,8 @@ from nautilus_trader.persistence.wranglers import TradeTickDataWrangler
 from nautilus_trader.test_kit.providers import TestDataProvider
 from nautilus_trader.test_kit.providers import TestInstrumentProvider
 
+from execution_algos.simple_execution_strategy import get_execution_algorithm
+
 
 def _load_symbol(module_name: str, module_path: Path, symbol_name: str) -> Any:
     spec = spec_from_file_location(module_name, module_path)
@@ -35,11 +37,6 @@ def _load_symbol(module_name: str, module_path: Path, symbol_name: str) -> Any:
 
 
 _ROOT_DIR = Path(__file__).resolve().parents[1]
-get_execution_algorithm: Callable[..., object] = cast(Callable[..., object], _load_symbol(
-    module_name="simple_execution_algorithm",
-    module_path=_ROOT_DIR / "strategies" / "simple-execution-strategy" / "execution_algorithm.py",
-    symbol_name="get_execution_algorithm",
-))
 get_trading_strategy: Callable[..., object] = cast(Callable[..., object], _load_symbol(
     module_name="ema_trading_strategy",
     module_path=_ROOT_DIR / "strategies" / "ema-strategy" / "trading_strategy.py",

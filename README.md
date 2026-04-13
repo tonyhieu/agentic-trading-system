@@ -40,6 +40,9 @@ The repository includes a sophisticated snapshot system that automatically backs
 
 ```
 agentic-trading-system/
+├── execution_algos/                 # Reusable execution algorithm module
+│   └── simple_execution_strategy/
+│       └── execution_algorithm.py
 ├── strategies/                      # Trading strategy implementations
 │   └── sample-momentum-strategy/    # Example strategy with results
 │       ├── momentum_strategy.py     # Strategy code
@@ -153,9 +156,10 @@ Well within the $10-50/month budget range.
 This repository is designed for autonomous agents to iterate on trading strategies. Agents should:
 
 1. Develop strategies in the `strategies/` directory
-2. Include comprehensive backtesting results
-3. Use the snapshot system to preserve iterations
-4. Follow naming conventions in SKILLS.md
+2. Develop execution algorithms in the `execution_algos/` directory
+3. Include comprehensive backtesting results
+4. Use the snapshot system to preserve iterations
+5. Follow naming conventions in SKILLS.md
 
 ## License
 
