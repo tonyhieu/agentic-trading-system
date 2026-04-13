@@ -129,8 +129,8 @@ ls -la ./dataset-output/
 ├── schema.json             ← Column definitions
 ├── checksums.txt           ← File hashes
 └── partitions/             ← Parquet files
-    ├── date=2026-04-01/symbol=AAPL/part-000.parquet
-    ├── date=2026-04-01/symbol=MSFT/part-000.parquet
+    ├── date=2026-03-08/data.dbn.zst
+    ├── date=2026-03-08/data.dbn.zst
     └── ... (thousands more)
 ```
 
@@ -189,10 +189,10 @@ Assuming 250 trading days and 500 symbols:
 
 ```
 Structure:
-├── date=2024-01-01/symbol=AAPL/part-000.parquet (20 MB)
-├── date=2024-01-01/symbol=MSFT/part-000.parquet (18 MB)
+├── date=2026-03-08/data.dbn.zst (20 MB)
+├── date=2026-03-08/data.dbn.zst (18 MB)
 ├── ... (500 symbols per day)
-├── date=2024-01-02/symbol=AAPL/part-000.parquet (20 MB)
+├── date=2026-03-08/data.dbn.zst (20 MB)
 └── ... (and so on)
 
 Total partitions: 250 × 500 = 125,000
@@ -359,8 +359,8 @@ dataset-output/
 ├── checksums.txt              (1 MB)
 └── partitions/                (40 GB)
     ├── date=2026-04-01/
-    │   ├── symbol=AAPL/part-000.parquet
-    │   ├── symbol=MSFT/part-000.parquet
+    │   ├── data.dbn.zst
+    │   ├── data.dbn.zst
     │   └── ... (500 symbols)
     ├── date=2026-04-02/
     │   └── ... (same structure)

@@ -157,8 +157,7 @@ Captures Parquet column names, types, and logical data layout:
 Line-delimited format for integrity verification:
 
 ```
-SHA256:part-000.parquet=a1b2c3d4e5f6...
-SHA256:part-001.parquet=f6e5d4c3b2a1...
+SHA256:data.dbn.zst=a1b2c3d4e5f6...
 SHA256:schema.json=1234567890abcdef...
 SHA256:manifest.json=fedcba0987654321...
 ```
@@ -214,36 +213,36 @@ If dataset structure changes:
 
 ## Examples
 
-### Example 1: Daily OHLCV Bars
+### Example 1: Market Data (Date-Only Partitioning)
 ```
-datasets/us-equities-bars-1m/2026-04-11T00-00-00Z/
+datasets/glbx-mdp3-market-data/v1.0.0/
 ├── manifest.json
 ├── schema.json
 ├── checksums.txt
 └── partitions/
-    ├── date=2026-04-01/symbol=AAPL/part-000.parquet
-    ├── date=2026-04-01/symbol=MSFT/part-000.parquet
-    └── date=2026-04-02/symbol=AAPL/part-000.parquet
+    ├── date=2026-03-08/data.dbn.zst
+    ├── date=2026-03-09/data.dbn.zst
+    └── date=2026-03-10/data.dbn.zst
 ```
 
-### Example 2: Full Month, Single Symbol
+### Example 2: Trade Execution Logs (Date-Only DBN)
 ```
 datasets/trade-execution-logs/v1.0.0/
 ├── manifest.json
 ├── schema.json
 └── partitions/
-    ├── date=2026-04-01/part-000.parquet
-    ├── date=2026-04-02/part-000.parquet
-    └── date=2026-04-03/part-000.parquet
+    ├── date=2026-04-01/data.dbn.zst
+    ├── date=2026-04-02/data.dbn.zst
+    └── date=2026-04-03/data.dbn.zst
 ```
 
 ### Example 3: Multi-Year Archive
 ```
-datasets/historical-options/2026-04-11T00-00-00Z/
+datasets/historical-market-data/v1.0.0/
 ├── manifest.json
 ├── schema.json
 └── partitions/
-    ├── date=2024-01-01/symbol=SPY/part-000.parquet
-    ├── date=2024-01-02/symbol=SPY/part-000.parquet
-    └── ... (many more partitions)
+    ├── date=2024-01-01/data.dbn.zst
+    ├── date=2024-01-02/data.dbn.zst
+    └── ... (one per trading date)
 ```

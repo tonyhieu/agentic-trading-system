@@ -177,7 +177,7 @@ import hashlib
 files = [
     "manifest.json",
     "schema.json",
-    "partitions/date=2026-04-01/symbol=TEST/part-000.parquet"
+    "partitions/date=2026-03-08/data.dbn.zst"
 ]
 
 with open("test-dataset/checksums.txt", "w") as f:

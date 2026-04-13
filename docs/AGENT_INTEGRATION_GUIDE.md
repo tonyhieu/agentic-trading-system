@@ -324,11 +324,11 @@ docker run --rm \
     python /scripts/data_retriever.py list-datasets
     
     # Fetch manifest
-    python /scripts/data_retriever.py fetch-manifest us-equities-bars-1m v1.0.0
+    python /scripts/data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
     
     # Download data
     python /scripts/data_retriever.py sync-partition \
-      us-equities-bars-1m v1.0.0 'date=2026-04-01/symbol=AAPL'
+      glbx-mdp3-market-data v1.0.0 'date=2026-03-08'
     
     # Run strategy
     cd /workspace
@@ -472,14 +472,14 @@ class MomentumAgent:
     
     def _plan_backtest(self, manifest):
         """Decide which partitions to download."""
-        # Example: 10 days of AAPL and MSFT
+        # Example: 10 days of trading data
         partitions = []
         start = datetime.strptime(manifest["date_range"]["start"], "%Y-%m-%d")
         for i in range(10):
             date = (start + timedelta(days=i)).strftime("%Y-%m-%d")
-            for symbol in ["AAPL", "MSFT"]:
-                if symbol in manifest["symbols"]:
-                    partitions.append(f"date={date}/symbol={symbol}")
+            partition = f"date={date}"
+            if partition in [p.split("date=")[1].split("/")[0] for p in manifest["partitions"]]:
+                partitions.append(partition)
         return partitions
     
     def _download_partitions(self, dataset, version, partitions):

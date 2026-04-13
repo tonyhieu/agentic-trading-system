@@ -98,7 +98,7 @@ python3 scripts/data_retriever.py sync-partition \
 ### Step 4: Load in Python
 ```python
 import pandas as pd
-df = pd.read_parquet("./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL/part-000.parquet")
+df = dbn.load_from_file("./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-03-08/data.dbn.zst")
 print(df.head())
 ```
 
@@ -203,7 +203,7 @@ strategies/
 
 4. **Run backtest**
    ```python
-   df = pd.read_parquet(cache_path)
+   df = dbn.load_from_file(cache_path)
    results = backtest(strategy, df)
    ```
 

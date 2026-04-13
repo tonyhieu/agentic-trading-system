@@ -32,8 +32,8 @@ s3://$S3_BUCKET_NAME/datasets/
         ├── schema.json
         ├── checksums.txt
         └── partitions/
-            ├── date=2026-04-01/symbol=AAPL/part-000.parquet
-            ├── date=2026-04-01/symbol=MSFT/part-000.parquet
+            ├── date=2026-04-01/data.dbn.zst
+            ├── date=2026-04-02/data.dbn.zst
             └── ...
 ```
 
@@ -48,16 +48,16 @@ Each dataset version must include `manifest.json` with at least:
 
 ```json
 {
-  "dataset_name": "us-equities-bars-1m",
-  "dataset_version": "2026-04-11T00-00-00Z",
-  "created_at": "2026-04-11T00:00:00Z",
-  "format": "parquet",
-  "compression": "snappy",
-  "partition_scheme": ["date", "symbol"],
+  "dataset_name": "glbx-mdp3-market-data",
+  "dataset_version": "v1.0.0",
+  "created_at": "2026-04-13T00:00:00Z",
+  "format": "dbn",
+  "compression": "zstd",
+  "partition_scheme": ["date"],
   "partitions": [
-    "partitions/date=2026-04-01/symbol=AAPL/part-000.parquet"
+    "partitions/date=2026-03-08/data.dbn.zst"
   ],
-  "total_size_bytes": 42949672960
+  "total_size_bytes": 8990765938
 }
 ```
 
@@ -77,8 +77,8 @@ Each dataset version must include `manifest.json` with at least:
 #   checksums.txt
 #   partitions/...
 
-DATASET_NAME="us-equities-bars-1m"
-DATASET_VERSION="2026-04-11T00-00-00Z"
+DATASET_NAME="glbx-mdp3-market-data"
+DATASET_VERSION="v1.0.0"
 
 aws s3 sync ./dataset-root \
   "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$DATASET_VERSION/" \
@@ -98,7 +98,7 @@ Agents should use this sequence:
 1. List datasets.
 2. List versions for target dataset.
 3. Pull `manifest.json` first.
-4. Pull only required partitions.
+4. Pull only required date partitions.
 5. Reuse local cache between runs.
 
 ```bash
@@ -118,12 +118,12 @@ aws s3 cp \
 
 ### Selective Sync Patterns
 
-Retrieve only required partitions (example: one date range and one symbol):
+Retrieve only required date partitions (example: one date):
 
 ```bash
 aws s3 sync \
-  "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$DATASET_VERSION/partitions/date=2026-04-01/symbol=AAPL/" \
-  "./data-cache/$DATASET_NAME/$DATASET_VERSION/partitions/date=2026-04-01/symbol=AAPL/" \
+  "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$DATASET_VERSION/partitions/date=2026-03-08/" \
+  "./data-cache/$DATASET_NAME/$DATASET_VERSION/partitions/date=2026-03-08/" \
   --region "$AWS_REGION" \
   --no-progress
 ```
@@ -159,10 +159,10 @@ Host CLI remains a valid fallback when Docker is not required.
 
 For 40 GB datasets, use:
 
-- Partitioned storage by high-selectivity keys (date, then symbol if useful).
-- Compressed Parquet (snappy or zstd).
+- Partitioned storage by high-selectivity keys (date).
+- Compressed DBN format (zstd compression, already applied).
 - Manifest-first discovery to prevent large listings and unnecessary transfer.
-- Incremental retrieval: fetch only changed/new partitions per iteration.
+- Incremental retrieval: fetch only changed/new date partitions per iteration.
 
 Do not store the dataset as a single large file.
 

@@ -405,7 +405,7 @@ python scripts/data_retriever.py sync-partition name v1.0.0 "date=2026-04-01/sym
 ### 4. Load & Analyze
 ```python
 import pandas as pd
-df = pd.read_parquet("./data-cache/name/v1.0.0/partitions/.../part-000.parquet")
+df = dbn.load_from_file("./data-cache/name/v1.0.0/partitions/.../part-000.dbn.zst")
 ```
 
 ### 5. Run in Docker
