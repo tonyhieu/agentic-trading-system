@@ -21,26 +21,28 @@ Use this workflow to publish a dataset to S3 following the storage contract.
 
 ### Prerequisites
 
-- Local directory with manifest, schema, checksums, and partitions
+- Local directory with manifest, schema, checksums, and DBN partition files
 - Example structure:
   ```
-  ./my-dataset/
+  ./glbx-dataset/
   ├── manifest.json
   ├── schema.json
   ├── checksums.txt
   └── partitions/
-      ├── date=2026-04-01/symbol=AAPL/part-000.parquet
-      ├── date=2026-04-01/symbol=MSFT/part-000.parquet
-      └── ...
+      ├── date=2026-03-08/
+      │   └── data.dbn.zst
+      ├── date=2026-03-09/
+      │   └── data.dbn.zst
+      └── ... (one per trading date)
   ```
 
 ### Upload Steps
 
 ```bash
 # 1. Define dataset variables
-DATASET_NAME="us-equities-bars-1m"
-DATASET_VERSION="2026-04-11T00-00-00Z"
-LOCAL_DATASET_ROOT="./my-dataset"
+DATASET_NAME="glbx-mdp3-market-data"
+DATASET_VERSION="v1.0.0"
+LOCAL_DATASET_ROOT="./glbx-dataset"
 
 # 2. Validate manifest locally
 python3 << 'PYTHON'
@@ -49,7 +51,8 @@ with open(f"{LOCAL_DATASET_ROOT}/manifest.json") as f:
     manifest = json.load(f)
     assert manifest["dataset_name"] == "${DATASET_NAME}"
     assert manifest["dataset_version"] == "${DATASET_VERSION}"
-    assert manifest["format"] == "parquet"
+    assert manifest["format"] == "dbn"
+    assert manifest["compression"] == "zstd"
     print("✓ Manifest valid")
 PYTHON
 

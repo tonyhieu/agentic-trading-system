@@ -1,83 +1,45 @@
-# Dataset Preparation & Selective Partitioning Analysis
+# Dataset Preparation & Analysis
 
 ## Overview
 
-Created an automated script (`scripts/prepare_dataset.py`) to:
-1. Download 40GB dataset from Box
-2. Analyze its structure
-3. Recommend optimal partitioning strategy
-4. Convert to Parquet with partitions
-5. Generate manifest, schema, checksums
-6. **Analyze cost savings from selective retrieval**
+The dataset from the University of Chicago is a **8.37 GB Chicago CME (GLBX) market data collection** that is already optimally formatted:
+
+1. ✅ Already partitioned by trading date (one file per date)
+2. ✅ Already compressed (zstd format)
+3. ✅ Already in binary DBN format (Databento format)
+4. ✅ No conversion needed
 
 ---
 
-## How It Works
+## Dataset Characteristics
 
-### Phase 1: Download & Detect Format
+### Format: DBN (Databento Binary Format)
+- **Compression**: zstd (Zstandard)
+- **Structure**: One file per trading date
+- **Size**: 8.37 GB total, ~330 MB per day average
+- **Date Range**: 2026-03-08 to 2026-04-06 (26 trading days)
+- **Exchange**: GLBX (Global FX)
+
+### File Layout
 ```python
-# Automatically downloads from Box link
-# Detects format: CSV, JSON, Parquet, Excel
-# Reports file size
+# For each trading date:
+#   partitions/date=2026-03-08/data.dbn.zst
+#   partitions/date=2026-03-09/data.dbn.zst
+#   ... (one per trading date)
 ```
 
-### Phase 2: Analyze Structure
-```python
-# For each column:
-#   - Count unique values
-#   - Detect data type
-#   - Calculate cardinality
+### Why No Conversion Needed
 
-# Identify optimal partition keys:
-#   - PRIMARY: date/timestamp column
-#   - SECONDARY: symbol/ticker column
-```
-
-### Phase 3: Partition & Convert
-```python
-# For each (date, symbol) pair:
-#   Create partition directory:
-#     partitions/date=2026-04-01/symbol=AAPL/
-#   
-#   Save filtered data as Parquet:
-#     part-000.parquet (snappy compressed)
-```
-
-### Phase 4: Generate Metadata
-```python
-# manifest.json
-#   - All partition paths
-#   - Record count
-#   - Total size
-#   - Date range
-#   - List of symbols
-
-# schema.json
-#   - Column names & types
-#   - Nullable flags
-#   - Descriptions
-
-# checksums.txt
-#   - SHA-256 for each file
-```
-
-### Phase 5: Analyze Selective Retrieval
-```python
-# Calculate costs for 3 scenarios:
-#   1. Full dataset download (40 GB)
-#   2. Single partition (1 date × 1 symbol)
-#   3. Typical backtest (60 days × 1 symbol)
-```
+The dataset is already:
+1. **Optimally compressed** - zstd provides excellent compression ratio
+2. **Naturally partitioned** - One file per trading date (atomic unit)
+3. **Industry standard format** - DBN is standard for market data
+4. **All symbols included** - Each DBN file contains all instruments for that date
+5. **Symbol filtering done at query time** - Agent loads DBN, filters in memory
 
 ---
 
-## Why Selective Partitioning Works
-
-### Example: 40 GB Dataset with 100 Dates × 10 Symbols
-
-```
-Total partitions: 1,000
-Total files: ~10,000 (10 files per partition avg)
+## Selective Partitioning Strategy
 Average partition: 4 MB
 ```
 

@@ -113,27 +113,25 @@ if __name__ == "__main__":
 DATASET_NAME="test-dataset-$(date +%s)"
 DATASET_VERSION="test-v1.0.0"
 
-mkdir -p test-dataset/partitions/date=2026-04-01/symbol=TEST
+mkdir -p test-dataset/partitions/date=2026-04-01
 
-# Create minimal Parquet file using pandas
+# Create minimal DBN file (using zstd compressed binary)
 python3 << 'PYTHON'
-import pandas as pd
-import os
+import struct
+import zstandard as zstd
 
-# Create sample data
-data = {
-    "timestamp": [1712102400000, 1712102460000],
-    "symbol": ["TEST", "TEST"],
-    "open": [100.0, 100.5],
-    "high": [101.0, 101.5],
-    "low": [99.5, 100.0],
-    "close": [100.5, 100.8],
-    "volume": [1000, 1500]
-}
+# Create minimal DBN record (simplified structure)
+# This is a placeholder - real DBN files use Databento's binary format
+sample_data = b"DBN_TEST_DATA_" + b"x" * 1000  # Placeholder
 
-df = pd.DataFrame(data)
-df.to_parquet("test-dataset/partitions/date=2026-04-01/symbol=TEST/part-000.parquet", compression="snappy")
-print("✓ Created test Parquet file")
+# Compress with zstd
+cctx = zstd.ZstdCompressor()
+compressed = cctx.compress(sample_data)
+
+with open("test-dataset/partitions/date=2026-04-01/data.dbn.zst", "wb") as f:
+    f.write(compressed)
+
+print("✓ Created test DBN file")
 PYTHON
 
 # Create manifest
@@ -141,17 +139,17 @@ cat > test-dataset/manifest.json << EOF
 {
   "dataset_name": "$DATASET_NAME",
   "dataset_version": "$DATASET_VERSION",
-  "created_at": "2026-04-11T00:00:00Z",
-  "format": "parquet",
-  "compression": "snappy",
-  "partition_scheme": ["date", "symbol"],
+  "created_at": "2026-04-13T00:00:00Z",
+  "format": "dbn",
+  "compression": "zstd",
+  "partition_scheme": ["date"],
   "partitions": [
-    "partitions/date=2026-04-01/symbol=TEST/part-000.parquet"
+    "partitions/date=2026-04-01/data.dbn.zst"
   ],
   "total_size_bytes": 1024,
-  "record_count": 2,
-  "symbols": ["TEST"],
-  "date_range": {"start": "2026-04-01", "end": "2026-04-01"}
+  "record_count": 100,
+  "date_range": {"start": "2026-04-01", "end": "2026-04-01"},
+  "exchange": "TEST"
 }
 EOF
 
@@ -451,15 +449,17 @@ def test_e2e_download_and_load():
         assert result.returncode == 0, f"Download failed: {result.stderr}"
         
         # 3. Load data
-        cache_path = Path("./data-cache/us-equities-bars-1m/v1.0.0/partitions") / first_partition
-        parquet_files = list(cache_path.glob("**/*.parquet"))
+        cache_path = Path("./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08")
+        dbn_file = cache_path / "data.dbn.zst"
         
-        if parquet_files:
-            df = pd.read_parquet(parquet_files[0])
+        if dbn_file.exists():
+            import databento_dbn as dbn
+            records = dbn.load_from_file(str(dbn_file))
+            df = records.to_df()
             assert not df.empty, "Loaded dataframe is empty"
             print(f"✓ Downloaded and loaded {len(df)} records")
         else:
-            print("⚠ No Parquet files found in partition")
+            print("⚠ No DBN file found in partition")
 
 if __name__ == "__main__":
     test_e2e_download_and_load()

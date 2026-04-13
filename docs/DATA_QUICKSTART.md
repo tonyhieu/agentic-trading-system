@@ -25,30 +25,34 @@ mkdir -p my-dataset/partitions
 # Create manifest.json
 cat > my-dataset/manifest.json << 'EOF'
 {
-  "dataset_name": "us-equities-bars-1m",
-  "dataset_version": "2026-04-11T00-00-00Z",
-  "created_at": "2026-04-11T00:00:00Z",
-  "format": "parquet",
-  "compression": "snappy",
-  "partition_scheme": ["date", "symbol"],
+  "dataset_name": "glbx-mdp3-market-data",
+  "dataset_version": "v1.0.0",
+  "created_at": "2026-04-13T00:00:00Z",
+  "format": "dbn",
+  "compression": "zstd",
+  "partition_scheme": ["date"],
   "partitions": [
-    "partitions/date=2026-04-01/symbol=AAPL/part-000.parquet"
+    "partitions/date=2026-03-08/data.dbn.zst"
   ],
-  "total_size_bytes": 1024000,
-  "record_count": 100000,
-  "symbols": ["AAPL"]
+  "total_size_bytes": 8990765938,
+  "record_count": 125000000,
+  "date_range": {
+    "start": "2026-03-08",
+    "end": "2026-04-06"
+  },
+  "exchange": "GLBX"
 }
 EOF
 
-# Add your Parquet files
-# my-dataset/partitions/date=2026-04-01/symbol=AAPL/part-000.parquet
+# Add your DBN files
+# my-dataset/partitions/date=2026-03-08/data.dbn.zst
 ```
 
 ### 2. Upload to S3
 
 ```bash
-DATASET_NAME="us-equities-bars-1m"
-DATASET_VERSION="2026-04-11T00-00-00Z"
+DATASET_NAME="glbx-mdp3-market-data"
+DATASET_VERSION="v1.0.0"
 
 aws s3 sync my-dataset \
   "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$DATASET_VERSION/" \
@@ -70,31 +74,36 @@ python3 scripts/data_retriever.py list-datasets
 ### 2. Fetch manifest (always do this first!)
 
 ```bash
-python3 scripts/data_retriever.py fetch-manifest us-equities-bars-1m 2026-04-11T00-00-00Z
+python3 scripts/data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
 ```
 
-### 3. Download specific partition
+### 3. Download specific date partition
 
 ```bash
 python3 scripts/data_retriever.py sync-partition \
-  us-equities-bars-1m \
-  2026-04-11T00-00-00Z \
-  "date=2026-04-01/symbol=AAPL"
+  glbx-mdp3-market-data \
+  v1.0.0 \
+  "date=2026-03-08"
 ```
 
-Data downloaded to: `./data-cache/us-equities-bars-1m/2026-04-11T00-00-00Z/partitions/`
+Data downloaded to: `./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/`
 
 ### 4. Load data in Python
 
 ```python
-import pandas as pd
-import glob
+import subprocess
 
-# Find all Parquet files for the partition
-files = glob.glob("./data-cache/us-equities-bars-1m/2026-04-11T00-00-00Z/partitions/date=2026-04-01/symbol=AAPL/**/*.parquet", recursive=True)
+# Extract and read DBN file
+dbn_file = "./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst"
 
-# Read all files
-df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+# Decompress and read (using databento-dbn library)
+import databento_dbn as dbn
+
+# Read DBN file
+records = dbn.load_from_file(dbn_file)
+
+# Convert to pandas for analysis
+df = records.to_df()
 print(df.head())
 ```
 
@@ -128,12 +137,12 @@ docker run --rm \
 docker-compose run agent data_retriever.py list-datasets
 
 # Fetch manifest
-docker-compose run agent data_retriever.py fetch-manifest my-dataset v1.0.0
+docker-compose run agent data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
 
 # Interactive shell
 docker-compose run agent bash
 # Inside container:
-# $ data_retriever.py sync-partition my-dataset v1.0.0 "date=2026-04-01/symbol=AAPL"
+# $ data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "date=2026-03-08"
 ```
 
 ---

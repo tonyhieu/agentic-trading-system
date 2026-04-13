@@ -94,42 +94,42 @@ Assuming a typical 40 GB market dataset:
 40 GB total size
 
 If we partition as:
-  partitions/date=YYYY-MM-DD/symbol=TICKER/
+  partitions/date=YYYY-MM-DD/
 
-Each partition might be:
-  40 GB / (250 × 500) = 0.32 MB average
+Each partition is:
+  40 GB / 250 trading days = 0.16 GB (160 MB) average
 
-If each partition has 1-2 Parquet files:
-  Total files: 250 × 500 × 1.5 = 187,500 files
+One file per date:
+  Total files: 250 (one DBN file per trading day)
 ```
 
 ### Cost Scenarios
 
 **Scenario 1: Download Full Dataset**
 ```
-Files: 187,500
-GET requests: 187,500 ÷ 1,000 × $5 = $937.50
+Files: 250
+GET requests: 250 ÷ 1,000 × $5 = $1.25
 Transfer: 40 GB × $0.023 = $0.92
 ────────────────────────────────
-TOTAL: $938.42
+TOTAL: $2.17
 ```
 
-**Scenario 2: Single Partition (1 date, 1 symbol)**
+**Scenario 2: Single Date Partition (1 date, all symbols)**
 ```
-Files: 1-2
-GET requests: 2 ÷ 1,000 × $5 = $0.00001
-Transfer: 0.32 MB × $0.023/GB = negligible
+Files: 1
+GET requests: 1 ÷ 1,000 × $5 = $0.005
+Transfer: 160 MB × $0.023/GB = $0.00368
 ────────────────────────────────
-TOTAL: ~$0.00001
+TOTAL: ~$0.009
 ```
 
-**Scenario 3: Typical Backtest (60 days, 1 symbol)**
+**Scenario 3: Typical Backtest (10 days)**
 ```
-Files: 60 × 1.5 = 90
-GET requests: 90 ÷ 1,000 × $5 = $0.0045
-Transfer: 19.2 MB × $0.023/GB = $0.00044
+Files: 10
+GET requests: 10 ÷ 1,000 × $5 = $0.05
+Transfer: 1.6 GB × $0.023/GB = $0.0368
 ────────────────────────────────
-TOTAL: ~$0.005 per backtest
+TOTAL: ~$0.087 per backtest
 ```
 
 ## The Math Behind High Costs

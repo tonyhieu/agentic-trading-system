@@ -181,9 +181,8 @@ s3://bucket/datasets/
 │       ├── checksums.txt
 │       └── partitions/
 │           ├── date=YYYY-MM-DD/
-│           │   └── symbol=TICKER/
-│           │       └── part-NNN.parquet
-│           └── ...
+│           │   └── data.dbn.zst
+│           └── ... (one per trading date)
 ```
 
 ### Retrieval Workflow
@@ -222,10 +221,10 @@ data_retriever.py fetch-manifest {dataset-name} {version}
 data_retriever.py fetch-schema {dataset-name} {version}
 
 # Download partition
-data_retriever.py sync-partition {dataset-name} {version} {partition-path}
+data_retriever.py sync-partition {dataset-name} {version} {date-partition}
 
-# Validate downloaded files
-data_retriever.py validate {dataset-name} {version}
+# Example: Download single date
+data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "date=2026-03-08"
 ```
 
 ### Python Interface
@@ -244,10 +243,7 @@ manifest = retriever.fetch_manifest(dataset, version)
 schema = retriever.fetch_schema(dataset, version)
 
 # Download
-retriever.sync_partition(dataset, version, "date=2026-04-01/symbol=AAPL")
-
-# Validate
-retriever.validate_checksums(dataset, version)
+retriever.sync_partition(dataset, version, "date=2026-03-08")
 ```
 
 ---
@@ -335,7 +331,7 @@ Per full download: ~$20.92
 
 ## Known Limitations
 
-1. **Manual Data Conversion**: Box.com data must be manually downloaded and converted to Parquet
+1. **DBN Format Requires Library**: Must use databento-dbn library to read DBN files (not required, data is pre-formatted)
 2. **No Streaming**: Must download entire partition (no row-level streaming)
 3. **Single Cloud**: Only AWS S3 supported (Glacier, R2, others are future work)
 4. **No Automated Validation**: Schema validation on upload is manual (future enhancement)

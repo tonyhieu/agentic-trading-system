@@ -10,9 +10,9 @@ This guide shows how autonomous agents can integrate data retrieval into their s
 ├─────────────────────────────────────────────────────────┤
 │ 1. Discover available datasets in S3 manifest            │
 │ 2. Fetch manifest.json to understand partition layout   │
-│ 3. Select partitions (e.g., "AAPL, April 2026")        │
-│ 4. Download selected partitions to local cache          │
-│ 5. Load data into strategy backtest engine              │
+│ 3. Select date ranges (e.g., "2026-03-08 to 2026-03-15") │
+│ 4. Download selected date partitions to local cache     │
+│ 5. Load DBN data into strategy backtest engine          │
 │ 6. Iterate: modify strategy, re-test with same data    │
 │ 7. Publish results to snapshots/agent-name branch      │
 └─────────────────────────────────────────────────────────┘
@@ -20,7 +20,7 @@ This guide shows how autonomous agents can integrate data retrieval into their s
 ┌─────────────────────────────────────────────────────────┐
 │           Docker Container (agent:latest)               │
 ├─────────────────────────────────────────────────────────┤
-│ Python 3.11 + AWS CLI + pandas + pyarrow                │
+│ Python 3.11 + AWS CLI + databento-dbn + numpy           │
 │ Mounts: /workspace (strategy), /data-cache (persistent) │
 └─────────────────────────────────────────────────────────┘
         ↓ Downloads from
@@ -28,12 +28,14 @@ This guide shows how autonomous agents can integrate data retrieval into their s
 │                    AWS S3 Bucket                         │
 ├─────────────────────────────────────────────────────────┤
 │ datasets/                                                │
-│ ├── us-equities-bars-1m/v1.0.0/                        │
+│ ├── glbx-mdp3-market-data/v1.0.0/                       │
 │ │   ├── manifest.json                                   │
 │ │   ├── schema.json                                     │
-│ │   └── partitions/date=.../symbol=.../part-000.parquet
-│ ├── historical-options/v2.1.0/...                      │
-│ └── market-microstructure/v1.5.0/...                   │
+│ │   └── partitions/date=2026-03-08/data.dbn.zst        │
+│ │       partitions/date=2026-03-09/data.dbn.zst        │
+│ │       ... (one per trading date)                      │
+│ ├── historical-data/v2.1.0/...                          │
+│ └── market-data/v1.5.0/...                              │
 │                                                          │
 │ strategies/ (snapshots created by agents)               │
 │ └── agent-momentum-1/2026-04-11-ABC123/                │
@@ -86,7 +88,7 @@ if __name__ == "__main__":
 #!/bin/bash
 # Agent runs this to understand dataset structure
 
-DATASET_NAME="us-equities-bars-1m"
+DATASET_NAME="glbx-mdp3-market-data"
 VERSION="v1.0.0"
 
 # Get manifest
@@ -130,25 +132,25 @@ class StrategyDataPlanner:
         current = datetime.strptime(start_date, "%Y-%m-%d")
         end = datetime.strptime(end_date, "%Y-%m-%d")
         
+        partitions = []
         while current <= end:
             date_str = current.strftime("%Y-%m-%d")
-            for symbol in symbols:
-                partition = f"date={date_str}/symbol={symbol}"
-                if f"partitions/{partition}/part-000.parquet" in self.manifest["partitions"]:
-                    partitions.append(partition)
+            partition = f"date={date_str}"
+            if f"partitions/{partition}/data.dbn.zst" in self.manifest["partitions"]:
+                partitions.append(partition)
             current += timedelta(days=1)
         
         return partitions
 
-# Example: Momentum strategy needs 60 days of AAPL and MSFT
+# Example: Momentum strategy needs 60 days of trading data
 planner = StrategyDataPlanner()
 partitions = planner.get_backtest_partitions(
     start_date="2026-03-12",
     end_date="2026-05-10",
-    symbols=["AAPL", "MSFT"]
+    symbols=None  # All symbols in each date partition
 )
 
-print(f"Agent will download {len(partitions)} partitions (~{len(partitions) * 2} MB)")
+print(f"Agent will download {len(partitions)} partitions (~{len(partitions) * 330} MB)")
 for p in partitions[:5]:
     print(f"  {p}")
 if len(partitions) > 5:
@@ -161,16 +163,16 @@ if len(partitions) > 5:
 #!/bin/bash
 # Download selected partitions for backtest
 
-DATASET_NAME="us-equities-bars-1m"
+DATASET_NAME="glbx-mdp3-market-data"
 VERSION="v1.0.0"
 
-# Download one partition
+# Download one date partition
 python /scripts/data_retriever.py sync-partition \
   "$DATASET_NAME" \
   "$VERSION" \
-  "date=2026-04-01/symbol=AAPL"
+  "date=2026-03-08"
 
-# Now data is in /data-cache/us-equities-bars-1m/v1.0.0/partitions/...
+# Now data is in /data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst
 ```
 
 ## Step 5: Load & Backtest
@@ -179,33 +181,34 @@ python /scripts/data_retriever.py sync-partition \
 #!/usr/bin/env python3
 """Agent loads data and runs backtest."""
 
-import pandas as pd
-import glob
+import subprocess
 from pathlib import Path
+import databento_dbn as dbn
 
 class BacktestEngine:
     def __init__(self, dataset_name, version, cache_dir="/data-cache"):
         self.cache_base = Path(cache_dir) / dataset_name / version / "partitions"
     
-    def load_partition_data(self, date, symbol):
-        """Load a single partition."""
-        partition_dir = self.cache_base / f"date={date}/symbol={symbol}"
-        files = list(partition_dir.glob("**/*.parquet"))
+    def load_date_data(self, date):
+        """Load DBN data for a single date partition."""
+        partition_dir = self.cache_base / f"date={date}"
+        dbn_file = partition_dir / "data.dbn.zst"
         
-        if not files:
-            raise FileNotFoundError(f"No data found for {date}/{symbol}")
+        if not dbn_file.exists():
+            raise FileNotFoundError(f"No data found for {date}")
         
-        # Load all Parquet files for this partition
-        dfs = [pd.read_parquet(f) for f in files]
-        return pd.concat(dfs, ignore_index=True)
+        # Load DBN file
+        records = dbn.load_from_file(str(dbn_file))
+        
+        # Convert to DataFrame
+        df = records.to_df()
+        return df
     
-    def backtest(self, strategy_func, start_date, end_date, symbols):
-        """Run backtest on selected symbols and dates."""
+    def backtest(self, strategy_func, start_date, end_date):
+        """Run backtest on selected dates."""
         
         all_data = []
-        for symbol in symbols:
-            current = pd.Timestamp(start_date)
-            end = pd.Timestamp(end_date)
+        current = pd.Timestamp(start_date)
             
             while current <= end:
                 date_str = current.strftime("%Y-%m-%d")

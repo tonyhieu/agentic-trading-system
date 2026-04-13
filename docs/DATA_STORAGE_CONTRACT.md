@@ -13,13 +13,10 @@ s3://$S3_BUCKET_NAME/datasets/
         ├── checksums.txt          (Recommended)
         └── partitions/
             ├── date=YYYY-MM-DD/
-            │   ├── symbol=TICKER/
-            │   │   ├── part-000.parquet
-            │   │   ├── part-001.parquet
-            │   │   └── ...
-            │   └── symbol=OTHER/...
-            ├── date=YYYY-MM-DD/...
-            └── ...
+            │   └── data.dbn.zst
+            ├── date=YYYY-MM-DD/
+            │   └── data.dbn.zst
+            └── ... (one per trading date)
 ```
 
 ## Naming Conventions
@@ -39,14 +36,12 @@ s3://$S3_BUCKET_NAME/datasets/
 1. **Primary**: `date=YYYY-MM-DD` (required)
    - Always partition by date for temporal data
    - One date per directory level
-2. **Secondary**: `symbol=TICKER` (optional)
-   - Add when access patterns justify multi-symbol queries
-   - Always after date partition
 
 ### File Naming
-- **Format**: `part-NNN.parquet` (NNN = zero-padded sequence number)
-- **Compression**: Built into Parquet (specify in manifest)
-- **Rule**: One or more files per symbol/date combination
+- **Format**: `data.dbn.zst` (DBN binary format, zstd compressed)
+- **Compression**: zstd (Zstandard compression, already applied)
+- **Rule**: One file per trading date, contains all symbols/instruments for that date
+- **Symbol filtering**: Performed at query time (agent loads DBN file, filters symbols in memory)
 
 ## Manifest Schema
 
@@ -54,25 +49,26 @@ Each dataset version **must** include `manifest.json` at the root:
 
 ```json
 {
-  "dataset_name": "us-equities-bars-1m",
-  "dataset_version": "2026-04-11T00-00-00Z",
-  "created_at": "2026-04-11T00:00:00Z",
-  "updated_at": "2026-04-11T00:00:00Z",
-  "format": "parquet",
-  "compression": "snappy",
-  "partition_scheme": ["date", "symbol"],
+  "dataset_name": "glbx-mdp3-market-data",
+  "dataset_version": "v1.0.0",
+  "created_at": "2026-04-13T00:00:00Z",
+  "updated_at": "2026-04-13T00:00:00Z",
+  "format": "dbn",
+  "compression": "zstd",
+  "partition_scheme": ["date"],
   "partitions": [
-    "partitions/date=2026-04-01/symbol=AAPL/part-000.parquet",
-    "partitions/date=2026-04-01/symbol=MSFT/part-000.parquet",
-    "partitions/date=2026-04-02/symbol=AAPL/part-000.parquet"
+    "partitions/date=2026-03-08/data.dbn.zst",
+    "partitions/date=2026-03-09/data.dbn.zst",
+    "partitions/date=2026-03-10/data.dbn.zst"
   ],
-  "total_size_bytes": 42949672960,
-  "record_count": 5000000,
+  "total_size_bytes": 8990765938,
+  "record_count": 125000000,
   "date_range": {
-    "start": "2026-04-01",
-    "end": "2026-04-30"
+    "start": "2026-03-08",
+    "end": "2026-04-06"
   },
-  "symbols": ["AAPL", "MSFT", "GOOGL"],
+  "exchange": "GLBX",
+  "instruments": "Global FX futures",
   "schema_file": "schema.json",
   "checksums_file": "checksums.txt"
 }

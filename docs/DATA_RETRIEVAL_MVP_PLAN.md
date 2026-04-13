@@ -33,8 +33,8 @@ Enable autonomous agents to reliably retrieve only the data they need from AWS S
 ## Core Decisions
 
 - **Runtime model:** Docker-first for agent reproducibility; host CLI fallback supported.
-- **Data format:** Parquet with snappy or zstd compression.
-- **Partitioning:** date-first; symbol partitioning added when access patterns justify it.
+- **Data format:** DBN (Databento binary format) with zstd compression.
+- **Partitioning:** date-first; each date is one atomic partition containing all symbols.
 - **Versioning:** immutable dataset versions; publish new versions instead of in-place updates.
 
 ## Phased Plan
