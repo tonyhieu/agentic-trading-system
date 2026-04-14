@@ -29,7 +29,12 @@ def call_claude(prompt: str) -> dict:
         messages=[{"role": "user", "content": prompt}],
     )
 
-    raw = message.content[0].text.strip()
+    text_parts = []
+    for block in message.content:
+        if hasattr(block, "text"):
+            text_parts.append(block.text)
+
+    raw = "\n".join(text_parts).strip()
 
     # Handle accidental markdown fences
     if raw.startswith("```"):
