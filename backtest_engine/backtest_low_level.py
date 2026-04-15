@@ -12,11 +12,16 @@ from nautilus_trader.persistence.wranglers import TradeTickDataWrangler
 from nautilus_trader.test_kit.providers import TestDataProvider
 from nautilus_trader.test_kit.providers import TestInstrumentProvider
 
-from execution_algos.simple_execution_strategy import get_execution_algorithm
-from strategies.ema_strategy import get_trading_strategy
+from execution_algos import create_execution_algorithm
+from strategies import create_strategy
 
 
-def run_backtest() -> BacktestEngine:
+def run_backtest(
+    strategy_name: str = "ema_cross",
+    execution_algorithm_name: str = "simple",
+    strategy_kwargs: dict | None = None,
+    execution_algorithm_kwargs: dict | None = None,
+) -> BacktestEngine:
     """Run the low-level backtest and return the configured engine."""
     # Load stub test data
     provider = TestDataProvider()
@@ -47,12 +52,24 @@ def run_backtest() -> BacktestEngine:
     engine.add_instrument(ethusdt_binance)
     engine.add_data(ticks)
 
-    # Instantiate and add strategy
-    strategy = get_trading_strategy(ethusdt_binance.id)
+    strategy_options = dict(strategy_kwargs or {})
+    execution_options = dict(execution_algorithm_kwargs or {})
+
+    # Keep default behavior aligned with previous implementation.
+    if strategy_name == "ema_cross":
+        strategy_options.setdefault("instrument_id", ethusdt_binance.id)
+    if execution_algorithm_name == "simple":
+        execution_options.setdefault("exec_id", "MY_GENERIC_ALGO")
+
+    # Instantiate and add strategy from registry
+    strategy = create_strategy(strategy_name, **strategy_options)
     engine.add_strategy(strategy=strategy)
 
-    # Instantiate and add execution algorithm
-    exec_algorithm = get_execution_algorithm(exec_id="MY_GENERIC_ALGO")
+    # Instantiate and add execution algorithm from registry
+    exec_algorithm = create_execution_algorithm(
+        execution_algorithm_name,
+        **execution_options,
+    )
     engine.add_exec_algorithm(exec_algorithm)
 
     # Run the engine (from start to end of data)
