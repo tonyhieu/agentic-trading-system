@@ -49,11 +49,8 @@ Store and retrieve large research datasets (up to and beyond 40 GB) for agent tr
 - **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - System architecture and design decisions
 
 ### Data Management
-- **[Data Quick Start](./docs/DATA_QUICKSTART.md)** - Get started in 5 minutes
 - **[Data Storage Contract](./docs/DATA_STORAGE_CONTRACT.md)** - S3 layout specification and manifest schema
-- **[Data Operations Playbook](./docs/DATA_OPERATIONS_PLAYBOOK.md)** - Complete CLI workflows for upload, discovery, and retrieval
-- **[Data Retrieval MVP Plan](./docs/DATA_RETRIEVAL_MVP_PLAN.md)** - Architecture for 40 GB dataset storage
-- **[Data Upload and Retrieval Guide](./docs/DATA_UPLOAD_AND_RETRIEVAL_GUIDE.md)** - Original planning document
+- **[Agent Integration Guide](./docs/AGENT_INTEGRATION_GUIDE.md)** - How agents retrieve and use data
 
 ## Repository Structure
 

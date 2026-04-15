@@ -368,7 +368,7 @@ for p in partitions:
 | "Connection timeout" | Verify AWS credentials and region |
 | "Out of disk" | `rm -rf ./data-cache/` to clear cache |
 
-For complete reference: `docs/DATA_OPERATIONS_PLAYBOOK.md` and `docs/AGENT_INTEGRATION_GUIDE.md`
+For complete reference: See `docs/AGENT_INTEGRATION_GUIDE.md`
 
 ---
 

@@ -565,8 +565,8 @@ git push origin snapshots/my-strategy-v2
 1. **Documentation:**
    - SKILLS.md - Usage instructions
    - AWS_SETUP_GUIDE.md - Infrastructure setup
-   - ARCHITECTURE.md - System design
-   - COST_MANAGEMENT.md - Cost optimization
+   - README_FOR_HUMANS.md - Architecture overview
+   - WHY_SELECTIVE_PARTITIONING.md - Cost analysis
 
 2. **AWS Resources:**
    - [S3 Documentation](https://docs.aws.amazon.com/s3/)

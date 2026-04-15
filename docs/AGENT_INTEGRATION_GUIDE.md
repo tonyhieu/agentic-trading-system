@@ -516,7 +516,6 @@ docker-compose run agent python /scripts/example_agent.py
 ## Next Steps
 
 1. **Review contracts**: Read `docs/DATA_STORAGE_CONTRACT.md`
-2. **Learn CLI**: Practice commands in `docs/DATA_OPERATIONS_PLAYBOOK.md`
-3. **Build your agent**: Adapt example above for your strategy
-4. **Test locally**: Run agent in Docker with sample data
-5. **Deploy**: Push to snapshots/* branch, GitHub Actions creates snapshot
+2. **Build your agent**: Adapt example above for your strategy
+3. **Test locally**: Run agent in Docker with sample data
+4. **Deploy**: Push to snapshots/* branch, GitHub Actions creates snapshot
