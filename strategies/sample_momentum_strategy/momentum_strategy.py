@@ -192,3 +192,10 @@ if __name__ == '__main__':
     print(f"Final Equity: ${results['final_equity']:,.2f}")
     
     print("\nBacktest complete!")
+
+
+def get_trading_strategy():
+    """
+    Factory function to create a MomentumStrategy instance.
+    """
+    return MomentumStrategy()
