@@ -28,8 +28,7 @@ The repository includes a sophisticated snapshot system that automatically backs
 Store and retrieve large research datasets (up to and beyond 40 GB) for agent training and backtesting:
 
 - **Manifest-Driven Discovery**: Agents fetch metadata first to understand dataset structure
-- **Selective Partition Retrieval**: Download only the data you need (date ranges, symbols) to minimize transfer costs
-- **Parquet Format**: Compressed columnar storage for efficient querying
+- **Selective Partition Retrieval**: Download only the data you need (date ranges) to minimize transfer costs
 - **Integrity Validation**: SHA-256 checksums for every file
 - **Docker-First Execution**: Reproducible agent environments with pre-configured AWS access
 - **Resume Capability**: Interrupted downloads continue from where they left off
