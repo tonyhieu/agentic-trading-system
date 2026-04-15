@@ -8,8 +8,8 @@
 - [AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md) - Infrastructure setup
 
 **For Agents (Integration):**
-- [PROBLEM_DEFINITION.md](PROBLEM_DEFINITION.md) ⭐ - Read first: metatask, oracle, research loop
-- [README_FOR_AGENTS.md](README_FOR_AGENTS.md) - Data retrieval API reference
+- [README_FOR_AGENTS.md](README_FOR_AGENTS.md) ⭐ - Start here
+- [PROBLEM_DEFINITION.md](PROBLEM_DEFINITION.md) ⭐ - metatask, oracle, research loop
 - [DATA_STORAGE_CONTRACT.md](DATA_STORAGE_CONTRACT.md) - S3 structure
 - [AGENT_INTEGRATION_GUIDE.md](AGENT_INTEGRATION_GUIDE.md) - Integration workflows
 
