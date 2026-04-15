@@ -7,6 +7,7 @@ from typing import Any
 _STRATEGY_FACTORIES: dict[str, tuple[str, str]] = {
     "ema_cross": ("strategies.ema_strategy", "get_trading_strategy"),
     "momentum": ("strategies.sample_momentum_strategy", "get_trading_strategy"),
+    "databento_subscriber": ("strategies.databento_strategy", "get_trading_strategy"),
 }
 
 
