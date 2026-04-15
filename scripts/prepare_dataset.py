@@ -462,11 +462,11 @@ class DatasetPreparer:
 
 def main():
     if len(sys.argv) > 1:
-        box_url = sys.argv[1]
+        url = sys.argv[1]
     else:
-        box_url = "https://uchicago.box.com/shared/static/ugsek0nrrc9u2vx3iap7u81pmfnmotz0"
+        raise ValueError("No URL provided")
     
-    preparer = DatasetPreparer(box_url)
+    preparer = DatasetPreparer(url)
     success = preparer.run()
     sys.exit(0 if success else 1)
 

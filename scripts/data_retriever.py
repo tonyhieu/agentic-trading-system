@@ -16,6 +16,9 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Optional
 import hashlib
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class DataRetriever:
     """Client for retrieving datasets from S3."""
