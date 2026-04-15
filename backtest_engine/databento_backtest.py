@@ -73,7 +73,7 @@ def run_databento_backtest(
     """
     # Resolve file path
     if dbn_file_path is None:
-        repo_root = Path(__file__).resolve().parents[2]
+        repo_root = Path(__file__).resolve().parents[1]
         dbn_file_path = repo_root / "data" / "glbx-mdp3-20260401.mbp-1.dbn.zst"
     else:
         dbn_file_path = Path(dbn_file_path).expanduser().resolve()
@@ -166,6 +166,14 @@ def run_databento_backtest(
     strategy_options = dict(strategy_kwargs or {})
     if strategy_name == "databento_subscriber":
         strategy_options.setdefault("instrument_ids", list(instrument_ids) if instrument_ids else None)
+    elif strategy_name == "databento_naive" and "instrument_id" not in strategy_options:
+        if instrument_ids and len(instrument_ids) > 0:
+            strategy_options.setdefault("instrument_id", instrument_ids[0])
+        else:
+            strategy_options.setdefault(
+                "instrument_id",
+                str(sorted(record_instruments, key=str)[0]),
+            )
 
     strategy = create_strategy(strategy_name, **strategy_options)
     engine.add_strategy(strategy=strategy)
