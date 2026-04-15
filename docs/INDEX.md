@@ -8,7 +8,8 @@
 - [AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md) - Infrastructure setup
 
 **For Agents (Integration):**
-- [README_FOR_AGENTS.md](README_FOR_AGENTS.md) ⭐ - Start here
+- [PROBLEM_DEFINITION.md](PROBLEM_DEFINITION.md) ⭐ - Read first: metatask, oracle, research loop
+- [README_FOR_AGENTS.md](README_FOR_AGENTS.md) - Data retrieval API reference
 - [DATA_STORAGE_CONTRACT.md](DATA_STORAGE_CONTRACT.md) - S3 structure
 - [AGENT_INTEGRATION_GUIDE.md](AGENT_INTEGRATION_GUIDE.md) - Integration workflows
 
@@ -22,6 +23,7 @@
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | **README_FOR_HUMANS.md** | System architecture, design decisions, costs | Humans |
+| **PROBLEM_DEFINITION.md** | Metatask, strategy template, oracle, research loop | Agents |
 | **README_FOR_AGENTS.md** | Quick start, API reference, code examples | Agents |
 | **WHY_SELECTIVE_PARTITIONING.md** | Why date-based partitioning (architectural decision) | Humans |
 | **AWS_SETUP_GUIDE.md** | Infrastructure setup (S3, IAM, credentials) | Humans |
