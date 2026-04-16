@@ -1,8 +1,26 @@
-# from backtest_engine.backtest_low_level import run_backtest
-from backtest_engine.databento_backtest import run_databento_backtest
+"""
+main.py
 
+Entry point for the CloudLoopAgent.
+
+Usage:
+    python main.py
+
+The agent runs multiple iterations of:
+  1. Backtest  →  2. Claude suggestions  →  3. Save versioned strategy
+"""
+
+import subprocess
+import sys
 
 if __name__ == "__main__":
-    engine = run_databento_backtest(dbn_file_path="data/glbx-mdp3-20260401.mbp-1.dbn.zst",
-                                    strategy_name="databento_naive")
-    engine.dispose()
+    NUM_ITERATIONS = 3
+
+    for i in range(1, NUM_ITERATIONS + 1):
+        subprocess.run(
+            [sys.executable, "-c",
+             f"from agent import CloudLoopAgent; "
+             f"agent = CloudLoopAgent(strategy_name='databento_naive', iteration={i}); "
+             f"agent.run_once()"],
+            check=False
+        )
