@@ -7,8 +7,9 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Install dependencies
-RUN pip install anthropic python-dotenv boto3 nautilus-trader requests "fsspec[http]"
+# Install uv and dependencies
+RUN pip install uv
+RUN uv sync
 
-# Run the loop
-CMD ["python", "cloud_loop_runner.py"]
+# Run the agent
+CMD ["uv", "run", "python", "main.py"]
