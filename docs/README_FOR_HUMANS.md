@@ -159,6 +159,14 @@ We built a **scalable, cost-efficient data retrieval system** on AWS S3 that ena
 - ✅ Date partitioning remains efficient
 - ✅ Add new datasets without changing core system
 
+## EC2 Instance Access
+
+Setup an EC2 instance and run the following to SSH into it:
+
+```
+ssh -i your_key_pair.pem ubuntu@your_ip
+```
+
 ## Troubleshooting & Support
 
 See `TROUBLESHOOTING.md` in this directory for:
