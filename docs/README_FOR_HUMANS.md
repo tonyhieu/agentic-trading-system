@@ -170,7 +170,6 @@ See `TROUBLESHOOTING.md` in this directory for:
 ## Next Steps for Humans
 
 1. **Review infrastructure**: Check AWS_SETUP_GUIDE.md to understand setup
-2. **Understand costs**: Read WHY_SELECTIVE_PARTITIONING.md for detailed analysis
 3. **For agents**: Refer agents to README_FOR_AGENTS.md
 
 ## For Agents
