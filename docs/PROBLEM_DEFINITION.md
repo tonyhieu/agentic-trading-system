@@ -104,6 +104,7 @@ Strategy net P&L must exceed **both** TWAP and VWAP net P&L by **at least 10%**.
 3. HYPOTHESIZE
    Write one paragraph: what inefficiency, what signal, why it survives costs.
    Note the parent strategy ID if this is a mutation of a prior attempt.
+   Write your reasoning to strategies/<name>/NOTES.md — Hypothesis section (see Section 10).
 
 4. IMPLEMENT
    Write strategy in strategies/<name>/strategy.py
@@ -115,6 +116,7 @@ Strategy net P&L must exceed **both** TWAP and VWAP net P&L by **at least 10%**.
 6. EVALUATE
    Compute IS, net P&L, Sharpe.
    Compare net P&L against TWAP and VWAP.
+   Append backtest observations to strategies/<name>/NOTES.md (see Section 10).
 
 7. DECIDE
    PASS  — beats both benchmarks by ≥ 10%  → snapshot (see Section 7), then enter Refinement Loop (see Section 6)
@@ -146,7 +148,7 @@ Once a strategy passes the gate, do not stop. Use the passing strategy as a base
 
 ```
 R1. IDENTIFY weaknesses
-    Re-read the baseline's backtest results and NOTES.md entries.
+    Re-read the baseline's backtest results and strategies/<baseline>/NOTES.md.
     Pinpoint the single biggest drag: time-of-day decay, parameter sensitivity,
     poor IS on large moves, concentrated risk on a few days, etc.
 
@@ -154,6 +156,7 @@ R2. PROPOSE one targeted change
     One change at a time — do not compound multiple edits.
     Examples: add a time-of-day filter, tighten the participation cap during
     high-spread regimes, condition signal on realized vol, adjust holding window.
+    Log your reasoning in strategies/<name>-r<N>/NOTES.md — Refinement Log section.
 
 R3. IMPLEMENT the variant
     strategies/<name>-r<N>/strategy.py
@@ -186,7 +189,7 @@ Snapshot the best-scoring variant as the final strategy (see Section 7).
 
 ## 7. Saving a Passing Strategy
 
-### Step 1 — Write results
+### Step 1 — Write results and notes
 
 Create `strategies/<name>/results/backtest-results.json`:
 
@@ -209,6 +212,8 @@ Create `strategies/<name>/results/backtest-results.json`:
 }
 ```
 
+Ensure `strategies/<name>/NOTES.md` is complete — all three sections filled in (Hypothesis, Implementation Decisions, Backtest Observations). This file is included in the snapshot and is the primary record of your reasoning.
+
 ### Step 2 — Snapshot from within Docker
 
 See **SKILLS.md → "Strategy Snapshot skill"** for the full procedure. The automatic method (push to a `snapshots/*` branch) is preferred — GitHub Actions handles the S3 upload:
@@ -227,7 +232,16 @@ If the branch push fails, use the manual GitHub Actions workflow documented in S
 
 ## 8. Assumptions, Unknowns, and Honest Reporting
 
-### When to write a note
+There are two separate note files with different purposes:
+
+| File | Purpose | Audience |
+|---|---|---|
+| `strategies/<name>/NOTES.md` | Agent reasoning — hypothesis, implementation decisions, backtest observations | Future agents reading the program database |
+| `research/NOTES.md` | Ambiguity alerts — things that are unclear and **require a human decision** | The human operator |
+
+Write to `research/NOTES.md` (and print an alert) when something is unclear enough that a human needs to decide. Write to `strategies/<name>/NOTES.md` for everything else. See Section 10 for the strategy NOTES.md format.
+
+### When to write a global note
 
 Write a note to `research/NOTES.md` and **print a clear alert** any time you:
 
@@ -303,3 +317,54 @@ File: `research/program_database.json`
 ```
 
 **Rules**: always append, never delete. Failed entries prevent re-exploring dead ends.
+
+---
+
+## 10. Strategy NOTES.md Format
+
+Every strategy directory must contain a `NOTES.md`. Write it incrementally — the Hypothesis section at step 3, the Backtest Observations section after step 6, and Refinement Log entries during the refinement loop.
+
+```markdown
+# Strategy Notes: <strategy-name>
+
+## Hypothesis
+
+**Signal**: <what signal or mechanism drives entries/exits>
+**Inefficiency exploited**: <what market behaviour makes this profitable>
+**Why it survives costs**: <why the edge is large enough after IS and spread>
+**Parent strategy**: <parent strategy id, or "none — original hypothesis">
+**Alternatives considered**: <other approaches ruled out and why>
+
+---
+
+## Implementation Decisions
+
+<Non-obvious parameter choices, edge-case handling, and design trade-offs.>
+
+**Concerns**: <Any look-ahead bias risks, fragile assumptions, or overfitting risks you noticed.>
+
+---
+
+## Backtest Observations
+
+**What drove performance**:
+**What underperformed**:
+**Hypothesis verdict**: <Did the backtest support or contradict the original hypothesis?>
+**Suggested refinement**: <Single highest-leverage change to try next, if any.>
+
+---
+
+## Refinement Log
+
+### R<N> — [YYYY-MM-DD]
+**Identified weakness**:
+**Proposed fix**:
+**Result**: BETTER | NEUTRAL | WORSE
+**Why**:
+```
+
+**Rules:**
+- Fill in Hypothesis before writing any code.
+- Fill in Backtest Observations before deciding PASS/FAIL/CLOSE.
+- Append a Refinement Log entry for every refinement iteration, including NEUTRAL and WORSE outcomes.
+- This file is included in the S3 snapshot and is read by future agents via `research/program_database.json`.

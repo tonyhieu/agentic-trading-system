@@ -8,6 +8,7 @@ A snapshot is a timestamped backup of your trading strategy that includes:
 - **Code files** (.py, .ipynb, requirements.txt)
 - **Backtesting results** (JSON, CSV, charts)
 - **Metadata** (commit SHA, timestamp, performance metrics)
+- **NOTES.md** (agent reasoning — hypothesis, implementation decisions, backtest observations)
 
 Snapshots are automatically uploaded to AWS S3 and retained for 30 days. They provide a reliable backup separate from the GitHub repository, preventing data loss from force pushes.
 
@@ -29,6 +30,7 @@ Ensure your strategy follows this directory structure:
 strategies/
 └── your-strategy-name/
     ├── strategy_file.py          # Your strategy code
+    ├── NOTES.md                  # Agent reasoning (required — see PROBLEM_DEFINITION.md §10)
     ├── requirements.txt           # Python dependencies (optional)
     └── results/                   # Backtesting results (optional)
         ├── backtest-results.json  # Performance metrics
@@ -40,6 +42,7 @@ strategies/
 - Place your strategy in the `strategies/` directory
 - Use a descriptive, kebab-case name (e.g., `momentum-trader`, `mean-reversion-v2`)
 - Include a `results/backtest-results.json` file for automatic metric extraction
+- Include a `NOTES.md` capturing your hypothesis, implementation decisions, and backtest observations — this is included in the snapshot and read by future agents
 
 #### Step 2: Trigger Manual Snapshot via GitHub Actions
 
@@ -186,6 +189,7 @@ s3://bucket-name/strategies/{strategy-name}/{timestamp}-{commit-sha}/
 ├── results/
 │   ├── backtest-results.json
 │   └── trade-history.csv
+├── NOTES.md
 └── metadata.json
 ```
 
@@ -409,6 +413,7 @@ git push origin snapshots/your-strategy-name
 
 ### Do's ✅
 - **Always** include meaningful backtest results in your snapshots
+- **Always** write a `NOTES.md` before snapshotting — hypothesis, implementation decisions, and backtest observations (see PROBLEM_DEFINITION.md §10 for the format)
 - **Use** descriptive strategy names (e.g., `momentum-trader-v2`, not `strategy1`)
 - **Verify** your strategy structure before triggering a snapshot
 - **Check** the Actions tab to confirm successful uploads
@@ -507,26 +512,57 @@ cat > strategies/rsi-reversal-strategy/results/backtest-results.json << EOF
 }
 EOF
 
-# 4. Create requirements file
+# 4. Write agent reasoning (required before snapshotting)
+cat > strategies/rsi-reversal-strategy/NOTES.md << EOF
+# Strategy Notes: rsi-reversal-strategy
+
+## Hypothesis
+
+**Signal**: RSI oversold/overbought at top-of-book on 14-tick rolling window
+**Inefficiency exploited**: Short-term mean reversion after aggressive directional flow
+**Why it survives costs**: Edge (3–5 ticks) exceeds typical IS (~1.5 ticks) in liquid sessions
+**Parent strategy**: none — original hypothesis
+**Alternatives considered**: Bollinger band reversion (noisier signal on raw price), momentum (tried as ofi-v1, insufficient edge after costs)
+
+---
+
+## Implementation Decisions
+
+RSI period of 14 ticks chosen to match typical CME GLBX order bursts; shorter windows tested but produced too many false reversals.
+Entry only when participation cap allows full size — partial fills skipped to keep IS predictable.
+
+**Concerns**: RSI on tick data can produce near-constant overbought/oversold readings during trending sessions — added a 3-tick confirmation delay to reduce premature reversals.
+
+---
+
+## Backtest Observations
+
+**What drove performance**: Strong reversion in EUR/USD and GBP/USD during London open (07:00–10:00 UTC)
+**What underperformed**: NY afternoon session — trend continuation dominated, reversals did not complete within holding window
+**Hypothesis verdict**: Supported in morning sessions; does not hold in afternoon trending regime
+**Suggested refinement**: Add session filter restricting entries to 07:00–13:00 UTC
+EOF
+
+# 5. Create requirements file
 cat > strategies/rsi-reversal-strategy/requirements.txt << EOF
 pandas>=2.0.0
 numpy>=1.24.0
 ta-lib>=0.4.0
 EOF
 
-# 5. Commit your strategy
+# 6. Commit your strategy
 git add strategies/rsi-reversal-strategy/
 git commit -m "Add RSI reversal strategy with backtest results"
 git push origin main
 
-# 6. Create automatic snapshot via branch
+# 7. Create automatic snapshot via branch
 git checkout -b snapshots/rsi-reversal-strategy
 git push origin snapshots/rsi-reversal-strategy
 
-# 7. Verify in GitHub Actions
+# 8. Verify in GitHub Actions
 # Go to Actions tab and check for successful completion
 
-# 8. Done! Your strategy is safely backed up to S3
+# 9. Done! Your strategy is safely backed up to S3 (including NOTES.md)
 ```
 
 ---

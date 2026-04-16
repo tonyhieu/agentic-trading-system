@@ -63,6 +63,11 @@ jobs:
           find "${{ steps.meta.outputs.path }}" -maxdepth 1 -name "*.ipynb" -exec cp {} "$ROOT/code/" \; 2>/dev/null || true
           [ -f "${{ steps.meta.outputs.path }}/requirements.txt" ] && cp "${{ steps.meta.outputs.path }}/requirements.txt" "$ROOT/code/" || true
           [ -d "${{ steps.meta.outputs.path }}/results" ] && find "${{ steps.meta.outputs.path }}/results" -type f -exec cp {} "$ROOT/results/" \; 2>/dev/null || true
+          if [ -f "${{ steps.meta.outputs.path }}/NOTES.md" ]; then
+            cp "${{ steps.meta.outputs.path }}/NOTES.md" "$ROOT/"
+          else
+            echo "Warning: No NOTES.md found in ${{ steps.meta.outputs.path }} — snapshot will not include agent reasoning"
+          fi
           echo "ROOT=$ROOT" >> $GITHUB_ENV
       
       - name: Create metadata
