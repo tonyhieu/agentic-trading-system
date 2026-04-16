@@ -29,7 +29,6 @@ Two sections organized by who you are.
 |----------|------|
 | **README_FOR_HUMANS.md** | Architecture, design, costs |
 | **README_FOR_AGENTS.md** | Integration, quick start, examples |
-| **WHY_SELECTIVE_PARTITIONING.md** | Why we save 62% on costs (architectural decision) |
 | **AWS_SETUP_GUIDE.md** | How to set up infrastructure |
 | **DATA_STORAGE_CONTRACT.md** | S3 file structure and metadata |
 | **AGENT_INTEGRATION_GUIDE.md** | Integration workflows and examples |
