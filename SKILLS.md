@@ -217,7 +217,160 @@ A snapshot retrieval workflow will be added in the future to download snapshots 
 
 ---
 
-## 🎯 Quick Reference
+## 📊 Data Retrieval for Strategy Development
+
+Use the data retrieval system to fetch large datasets (research data, market data, historical bars) from AWS S3 for backtesting.
+
+### Quick Start: Download Data
+
+```bash
+# 1. List available datasets
+python /scripts/data_retriever.py list-datasets
+
+# 2. Fetch manifest to understand structure
+python /scripts/data_retriever.py fetch-manifest us-equities-bars-1m v1.0.0
+
+# 3. Download specific partition
+python /scripts/data_retriever.py sync-partition \
+  us-equities-bars-1m v1.0.0 "date=2026-04-01/symbol=AAPL"
+
+# Data now in: ./data-cache/us-equities-bars-1m/v1.0.0/partitions/...
+```
+
+### Load Data in Python
+
+```python
+import pandas as pd
+import glob
+
+# Find Parquet files for partition
+files = glob.glob(
+  "./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL/**/*.parquet",
+  recursive=True
+)
+
+# Load data
+df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+print(df.head())
+```
+
+### Docker: Isolated Execution
+
+```bash
+docker-compose run agent python /scripts/data_retriever.py list-datasets
+docker-compose run agent python /scripts/data_retriever.py sync-partition \
+  us-equities-bars-1m v1.0.0 "date=2026-04-01/symbol=AAPL"
+```
+
+### Cost Optimization
+
+- **Single partition (1 date, 1 symbol)**: ~5-20 MB, $0.00011
+- **40-day backtest**: 40 partitions, $0.0044 total
+- **Full dataset (40 GB)**: $20+ (avoid!)
+
+**Best practice**: Always use selective partition downloads for large datasets.
+
+### Complete Backtest Integration
+
+```python
+#!/usr/bin/env python3
+import subprocess
+import pandas as pd
+from pathlib import Path
+
+# 1. Download data
+subprocess.run([
+  "python", "/scripts/data_retriever.py", "sync-partition",
+  "us-equities-bars-1m", "v1.0.0", "date=2026-04-01/symbol=AAPL"
+], check=True)
+
+# 2. Load data
+cache_dir = Path("./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL")
+df = pd.read_parquet(list(cache_dir.glob("**/*.parquet"))[0])
+
+# 3. Run backtest
+results = {
+  "total_return": 0.15,
+  "sharpe_ratio": 1.2,
+  "max_drawdown": -0.08
+}
+
+# 4. Save results
+import json
+with open("./results/backtest-results.json", "w") as f:
+  json.dump(results, f)
+
+# 5. Commit and push (creates snapshot)
+# git add results/
+# git commit -m "Backtest with AAPL data"
+# git push origin snapshots/my-strategy
+```
+
+### Data Discovery Contract
+
+All datasets follow this structure:
+
+```
+s3://$S3_BUCKET_NAME/datasets/
+└── {dataset-name}/
+    └── {version}/
+        ├── manifest.json         # Dataset metadata
+        ├── schema.json           # Column definitions
+        ├── checksums.txt         # File integrity
+        └── partitions/
+            ├── date=YYYY-MM-DD/symbol=TICKER/part-000.parquet
+            └── ...
+```
+
+**manifest.json** contains:
+- Dataset name and version
+- Date range available
+- List of symbols
+- Total size in bytes
+- Partition structure
+
+See `docs/DATA_STORAGE_CONTRACT.md` for full specification.
+
+### Advanced: Selective Retrieval
+
+```python
+from datetime import datetime, timedelta
+
+# Strategy: Backtest momentum with 60 days of AAPL + MSFT
+dataset = "us-equities-bars-1m"
+version = "v1.0.0"
+start_date = datetime(2026, 3, 12)
+end_date = datetime(2026, 5, 10)
+
+partitions = []
+current = start_date
+while current <= end_date:
+    for symbol in ["AAPL", "MSFT"]:
+        date_str = current.strftime("%Y-%m-%d")
+        partition = f"date={date_str}/symbol={symbol}"
+        partitions.append(partition)
+    current += timedelta(days=1)
+
+print(f"Downloading {len(partitions)} partitions (~{len(partitions)*10} MB)...")
+for p in partitions:
+    subprocess.run([
+      "python", "/scripts/data_retriever.py", "sync-partition",
+      dataset, version, p
+    ], check=True)
+```
+
+### Troubleshooting Data Retrieval
+
+| Issue | Fix |
+|-------|-----|
+| "S3_BUCKET_NAME not set" | `export S3_BUCKET_NAME=your-bucket` |
+| "Partition not found" | Check manifest for exact path |
+| "Connection timeout" | Verify AWS credentials and region |
+| "Out of disk" | `rm -rf ./data-cache/` to clear cache |
+
+For complete reference: See `docs/AGENT_INTEGRATION_GUIDE.md`
+
+---
 
 ### Manual Snapshot Command Sequence
 
@@ -378,6 +531,230 @@ git push origin snapshots/rsi-reversal-strategy
 
 ---
 
-**Last Updated:** 2026-04-04  
+---
+
+# 📊 Data Retrieval & Upload Skills
+
+This section describes how autonomous agents can retrieve trading data from AWS S3 and upload their own datasets.
+
+## 🎯 Available Datasets
+
+### GLBX MDP3 Market Data (Chicago CME Global FX)
+
+**Dataset:** `glbx-mdp3-market-data` | **Version:** `v1.0.0`
+
+- **Format:** DBN (Databento Binary Format)
+- **Compression:** zstd
+- **Size:** 8.37 GB
+- **Coverage:** 26 trading days (2026-03-08 to 2026-04-06)
+- **Exchange:** GLBX (Chicago Mercantile Exchange)
+- **Instruments:** Global FX futures (all symbols in one file per date)
+- **Partitioning:** By trading date (one .dbn.zst file per date)
+- **Location:** `s3://agentic-trading-snapshots-uchicago-spring-2026/datasets/glbx-mdp3-market-data/v1.0.0/`
+
+---
+
+## 🚀 How to Retrieve Data
+
+### Step 1: Set Up Environment
+
+```bash
+# Set your AWS credentials (already configured in CI/CD)
+export AWS_ACCESS_KEY_ID="your-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_REGION="us-east-2"
+export S3_BUCKET_NAME="agentic-trading-snapshots-uchicago-spring-2026"
+```
+
+### Step 2: List Available Datasets
+
+```bash
+# List all available datasets
+python scripts/data_retriever.py list-datasets
+
+# Output:
+# glbx-mdp3-market-data
+# historical-data
+# ... (more datasets)
+```
+
+### Step 3: Fetch Dataset Metadata
+
+```bash
+# Always fetch manifest first to understand what's available
+python scripts/data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
+
+# Output: manifest.json with partition list, checksums, date range
+```
+
+### Step 4: Download Specific Date Partitions
+
+```bash
+# Download a single date
+python scripts/data_retriever.py sync-partition \
+  glbx-mdp3-market-data v1.0.0 \
+  "date=2026-03-08"
+
+# Download multiple dates
+for date in 2026-03-08 2026-03-09 2026-03-10; do
+  python scripts/data_retriever.py sync-partition \
+    glbx-mdp3-market-data v1.0.0 \
+    "date=$date"
+done
+
+# Data downloaded to: ./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst
+```
+
+### Step 5: Load Data in Python
+
+```python
+import databento_dbn as dbn
+from pathlib import Path
+
+# Load a single date partition
+dbn_file = Path("./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst")
+
+# Load DBN file
+records = dbn.load_from_file(str(dbn_file))
+
+# Convert to pandas DataFrame
+df = records.to_df()
+
+print(f"Loaded {len(df)} records")
+print(df.head())
+
+# Filter by symbol/ticker (optional)
+symbol_data = df[df['symbol'] == 'ES']  # E-mini S&P 500 futures
+```
+
+### Example: Complete Workflow
+
+```bash
+#!/bin/bash
+# Strategy backtest workflow
+
+DATASET="glbx-mdp3-market-data"
+VERSION="v1.0.0"
+START_DATE="2026-03-08"
+END_DATE="2026-03-10"
+
+# 1. Fetch metadata
+python scripts/data_retriever.py fetch-manifest "$DATASET" "$VERSION"
+
+# 2. Download date range
+for date_int in {20260308..20260310}; do
+  # Convert 20260308 to 2026-03-08
+  year=${date_int:0:4}
+  month=${date_int:4:2}
+  day=${date_int:6:2}
+  date_str="$year-$month-$day"
+  
+  echo "Downloading $date_str..."
+  python scripts/data_retriever.py sync-partition "$DATASET" "$VERSION" "date=$date_str"
+done
+
+# 3. Run backtest
+python your_strategy.py
+
+# 4. Save results
+# Results saved to snapshots/your-strategy-name/...
+```
+
+### Cost Information
+
+- **Single date partition (~330 MB):** ~$0.01
+- **10-day backtest (~3.3 GB):** ~$0.13
+- **Full dataset (26 days, 8.37 GB):** ~$0.32
+
+**Key insight:** Selective date retrieval costs 62% less than full downloads!
+
+---
+
+## 📤 How to Upload Your Own Dataset
+
+### Prerequisites
+
+- Dataset organized by trading date
+- Compressed to zstd format (optional but recommended)
+- Manifest, schema, and checksums files
+
+### Step 1: Prepare Local Dataset Structure
+
+```
+my-dataset/
+├── manifest.json          # Required
+├── schema.json            # Recommended
+├── checksums.txt          # Recommended
+└── partitions/
+    ├── date=2026-04-01/
+    │   └── data.dbn.zst
+    ├── date=2026-04-02/
+    │   └── data.dbn.zst
+    └── ... (one per trading date)
+```
+
+### Step 2: Create Manifest
+
+```json
+{
+  "dataset_name": "my-trading-data",
+  "dataset_version": "v1.0.0",
+  "created_at": "2026-04-15T00:00:00Z",
+  "format": "dbn",
+  "compression": "zstd",
+  "partition_scheme": ["date"],
+  "partitions": [
+    "partitions/date=2026-04-01/data.dbn.zst",
+    "partitions/date=2026-04-02/data.dbn.zst"
+  ],
+  "total_size_bytes": 1000000000,
+  "date_range": {
+    "start": "2026-04-01",
+    "end": "2026-04-02"
+  },
+  "exchange": "YOUR_EXCHANGE"
+}
+```
+
+### Step 3: Upload to S3
+
+```bash
+# Sync entire dataset to S3
+DATASET_NAME="my-trading-data"
+VERSION="v1.0.0"
+
+aws s3 sync ./my-dataset \
+  "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$VERSION/" \
+  --region us-east-2 \
+  --no-progress
+
+echo "✓ Dataset uploaded to S3"
+```
+
+### Step 4: Verify Upload
+
+```bash
+# List uploaded files
+aws s3 ls "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$VERSION/" \
+  --recursive \
+  --region us-east-2
+
+# Fetch manifest to verify it's readable
+python scripts/data_retriever.py fetch-manifest "$DATASET_NAME" "$VERSION"
+```
+
+---
+
+## 💡 Best Practices
+
+1. **Always fetch manifest first** - Understand what partitions exist before downloading
+2. **Use selective dates** - Don't download full dataset unless necessary
+3. **Cache locally** - Reuse downloaded data across multiple strategy runs
+4. **Validate checksums** - Verify data integrity using `checksums.txt`
+5. **Use Docker** - Ensure reproducibility across agent runs
+
+---
+
+**Last Updated:** 2026-04-15  
 **System Version:** 1.0  
 **Retention Policy:** 30 days

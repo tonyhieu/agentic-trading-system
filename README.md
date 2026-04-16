@@ -23,6 +23,17 @@ The repository includes a sophisticated snapshot system that automatically backs
 - **30-Day Retention**: Automatic cleanup prevents storage bloat
 - **Secure & Reliable**: Stored in AWS S3, separate from git repository to prevent data loss
 
+### Large-Scale Data Management
+
+Store and retrieve large research datasets (up to and beyond 40 GB) for agent training and backtesting:
+
+- **Manifest-Driven Discovery**: Agents fetch metadata first to understand dataset structure
+- **Selective Partition Retrieval**: Download only the data you need (date ranges) to minimize transfer costs
+- **Integrity Validation**: SHA-256 checksums for every file
+- **Docker-First Execution**: Reproducible agent environments with pre-configured AWS access
+- **Resume Capability**: Interrupted downloads continue from where they left off
+- **Cost Optimized**: Store 40 GB dataset for ~$1-5/month with selective retrieval patterns
+
 ### What Gets Snapshotted?
 
 - Strategy code (.py files, Jupyter notebooks)
@@ -32,9 +43,14 @@ The repository includes a sophisticated snapshot system that automatically backs
 
 ## Documentation
 
+### Strategy Snapshots
 - **[SKILLS.md](./SKILLS.md)** - Complete guide for agents on how to create and manage snapshots
 - **[AWS Setup Guide](./docs/AWS_SETUP_GUIDE.md)** - Step-by-step AWS infrastructure setup
 - **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - System architecture and design decisions
+
+### Data Management
+- **[Data Storage Contract](./docs/DATA_STORAGE_CONTRACT.md)** - S3 layout specification and manifest schema
+- **[Agent Integration Guide](./docs/AGENT_INTEGRATION_GUIDE.md)** - How agents retrieve and use data
 
 ## Repository Structure
 

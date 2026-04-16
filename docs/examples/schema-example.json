@@ -1,0 +1,55 @@
+{
+  "dataset_name": "us-equities-bars-1m",
+  "dataset_version": "2026-04-11T00-00-00Z",
+  "columns": [
+    {
+      "name": "timestamp",
+      "type": "int64",
+      "logical_type": "timestamp_ms",
+      "nullable": false,
+      "description": "Unix millisecond timestamp of bar start"
+    },
+    {
+      "name": "symbol",
+      "type": "utf8",
+      "nullable": false,
+      "description": "Ticker symbol (AAPL, MSFT, etc.)"
+    },
+    {
+      "name": "open",
+      "type": "double",
+      "nullable": false,
+      "description": "Opening price in USD"
+    },
+    {
+      "name": "high",
+      "type": "double",
+      "nullable": false,
+      "description": "Highest price in USD during the minute"
+    },
+    {
+      "name": "low",
+      "type": "double",
+      "nullable": false,
+      "description": "Lowest price in USD during the minute"
+    },
+    {
+      "name": "close",
+      "type": "double",
+      "nullable": false,
+      "description": "Closing price in USD"
+    },
+    {
+      "name": "volume",
+      "type": "int64",
+      "nullable": false,
+      "description": "Trading volume in shares"
+    },
+    {
+      "name": "vwap",
+      "type": "double",
+      "nullable": true,
+      "description": "Volume-weighted average price (optional)"
+    }
+  ]
+}
