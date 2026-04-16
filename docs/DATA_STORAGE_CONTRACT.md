@@ -12,9 +12,9 @@ s3://$S3_BUCKET_NAME/datasets/
         ├── schema.json            (Recommended)
         ├── checksums.txt          (Recommended)
         └── partitions/
-            ├── date=YYYY-MM-DD/
+            ├── date=YYYYMMDD/
             │   └── data.dbn.zst
-            ├── date=YYYY-MM-DD/
+            ├── date=YYYYMMDD/
             │   └── data.dbn.zst
             └── ... (one per trading date)
 ```
@@ -33,7 +33,7 @@ s3://$S3_BUCKET_NAME/datasets/
 - **Rule**: Each version is immutable; publish new version for updates
 
 ### Partition Keys
-1. **Primary**: `date=YYYY-MM-DD` (required)
+1. **Primary**: `date=YYYYMMDD` (required)
    - Always partition by date for temporal data
    - One date per directory level
 
@@ -57,9 +57,9 @@ Each dataset version **must** include `manifest.json` at the root:
   "compression": "zstd",
   "partition_scheme": ["date"],
   "partitions": [
-    "partitions/date=2026-03-08/data.dbn.zst",
-    "partitions/date=2026-03-09/data.dbn.zst",
-    "partitions/date=2026-03-10/data.dbn.zst"
+    "partitions/date=20260308/data.dbn.zst",
+    "partitions/date=20260309/data.dbn.zst",
+    "partitions/date=20260310/data.dbn.zst"
   ],
   "total_size_bytes": 8990765938,
   "record_count": 125000000,
@@ -220,9 +220,9 @@ datasets/glbx-mdp3-market-data/v1.0.0/
 ├── schema.json
 ├── checksums.txt
 └── partitions/
-    ├── date=2026-03-08/data.dbn.zst
-    ├── date=2026-03-09/data.dbn.zst
-    └── date=2026-03-10/data.dbn.zst
+    ├── date=20260308/data.dbn.zst
+    ├── date=20260309/data.dbn.zst
+    └── date=20260310/data.dbn.zst
 ```
 
 ### Example 2: Trade Execution Logs (Date-Only DBN)
@@ -231,9 +231,9 @@ datasets/trade-execution-logs/v1.0.0/
 ├── manifest.json
 ├── schema.json
 └── partitions/
-    ├── date=2026-04-01/data.dbn.zst
-    ├── date=2026-04-02/data.dbn.zst
-    └── date=2026-04-03/data.dbn.zst
+    ├── date=20260401/data.dbn.zst
+    ├── date=20260402/data.dbn.zst
+    └── date=20260403/data.dbn.zst
 ```
 
 ### Example 3: Multi-Year Archive
@@ -242,7 +242,7 @@ datasets/historical-market-data/v1.0.0/
 ├── manifest.json
 ├── schema.json
 └── partitions/
-    ├── date=2024-01-01/data.dbn.zst
-    ├── date=2024-01-02/data.dbn.zst
+    ├── date=20240101/data.dbn.zst
+    ├── date=20240102/data.dbn.zst
     └── ... (one per trading date)
 ```

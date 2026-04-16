@@ -41,8 +41,8 @@ See **SKILLS.md → "Data Retrieval skill"** for the full command reference, cos
 python scripts/data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
 
 # Download one day (~330 MB, ~$0.01)
-python scripts/data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "date=2026-03-08"
-# Cached at: data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst
+python scripts/data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "date=20260308"
+# Cached at: data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=20260308/data.dbn.zst
 ```
 
 **Cost budget**: download at most 10 days per iteration. Cached data is free to reuse.
@@ -52,7 +52,7 @@ python scripts/data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "da
 ```python
 import databento_dbn as dbn
 
-with open("data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst", "rb") as f:
+with open("data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=20260308/data.dbn.zst", "rb") as f:
     df = dbn.DBNDecoder(f).to_df()
 
 # Key MBP1 fields: ts_event, bid_px, ask_px, bid_sz, ask_sz, symbol
