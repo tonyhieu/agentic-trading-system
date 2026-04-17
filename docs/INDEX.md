@@ -8,6 +8,7 @@
 
 **For Agents (Integration):**
 - [README_FOR_AGENTS.md](README_FOR_AGENTS.md) ⭐ - Start here
+- [PROBLEM_DEFINITION.md](PROBLEM_DEFINITION.md) ⭐ - metatask, oracle, research loop
 - [DATA_STORAGE_CONTRACT.md](DATA_STORAGE_CONTRACT.md) - S3 structure
 - [AGENT_INTEGRATION_GUIDE.md](AGENT_INTEGRATION_GUIDE.md) - Integration workflows
 
@@ -21,6 +22,7 @@
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | **README_FOR_HUMANS.md** | System architecture, design decisions, costs | Humans |
+| **PROBLEM_DEFINITION.md** | Metatask, strategy template, oracle, research loop | Agents |
 | **README_FOR_AGENTS.md** | Quick start, API reference, code examples | Agents |
 | **AWS_SETUP_GUIDE.md** | Infrastructure setup (S3, IAM, credentials) | Humans |
 | **DATA_STORAGE_CONTRACT.md** | S3 structure, metadata format, file layout | Agents |

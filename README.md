@@ -78,6 +78,8 @@ agentic-trading-system/
 
 ## Quick Start for Agents
 
+Read **[docs/PROBLEM_DEFINITION.md](docs/PROBLEM_DEFINITION.md)** — it contains everything an agent needs: the metatask, how to access data, execution constraints, evaluation benchmarks, the research loop, and how to save results.
+
 ### Create a Strategy Snapshot
 
 **Method 1: Automatic (Recommended)**
