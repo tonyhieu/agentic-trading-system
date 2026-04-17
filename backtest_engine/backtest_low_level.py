@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pathlib import Path
 
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
@@ -9,9 +10,20 @@ from nautilus_trader.model.currencies import USD
 from nautilus_trader.model.enums import AccountType
 from nautilus_trader.model.enums import OmsType
 
-from backtest_engine.data_loader import load_dbn_partition
+from backtest_engine.data_loader import DATASET_NAME, DATASET_VERSION, load_dbn_partition
+from backtest_engine.results import Reports, compute_metrics, persist
 from execution_algos import create_execution_algorithm
 from strategies import create_strategy
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+STARTING_BALANCE_USD = 1_000_000.0
+
+# Maps factory strategy_name -> on-disk strategy directory under `strategies/`.
+# Snapshot CI reads `strategies/{dir}/results/`, so runs land where the workflow
+# expects them. Add an entry when registering a new strategy.
+STRATEGY_DIRS: dict[str, str] = {
+    "ema_cross": "ema_strategy",
+}
 
 
 def run_backtest(
@@ -22,7 +34,7 @@ def run_backtest(
     date: str = "20260406",
     symbol: str = "MESM6",
 ) -> BacktestEngine:
-    """Run the low-level backtest and return the configured engine."""
+    """Run the low-level backtest, persist a comparable run artifact, and return the engine."""
     instrument, ticks = load_dbn_partition(date, symbol)
 
     config = BacktestEngineConfig(trader_id=TraderId("BACKTESTER-001"))
@@ -34,7 +46,7 @@ def run_backtest(
         oms_type=OmsType.NETTING,
         account_type=AccountType.MARGIN,
         base_currency=USD,
-        starting_balances=[Money(1_000_000.0, USD)],
+        starting_balances=[Money(STARTING_BALANCE_USD, USD)],
     )
 
     engine.add_instrument(instrument)
@@ -60,10 +72,34 @@ def run_backtest(
 
     engine.run()
 
-    engine.trader.generate_account_report(glbx)
-    engine.trader.generate_orders_report()
-    engine.trader.generate_order_fills_report()
-    engine.trader.generate_positions_report()
+    reports = Reports(
+        account=engine.trader.generate_account_report(glbx),
+        orders=engine.trader.generate_orders_report(),
+        fills=engine.trader.generate_order_fills_report(),
+        positions=engine.trader.generate_positions_report(),
+    )
+
+    metrics = compute_metrics(reports, starting_balance=STARTING_BALANCE_USD)
+    metadata = {
+        "strategy_name": strategy_name,
+        "strategy_kwargs": strategy_options,
+        "execution_algorithm_name": execution_algorithm_name,
+        "execution_algorithm_kwargs": execution_options,
+        "date": date,
+        "symbol": symbol,
+        "venue": str(glbx),
+        "dataset_name": DATASET_NAME,
+        "dataset_version": DATASET_VERSION,
+    }
+
+    strategy_dir_name = STRATEGY_DIRS.get(strategy_name, strategy_name)
+    run_dir = persist(
+        strategy_dir=REPO_ROOT / "strategies" / strategy_dir_name,
+        metadata=metadata,
+        metrics=metrics,
+        reports=reports,
+    )
+    print(f"Run artifact: {run_dir}")
 
     return engine
 
