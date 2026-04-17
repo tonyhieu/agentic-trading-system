@@ -27,6 +27,9 @@ build/
 # Downloaded snapshots (use retrieval script to get from S3)
 snapshots/
 
+# Cached market-data partitions synced from S3
+data-cache/
+
 # IDE
 .vscode/
 .idea/
