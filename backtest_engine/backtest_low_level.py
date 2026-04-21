@@ -1,19 +1,29 @@
+from decimal import Decimal
+from pathlib import Path
+
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.model import Money
 from nautilus_trader.model import TraderId
 from nautilus_trader.model import Venue
-
-from nautilus_trader.model.currencies import ETH
-from nautilus_trader.model.currencies import USDT
+from nautilus_trader.model.currencies import USD
 from nautilus_trader.model.enums import AccountType
 from nautilus_trader.model.enums import OmsType
-from nautilus_trader.persistence.wranglers import TradeTickDataWrangler
-from nautilus_trader.test_kit.providers import TestDataProvider
-from nautilus_trader.test_kit.providers import TestInstrumentProvider
 
+from backtest_engine.data_loader import DATASET_NAME, DATASET_VERSION, load_dbn_partition
+from backtest_engine.results import Reports, compute_metrics, persist
 from execution_algos import create_execution_algorithm
 from strategies import create_strategy
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+STARTING_BALANCE_USD = 1_000_000.0
+
+# Maps factory strategy_name -> on-disk strategy directory under `strategies/`.
+# Snapshot CI reads `strategies/{dir}/results/`, so runs land where the workflow
+# expects them. Add an entry when registering a new strategy.
+STRATEGY_DIRS: dict[str, str] = {
+    "ema_cross": "ema_strategy",
+}
 
 
 def run_backtest(
@@ -21,65 +31,75 @@ def run_backtest(
     execution_algorithm_name: str = "simple",
     strategy_kwargs: dict | None = None,
     execution_algorithm_kwargs: dict | None = None,
+    date: str = "20260406",
+    symbol: str = "MESM6",
 ) -> BacktestEngine:
-    """Run the low-level backtest and return the configured engine."""
-    # Load stub test data
-    provider = TestDataProvider()
-    trades_df = provider.read_csv_ticks("binance/ethusdt-trades.csv")
+    """Run the low-level backtest, persist a comparable run artifact, and return the engine."""
+    instrument, ticks = load_dbn_partition(date, symbol)
 
-    # Initialize the instrument which matches the data
-    ethusdt_binance = TestInstrumentProvider.ethusdt_binance()
-
-    # Process into Nautilus objects
-    wrangler = TradeTickDataWrangler(instrument=ethusdt_binance)
-    ticks = wrangler.process(trades_df)
-
-    # Configure and build backtest engine
     config = BacktestEngineConfig(trader_id=TraderId("BACKTESTER-001"))
     engine = BacktestEngine(config=config)
 
-    # Add a trading venue (multiple venues possible)
-    binance = Venue("BINANCE")
+    glbx = Venue("GLBX")
     engine.add_venue(
-        venue=binance,
+        venue=glbx,
         oms_type=OmsType.NETTING,
-        account_type=AccountType.CASH,  # Spot CASH account (not for perpetuals or futures)
-        base_currency=None,  # Multi-currency account
-        starting_balances=[Money(1_000_000.0, USDT), Money(10.0, ETH)],
+        account_type=AccountType.MARGIN,
+        base_currency=USD,
+        starting_balances=[Money(STARTING_BALANCE_USD, USD)],
     )
 
-    # Add instrument and data
-    engine.add_instrument(ethusdt_binance)
+    engine.add_instrument(instrument)
     engine.add_data(ticks)
 
     strategy_options = dict(strategy_kwargs or {})
     execution_options = dict(execution_algorithm_kwargs or {})
 
-    # Keep default behavior aligned with previous implementation.
     if strategy_name == "ema_cross":
-        strategy_options.setdefault("instrument_id", ethusdt_binance.id)
+        strategy_options.setdefault("instrument_id", instrument.id)
+        strategy_options.setdefault("trade_size", Decimal("1"))
     if execution_algorithm_name == "simple":
         execution_options.setdefault("exec_id", "MY_GENERIC_ALGO")
 
-    # Instantiate and add strategy from registry
     strategy = create_strategy(strategy_name, **strategy_options)
     engine.add_strategy(strategy=strategy)
 
-    # Instantiate and add execution algorithm from registry
     exec_algorithm = create_execution_algorithm(
         execution_algorithm_name,
         **execution_options,
     )
     engine.add_exec_algorithm(exec_algorithm)
 
-    # Run the engine (from start to end of data)
     engine.run()
 
-    # Generate reports
-    engine.trader.generate_account_report(binance)
-    engine.trader.generate_orders_report()
-    engine.trader.generate_order_fills_report()
-    engine.trader.generate_positions_report()
+    reports = Reports(
+        account=engine.trader.generate_account_report(glbx),
+        orders=engine.trader.generate_orders_report(),
+        fills=engine.trader.generate_order_fills_report(),
+        positions=engine.trader.generate_positions_report(),
+    )
+
+    metrics = compute_metrics(reports, starting_balance=STARTING_BALANCE_USD)
+    metadata = {
+        "strategy_name": strategy_name,
+        "strategy_kwargs": strategy_options,
+        "execution_algorithm_name": execution_algorithm_name,
+        "execution_algorithm_kwargs": execution_options,
+        "date": date,
+        "symbol": symbol,
+        "venue": str(glbx),
+        "dataset_name": DATASET_NAME,
+        "dataset_version": DATASET_VERSION,
+    }
+
+    strategy_dir_name = STRATEGY_DIRS.get(strategy_name, strategy_name)
+    run_dir = persist(
+        strategy_dir=REPO_ROOT / "strategies" / strategy_dir_name,
+        metadata=metadata,
+        metrics=metrics,
+        reports=reports,
+    )
+    print(f"Run artifact: {run_dir}")
 
     return engine
 

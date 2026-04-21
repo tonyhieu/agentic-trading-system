@@ -352,7 +352,7 @@ class EMACrossStrategy(Strategy):
         )
 
         if not positions_open:
-            self.log.info(f"No {instrument_id.to_str()} open positions to close")
+            self.log.info(f"No {instrument_id} open positions to close")
             return
 
         for position in positions_open:
@@ -382,6 +382,7 @@ class EMACrossStrategy(Strategy):
 def get_trading_strategy(
     instrument_id: InstrumentId,
     exec_algorithm_id: str | None = "MY_GENERIC_ALGO",
+    trade_size: Decimal = Decimal("0.10"),
 ) -> EMACrossStrategy:
     """
     Build and return an ``EMACrossStrategy`` instance for the given instrument.
@@ -409,7 +410,7 @@ def get_trading_strategy(
     config = EMACrossStrategyConfig(
         instrument_id=instrument_id,
         bar_type=bar_type,
-        trade_size=Decimal("0.10"),  # 0.10 ETH per trade
+        trade_size=trade_size,
         fast_ema_period=10,
         slow_ema_period=20,
         exec_algorithm_id=ExecAlgorithmId(exec_algorithm_id) if exec_algorithm_id else None,
