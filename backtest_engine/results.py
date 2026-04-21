@@ -7,6 +7,7 @@ A run lands at `{strategy_dir}/results/{timestamp}-{shortsha}/` containing:
 """
 from __future__ import annotations
 
+import ast
 import json
 import math
 import subprocess
@@ -17,6 +18,9 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+# Annualization basis for Sharpe: 1-min returns, 24h futures session, 252 trading days.
+MINUTES_PER_TRADING_YEAR = 252 * 24 * 60
 
 
 @dataclass
@@ -80,6 +84,72 @@ def _parse_money(value: Any) -> float:
         return float("nan")
 
 
+def _sum_money_list(value: Any) -> float:
+    """Sum a commissions-like field. Nautilus stores commissions as a list[Money] per order;
+    that becomes a stringified list once round-tripped through CSV."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return 0.0
+    if isinstance(value, (list, tuple)):
+        return float(sum(_parse_money(v) for v in value if v is not None))
+    s = str(value).strip()
+    if s.startswith("[") and s.endswith("]"):
+        try:
+            parsed = ast.literal_eval(s)
+            if isinstance(parsed, (list, tuple)):
+                return float(sum(_parse_money(v) for v in parsed))
+        except (ValueError, SyntaxError):
+            pass
+    return _parse_money(value)
+
+
+def _sharpe_ratio(account: pd.DataFrame) -> float | None:
+    """Annualized Sharpe from the equity curve, resampled to 1-minute bars.
+
+    Note: Nautilus emits account rows only on account-changing events, so the
+    forward-filled curve understates both mean and stdev of returns. The absolute
+    value is imprecise, but the number is consistent across runs that use the
+    same machinery, which is what this metric is for.
+    """
+    col = next((c for c in ("balance_total", "total", "equity") if c in account.columns), None)
+    if col is None or len(account) < 2 or not isinstance(account.index, pd.DatetimeIndex):
+        return None
+
+    resampled = account[col].astype(float).resample("1min").last().ffill().dropna()
+    if len(resampled) < 2:
+        return None
+
+    returns = resampled.pct_change().dropna()
+    stdev = float(returns.std(ddof=1))
+    if returns.empty or stdev == 0 or math.isnan(stdev):
+        return None
+
+    return float(returns.mean() / stdev * math.sqrt(MINUTES_PER_TRADING_YEAR))
+
+
+def _execution_costs(orders: pd.DataFrame) -> dict[str, float | None]:
+    """Proxy for execution quality until arrival-price capture lands upstream.
+
+    Returns total commissions (account currency) plus mean and worst-case slippage
+    in instrument price units (multiply by the contract multiplier to get dollars).
+    """
+    total_comm = mean_slip = max_slip = None
+
+    if not orders.empty and "commissions" in orders.columns:
+        total_comm = float(sum(_sum_money_list(v) for v in orders["commissions"]))
+
+    if not orders.empty and "slippage" in orders.columns:
+        slip = pd.to_numeric(orders["slippage"], errors="coerce").dropna()
+        if not slip.empty:
+            mean_slip = float(slip.mean())
+            max_slip = float(slip.abs().max())
+
+    return {
+        "total_commissions": total_comm,
+        "mean_slippage": mean_slip,
+        "max_abs_slippage": max_slip,
+    }
+
+
 def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]:
     pos = reports.positions
     pnl_col = next((c for c in ("realized_pnl", "realized_return_pnl") if c in pos.columns), None)
@@ -112,6 +182,7 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
         "total_return_pct": total_return_pct,
         "realized_pnl": realized_pnl,
         "max_drawdown_pct": _max_drawdown_pct(reports.account),
+        "sharpe_ratio": _sharpe_ratio(reports.account),
         "trade_count": trades,
         "winners": winners,
         "losers": losers,
@@ -120,6 +191,7 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
         "short_count": short_count,
         "order_count": int(len(reports.orders)),
         "fill_count": int(len(reports.fills)),
+        **_execution_costs(reports.orders),
     }
 
 
