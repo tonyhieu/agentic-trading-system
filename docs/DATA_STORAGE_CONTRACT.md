@@ -78,8 +78,8 @@ Each dataset version **must** include `manifest.json` at the root:
 - `dataset_name`: Kebab-case identifier
 - `dataset_version`: Version tag
 - `created_at`: ISO 8601 creation timestamp
-- `format`: Data format (parquet)
-- `compression`: Compression algorithm (snappy, zstd, gzip, none)
+- `format`: Data format (`dbn` for the current dataset; may be `parquet` for future datasets)
+- `compression`: Compression algorithm (`zstd`, `snappy`, `gzip`, or `none`)
 - `partition_scheme`: List of partition keys in order
 - `partitions`: Array of relative paths to all partitions
 - `total_size_bytes`: Cumulative size of all partitions
@@ -96,59 +96,54 @@ Each dataset version **must** include `manifest.json` at the root:
 
 **Filename**: `schema.json`
 
-Captures Parquet column names, types, and logical data layout:
+Documents the record types and fields present in the dataset. For the DBN `glbx-mdp3-market-data` dataset each record type has its own field list:
 
 ```json
 {
-  "dataset_name": "us-equities-bars-1m",
-  "dataset_version": "2026-04-11T00-00-00Z",
-  "columns": [
-    {
-      "name": "timestamp",
-      "type": "int64",
-      "logical_type": "timestamp_ms",
-      "nullable": false,
-      "description": "Unix millisecond timestamp"
+  "dataset_name": "glbx-mdp3-market-data",
+  "dataset_version": "v1.0.0",
+  "format": "dbn",
+  "record_types": {
+    "MBP1Msg": {
+      "description": "Market-by-price top-of-book snapshot",
+      "fields": [
+        {"name": "ts_event", "type": "uint64", "description": "Exchange timestamp (ns)"},
+        {"name": "ts_recv",  "type": "uint64", "description": "Receiver timestamp (ns)"},
+        {"name": "bid_px",   "type": "int64",  "description": "Best bid price"},
+        {"name": "ask_px",   "type": "int64",  "description": "Best ask price"},
+        {"name": "bid_sz",   "type": "uint32", "description": "Best bid size"},
+        {"name": "ask_sz",   "type": "uint32", "description": "Best ask size"},
+        {"name": "symbol",   "type": "utf8",   "description": "Instrument symbol"}
+      ]
     },
-    {
-      "name": "symbol",
-      "type": "utf8",
-      "nullable": false,
-      "description": "Ticker symbol (AAPL, MSFT, etc.)"
+    "TradeMsg": {
+      "description": "Individual trade",
+      "fields": [
+        {"name": "ts_event", "type": "uint64", "description": "Exchange timestamp (ns)"},
+        {"name": "ts_recv",  "type": "uint64", "description": "Receiver timestamp (ns)"},
+        {"name": "price",    "type": "int64",  "description": "Trade price"},
+        {"name": "size",     "type": "uint32", "description": "Trade size"},
+        {"name": "side",     "type": "uint8",  "description": "1=Buy, 2=Sell"},
+        {"name": "action",   "type": "uint8",  "description": "Trade action code"},
+        {"name": "symbol",   "type": "utf8",   "description": "Instrument symbol"}
+      ]
     },
-    {
-      "name": "open",
-      "type": "double",
-      "nullable": false,
-      "description": "Opening price in USD"
-    },
-    {
-      "name": "high",
-      "type": "double",
-      "nullable": false,
-      "description": "High price in USD"
-    },
-    {
-      "name": "low",
-      "type": "double",
-      "nullable": false,
-      "description": "Low price in USD"
-    },
-    {
-      "name": "close",
-      "type": "double",
-      "nullable": false,
-      "description": "Closing price in USD"
-    },
-    {
-      "name": "volume",
-      "type": "int64",
-      "nullable": false,
-      "description": "Trading volume in shares"
+    "OHLCVMsg": {
+      "description": "OHLCV candle",
+      "fields": [
+        {"name": "ts_event", "type": "uint64", "description": "Candle timestamp (ns)"},
+        {"name": "open",     "type": "int64",  "description": "Open price"},
+        {"name": "high",     "type": "int64",  "description": "High price"},
+        {"name": "low",      "type": "int64",  "description": "Low price"},
+        {"name": "close",    "type": "int64",  "description": "Close price"},
+        {"name": "volume",   "type": "uint64", "description": "Volume"}
+      ]
     }
-  ]
+  }
 }
 ```
+
+For Parquet-format datasets (if added later), use a flat `columns` array with `name`, `type`, `nullable`, and `description` per column.
 
 ## Checksums File
 

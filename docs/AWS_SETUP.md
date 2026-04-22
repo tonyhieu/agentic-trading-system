@@ -1,6 +1,8 @@
-# AWS Setup Guide for Strategy Snapshot System
+# AWS Setup Guide
 
-This guide provides step-by-step instructions to set up AWS infrastructure for the automated strategy snapshot system.
+Step-by-step instructions to provision the AWS infrastructure used by both skills (data retrieval and strategy snapshot). Follow this once when bringing up a new environment.
+
+For the overall design and cost model, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Prerequisites
 - Credit/debit card for AWS account verification
@@ -325,47 +327,11 @@ You now have:
 
 ## Next Steps
 
-Now that AWS infrastructure is ready, you can proceed with:
-1. Creating the GitHub Actions workflow (`.github/workflows/snapshot-strategy.yml`)
-2. Creating SKILLS.md documentation for agents
-3. Testing the snapshot system
-4. Implementing the rest of the plan
+Infrastructure is ready. You can now:
 
-**Ready for autopilot mode!** 🚀
+1. Confirm the GitHub Actions workflow exists at `.github/workflows/snapshot-strategy.yml`.
+2. Point agents at [SKILLS.md](../SKILLS.md) for how to create snapshots.
+3. Test by pushing a sample strategy to a `snapshots/*` branch.
 
----
-
-## Troubleshooting
-
-### Issue: "Bucket name already exists"
-- Bucket names are globally unique across all AWS accounts
-- Try adding a more specific suffix: `-uchicago-2026-<your-initials>`
-
-### Issue: "Access denied" when testing
-- Verify IAM policy has correct bucket ARN
-- Verify GitHub secrets are spelled exactly right (case-sensitive)
-- Check that policy is attached to the IAM user
-
-### Issue: "Credentials not working"
-- Regenerate access keys in IAM
-- Update GitHub secrets with new keys
-- Ensure you copied the entire key (no spaces or line breaks)
-
-### Issue: Cost concerns
-- Check AWS Cost Explorer (Billing dashboard)
-- Verify lifecycle policy is enabled and working
-- Consider reducing retention to 7-14 days if needed
-
----
-
-## Cost Breakdown
-
-**Expected monthly costs:**
-- S3 Storage (100GB): ~$2.30
-- PUT requests (500/month): ~$0.003
-- GET requests (occasional): ~$0.001
-- Data transfer out: $0 (uploads are free)
-
-**Total: ~$3-5/month** for moderate usage
-
-This is well within the $10-50/month budget!
+For errors during setup or operation, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+For the cost model, see [ARCHITECTURE.md](ARCHITECTURE.md#cost-analysis).
