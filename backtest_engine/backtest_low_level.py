@@ -18,11 +18,12 @@ from strategies import create_strategy
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STARTING_BALANCE_USD = 1_000_000.0
 
-# Maps factory strategy_name -> on-disk strategy directory under `strategies/`.
-# Snapshot CI reads `strategies/{dir}/results/`, so runs land where the workflow
-# expects them. Add an entry when registering a new strategy.
-STRATEGY_DIRS: dict[str, str] = {
-    "ema_cross": "ema_strategy",
+# Maps factory execution_algorithm_name -> on-disk directory under `execution_algos/`.
+# The trading strategy is held fixed across runs; the execution algorithm is the
+# variable under study, so results are tagged to it. Add an entry when registering
+# a new execution algorithm.
+EXECUTION_DIRS: dict[str, str] = {
+    "simple": "simple_execution_strategy",
 }
 
 
@@ -92,9 +93,9 @@ def run_backtest(
         "dataset_version": DATASET_VERSION,
     }
 
-    strategy_dir_name = STRATEGY_DIRS.get(strategy_name, strategy_name)
+    execution_dir_name = EXECUTION_DIRS.get(execution_algorithm_name, execution_algorithm_name)
     run_dir = persist(
-        strategy_dir=REPO_ROOT / "strategies" / strategy_dir_name,
+        strategy_dir=REPO_ROOT / "execution_algos" / execution_dir_name,
         metadata=metadata,
         metrics=metrics,
         reports=reports,

@@ -59,7 +59,7 @@ agentic-trading-system/
 ├── execution_algos/                 # Reusable execution algorithm module
 │   └── simple_execution_strategy/
 │       └── execution_algorithm.py
-├── strategies/                      # Trading strategy implementations
+├── execution_algos/                      # Trading strategy implementations
 │   └── sample_momentum_strategy/    # Example strategy with results
 │       ├── momentum_strategy.py     # Strategy code
 │       ├── requirements.txt         # Dependencies
@@ -89,11 +89,11 @@ Read **[docs/PROBLEM_DEFINITION.md](docs/PROBLEM_DEFINITION.md)** — it contain
 git checkout -b snapshots/your-strategy-name
 
 # Add your strategy
-mkdir -p strategies/your-strategy-name/results
+mkdir -p execution_algos/your-strategy-name/results
 # ... add your code and results ...
 
 # Push to trigger automatic snapshot
-git add strategies/your-strategy-name/
+git add execution_algos/your-strategy-name/
 git commit -m "Add trading strategy with backtest results"
 git push origin snapshots/your-strategy-name
 ```
@@ -112,7 +112,7 @@ See [SKILLS.md](./SKILLS.md) for detailed instructions.
 Snapshots are stored in S3 with this structure:
 
 ```
-s3://bucket-name/strategies/
+s3://bucket-name/execution_algos/
 └── strategy-name/
     └── 2026-04-04T12-30-45Z-abc1234/    # Timestamp + commit SHA
         ├── code/
@@ -140,7 +140,7 @@ For administrators setting up the infrastructure:
 
 ## Example Strategy
 
-A sample momentum trading strategy is included in `strategies/sample_momentum_strategy/` to demonstrate:
+A sample momentum trading strategy is included in `execution_algos/sample_momentum_strategy/` to demonstrate:
 
 - Strategy code structure
 - Backtesting results format
@@ -173,7 +173,7 @@ Well within the $10-50/month budget range.
 
 This repository is designed for autonomous agents to iterate on trading strategies. Agents should:
 
-1. Develop strategies in the `strategies/` directory
+1. Develop strategies in the `execution_algos/` directory
 2. Develop execution algorithms in the `execution_algos/` directory
 3. Include comprehensive backtesting results
 4. Use the snapshot system to preserve iterations

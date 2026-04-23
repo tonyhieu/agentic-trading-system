@@ -37,7 +37,7 @@ This guide shows how autonomous agents can integrate data retrieval into their s
 │ ├── historical-data/v2.1.0/...                          │
 │ └── market-data/v1.5.0/...                              │
 │                                                          │
-│ strategies/ (snapshots created by agents)               │
+│ execution_algos/ (snapshots created by agents)               │
 │ └── agent-momentum-1/2026-04-11-ABC123/                │
 │     ├── code/momentum_strategy.py                       │
 │     ├── results/backtest-results.json                   │
@@ -281,11 +281,11 @@ Once satisfied, agent creates a snapshot:
 git checkout -b snapshots/agent-momentum-v2
 
 # 2. Add strategy and results
-cp strategy_v2.py /workspace/strategies/momentum-strategy/
-cp backtest-results.json /workspace/strategies/momentum-strategy/results/
+cp strategy_v2.py /workspace/execution_algos/momentum-strategy/
+cp backtest-results.json /workspace/execution_algos/momentum-strategy/results/
 
 # 3. Commit and push to snapshots branch
-git add strategies/
+git add execution_algos/
 git commit -m "Agent momentum strategy v2: Sharpe 1.5, MDD -6%"
 git push origin snapshots/agent-momentum-v2
 

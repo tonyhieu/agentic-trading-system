@@ -43,7 +43,7 @@ jobs:
           else
             NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
             echo "name=$NAME" >> $GITHUB_OUTPUT
-            echo "path=strategies/$NAME" >> $GITHUB_OUTPUT
+            echo "path=execution_algos/$NAME" >> $GITHUB_OUTPUT
           fi
       
       - name: Verify strategy
@@ -97,14 +97,14 @@ jobs:
       
       - name: Upload to S3
         run: |
-          S3="s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
+          S3="s3://${{ secrets.S3_BUCKET_NAME }}/execution_algos/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
           echo "Uploading to $S3"
           aws s3 sync "$ROOT/" "$S3" --storage-class STANDARD --no-progress
           echo "Upload complete"
       
       - name: Verify
         run: |
-          S3="s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
+          S3="s3://${{ secrets.S3_BUCKET_NAME }}/execution_algos/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
           aws s3 ls "$S3" --recursive
           if aws s3 ls "${S3}metadata.json" >/dev/null 2>&1; then
             echo "Verified successfully"
