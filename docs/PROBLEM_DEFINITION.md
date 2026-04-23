@@ -12,7 +12,7 @@
 
 ## 1. Metatask
 
-Discover intraday trading strategies on CME GLBX FX futures that outperform TWAP and VWAP execution benchmarks. Use a program database of past attempts to guide each new proposal. Repeat until a passing strategy is found or the iteration budget is exhausted.
+Discover intraday execution algorithms on CME GLBX FX futures that outperform TWAP and VWAP execution benchmarks. Use a program database of past attempts to guide each new proposal. Repeat until a passing strategy is found or the iteration budget is exhausted.
 
 ---
 

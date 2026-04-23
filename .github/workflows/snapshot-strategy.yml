@@ -1,14 +1,14 @@
-name: Create Strategy Snapshot
+name: Create Execution Algorithm Snapshot
 
 on:
   workflow_dispatch:
     inputs:
-      strategy_name:
-        description: 'Name of the strategy'
+      execution_name:
+        description: 'Name of the execution algorithm'
         required: true
         type: string
-      strategy_path:
-        description: 'Path to strategy files'
+      execution_path:
+        description: 'Path to execution algorithm files'
         required: true
         type: string
   push:
@@ -38,21 +38,21 @@ jobs:
           echo "timestamp=$(date -u +%Y-%m-%dT%H-%M-%SZ)" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "name=${{ github.event.inputs.strategy_name }}" >> $GITHUB_OUTPUT
-            echo "path=${{ github.event.inputs.strategy_path }}" >> $GITHUB_OUTPUT
+            echo "name=${{ github.event.inputs.execution_name }}" >> $GITHUB_OUTPUT
+            echo "path=${{ github.event.inputs.execution_path }}" >> $GITHUB_OUTPUT
           else
             NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
             echo "name=$NAME" >> $GITHUB_OUTPUT
-            echo "path=strategies/$NAME" >> $GITHUB_OUTPUT
+            echo "path=execution_algos/$NAME" >> $GITHUB_OUTPUT
           fi
-      
-      - name: Verify strategy
+
+      - name: Verify execution algorithm
         run: |
           if [ ! -d "${{ steps.meta.outputs.path }}" ]; then
-            echo "Error: Strategy not found at ${{ steps.meta.outputs.path }}"
+            echo "Error: Execution algorithm not found at ${{ steps.meta.outputs.path }}"
             exit 1
           fi
-          echo "Strategy verified"
+          echo "Execution algorithm verified"
       
       - name: Create snapshot
         run: |
@@ -72,7 +72,7 @@ jobs:
       
       - name: Create metadata
         env:
-          STRATEGY_NAME: ${{ steps.meta.outputs.name }}
+          EXECUTION_NAME: ${{ steps.meta.outputs.name }}
           TIMESTAMP: ${{ steps.meta.outputs.timestamp }}
           COMMIT_SHA: ${{ steps.meta.outputs.commit }}
           COMMIT_SHA_FULL: ${{ github.sha }}
@@ -97,14 +97,14 @@ jobs:
       
       - name: Upload to S3
         run: |
-          S3="s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
+          S3="s3://${{ secrets.S3_BUCKET_NAME }}/execution_algos/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
           echo "Uploading to $S3"
           aws s3 sync "$ROOT/" "$S3" --storage-class STANDARD --no-progress
           echo "Upload complete"
       
       - name: Verify
         run: |
-          S3="s3://${{ secrets.S3_BUCKET_NAME }}/strategies/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
+          S3="s3://${{ secrets.S3_BUCKET_NAME }}/execution_algos/${{ steps.meta.outputs.name }}/${{ steps.meta.outputs.timestamp }}-${{ steps.meta.outputs.commit }}/"
           aws s3 ls "$S3" --recursive
           if aws s3 ls "${S3}metadata.json" >/dev/null 2>&1; then
             echo "Verified successfully"
@@ -117,7 +117,7 @@ jobs:
         if: always()
         run: |
           echo "=========================================="
-          echo "Strategy: ${{ steps.meta.outputs.name }}"
+          echo "Execution algorithm: ${{ steps.meta.outputs.name }}"
           echo "Timestamp: ${{ steps.meta.outputs.timestamp }}"
           echo "Status: ${{ job.status }}"
           echo "=========================================="

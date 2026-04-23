@@ -34,12 +34,12 @@ export S3_BUCKET_NAME=agentic-trading-snapshots-uchicago-spring-2026
 uv run python scripts/data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
 uv run python scripts/data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "date=20260308"
 
-# Snapshot a passing strategy (automatic: push to snapshots/<name>, GH Actions uploads to S3)
-git checkout -b snapshots/<strategy-name>
-git push origin snapshots/<strategy-name>
+# Snapshot a passing execution algorithm (automatic: push to snapshots/<name>, GH Actions uploads to S3)
+git checkout -b snapshots/<execution-algo-name>
+git push origin snapshots/<execution-algo-name>
 ```
 
-Docker (`docker-compose.yml`) provides `agent`, `aws`, and `dev` services that bind-mount `./data-cache`, `./scripts`, and `./strategies` and inherit AWS env vars from the host.
+Docker (`docker-compose.yml`) provides `agent`, `aws`, and `dev` services that bind-mount `./data-cache`, `./scripts`, and `./strategies` and inherit AWS env vars from the host. Note: `./execution_algos` is **not** currently mounted — add it if you need container access to the execution-algorithm tree (results write here now).
 
 There is currently no test suite and no linter configured — do not invent commands for them.
 
@@ -65,7 +65,7 @@ Both `strategies/__init__.py` and `execution_algos/__init__.py` expose a **name 
 
 ### Run artifacts
 
-`results.persist` writes to `strategies/<strategy_dir>/results/{UTC-timestamp}-{git-shortsha}/`:
+This project treats the **execution algorithm** as the variable under study (the strategy is held static), so run artifacts are keyed off the execution algorithm. `results.persist` writes to `execution_algos/<execution_dir>/results/{UTC-timestamp}-{git-shortsha}/`:
 
 - `metadata.json` — strategy/exec-algo names, kwargs, date, symbol, dataset, git sha
 - `metrics.json` — final equity, return %, realized P&L, max drawdown %, **annualized Sharpe** (1-min resampled equity curve), win rate, fill/order counts, and execution-cost proxies (`total_commissions`, `mean_slippage`, `max_abs_slippage`)
@@ -73,7 +73,7 @@ Both `strategies/__init__.py` and `execution_algos/__init__.py` expose a **name 
 
 Two non-obvious things here:
 
-- **`STRATEGY_DIRS`** (in `backtest_low_level.py`) maps a factory name (e.g. `"ema_cross"`) to its on-disk directory (`"ema_strategy"`). The snapshot CI reads `strategies/<dir>/results/`, so runs must land where the workflow looks. Add an entry when the factory key differs from the directory name.
+- **`EXECUTION_DIRS`** (in `backtest_low_level.py`) maps an execution-algorithm factory name (e.g. `"simple"`) to its on-disk directory (`"simple_execution_strategy"`). The snapshot CI reads `execution_algos/<dir>/results/`, so runs must land where the workflow looks. Add an entry when the factory key differs from the directory name.
 - **Sharpe is annualized using a 24h futures session** (`MINUTES_PER_TRADING_YEAR = 252 * 24 * 60`). Nautilus only emits account rows on account-changing events, so the forward-filled curve understates mean and stdev; the absolute number is imprecise but comparable across runs using the same machinery.
 
 ### Data path
@@ -89,10 +89,10 @@ Dataset constants (`DATASET_NAME`, `DATASET_VERSION`) live in this module; bump 
 
 ### Snapshot flow
 
-`.github/workflows/snapshot-strategy.yml` triggers on push to `snapshots/**` or manual `workflow_dispatch`. It copies `*.py`, `requirements.txt`, `NOTES.md`, and the `results/` tree from the strategy directory into a timestamped S3 prefix under `s3://$S3_BUCKET_NAME/strategies/<name>/`. The workflow infers the strategy name from the branch (`snapshots/<name>` → `strategies/<name>`) unless overridden via dispatch inputs. Secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET_NAME`) must be set at the repo level. Snapshots auto-expire at 30 days via S3 lifecycle policy.
+`.github/workflows/snapshot-strategy.yml` triggers on push to `snapshots/**` or manual `workflow_dispatch`. It copies `*.py`, `requirements.txt`, `NOTES.md`, and the `results/` tree from the execution-algorithm directory into a timestamped S3 prefix under `s3://$S3_BUCKET_NAME/execution_algos/<name>/`. The workflow infers the execution-algorithm name from the branch (`snapshots/<name>` → `execution_algos/<name>`) unless overridden via `execution_name` / `execution_path` dispatch inputs. Secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET_NAME`) must be set at the repo level. Snapshots auto-expire at 30 days via S3 lifecycle policy.
 
-### Strategy conventions
+### Execution-algorithm conventions
 
-- Strategy directory names on disk are **snake_case** (`ema_strategy`, `sample_momentum_strategy`) because they are Python packages. The external "strategy name" used in `backtest-results.json`, snapshot paths, and `NOTES.md` is **kebab-case** (`ofi-v1`, `mean-reversion-r2`). The `STRATEGY_DIRS` map bridges the two.
-- Every strategy directory must ship a `NOTES.md` before snapshot — see `PROBLEM_DEFINITION.md` §10 for the required sections.
-- `backtest-results.json` lives at `strategies/<name>/results/backtest-results.json` and follows the schema in `SKILLS.md` — it is what the snapshot workflow extracts metrics from.
+- Execution-algorithm directory names on disk are **snake_case** (`simple_execution_strategy`) because they are Python packages. The external name used in `backtest-results.json`, snapshot paths, and `NOTES.md` is **kebab-case** (`twap-v1`, `vwap-r2`). The `EXECUTION_DIRS` map bridges the two.
+- Every execution-algorithm directory must ship a `NOTES.md` before snapshot — see `PROBLEM_DEFINITION.md` §10 for the required sections.
+- `backtest-results.json` lives at `execution_algos/<name>/results/backtest-results.json` and follows the schema in `SKILLS.md` — it is what the snapshot workflow extracts metrics from.

@@ -1,6 +1,6 @@
 """Capture, compute, and persist a single backtest run as a comparable artifact.
 
-A run lands at `{strategy_dir}/results/{timestamp}-{shortsha}/` containing:
+A run lands at `{run_parent_dir}/results/{timestamp}-{shortsha}/` containing:
 - metadata.json: run config (strategy, params, exec algo, params, date, symbol, git sha, ts)
 - metrics.json:  summary stats for cross-run comparison
 - account.csv, orders.csv, fills.csv, positions.csv: raw Nautilus reports
@@ -196,15 +196,15 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
 
 
 def persist(
-    strategy_dir: Path,
+    run_parent_dir: Path,
     metadata: dict[str, Any],
     metrics: dict[str, Any],
     reports: Reports,
 ) -> Path:
-    """Write a run to `{strategy_dir}/results/{timestamp}-{shortsha}/` and return that path."""
+    """Write a run to `{run_parent_dir}/results/{timestamp}-{shortsha}/` and return that path."""
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     sha = _git_short_sha()
-    run_dir = strategy_dir / "results" / f"{ts}-{sha}"
+    run_dir = run_parent_dir / "results" / f"{ts}-{sha}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
     full_meta = {

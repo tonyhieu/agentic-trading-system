@@ -101,7 +101,7 @@ cat strategies/my-strategy/results/backtest-results.json | python3 -m json.tool
 cat strategies/my-strategy/results/backtest-results.json | jq '.performance'
 ```
 
-See the format spec in [../SKILLS.md](../SKILLS.md#backtest-resultsjson-format).
+See the format spec in [../SKILLS.md](SKILLS.md#backtest-resultsjson-format).
 
 ### Snapshot branch push rejected (non-fast-forward)
 
@@ -138,7 +138,7 @@ Branch must start with `snapshots/` exactly. Also confirm Actions is enabled und
 
 ### `AWS_ACCESS_KEY_ID not found` / `S3_BUCKET_NAME not set`
 
-Environment variables aren't exported. See [../SKILLS.md](../SKILLS.md#environment-setup).
+Environment variables aren't exported. See [../SKILLS.md](SKILLS.md#environment-setup).
 
 ### `No such file or directory: 'aws'`
 
