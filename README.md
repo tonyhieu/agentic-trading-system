@@ -88,7 +88,7 @@ Read **[docs/PROBLEM_DEFINITION.md](docs/PROBLEM_DEFINITION.md)** — it contain
 # Create snapshot branch
 git checkout -b snapshots/your-strategy-name
 
-# Add your strategy
+# Add your execution algorithm
 mkdir -p execution_algos/your-strategy-name/results
 # ... add your code and results ...
 
@@ -138,9 +138,9 @@ For administrators setting up the infrastructure:
 
 3. Share the [SKILLS.md](./SKILLS.md) guide with autonomous agents
 
-## Example Strategy
+## Example Execution Algorithm
 
-A sample momentum trading strategy is included in `execution_algos/sample_momentum_strategy/` to demonstrate:
+A sample Execution Algorithm is included in `execution_algos/simple_execution_strategy` to demonstrate:
 
 - Strategy code structure
 - Backtesting results format
