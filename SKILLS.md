@@ -1,202 +1,796 @@
-# Agent Skills
+# SKILLS: Strategy Snapshot System
 
-Two executable skills available to research agents:
+This document provides instructions for autonomous agents on how to create snapshots of trading strategies using our automated backup system.
 
-1. **Data Retrieval** — download market data partitions from S3 for backtesting.
-2. **Strategy Snapshot** — save a passing strategy (code + results + NOTES) to S3 via GitHub Actions.
+## 📸 What is a Snapshot?
 
-For the research task, evaluation gate, and research loop, read [docs/PROBLEM_DEFINITION.md](docs/PROBLEM_DEFINITION.md) first. For error handling, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+A snapshot is a timestamped backup of your trading strategy that includes:
+- **Code files** (.py, .ipynb, requirements.txt)
+- **Backtesting results** (JSON, CSV, charts)
+- **Metadata** (commit SHA, timestamp, performance metrics)
+- **NOTES.md** (agent reasoning — hypothesis, implementation decisions, backtest observations)
+
+Snapshots are automatically uploaded to AWS S3 and retained for 30 days. They provide a reliable backup separate from the GitHub repository, preventing data loss from force pushes.
 
 ---
 
-## Environment Setup
+## 🚀 How to Create a Snapshot
 
-Both skills require AWS credentials in the environment:
+There are two methods to create a snapshot: **Manual** and **Automatic**.
+
+### Method 1: Manual Snapshot (Recommended for Testing)
+
+Use this method when you want to manually trigger a snapshot for a specific strategy.
+
+#### Step 1: Prepare Your Strategy
+
+Ensure your strategy follows this directory structure:
+
+```
+execution_algos/
+└── your-strategy-name/
+    ├── strategy_file.py          # Your strategy code
+    ├── NOTES.md                  # Agent reasoning (required — see PROBLEM_DEFINITION.md §10)
+    ├── requirements.txt           # Python dependencies (optional)
+    └── results/                   # Backtesting results (optional)
+        ├── backtest-results.json  # Performance metrics
+        ├── trade-history.csv      # Trade log
+        └── charts.png             # Visualization (optional)
+```
+
+**Important Notes:**
+- Place your strategy in the `execution_algos/` directory
+- Use a descriptive, kebab-case name (e.g., `momentum-trader`, `mean-reversion-v2`)
+- Include a `results/backtest-results.json` file for automatic metric extraction
+- Include a `NOTES.md` capturing your hypothesis, implementation decisions, and backtest observations — this is included in the snapshot and read by future agents
+
+#### Step 2: Trigger Manual Snapshot via GitHub Actions
+
+1. Go to your repository on GitHub
+2. Navigate to **Actions** tab
+3. Click **"Create Strategy Snapshot"** workflow (left sidebar)
+4. Click **"Run workflow"** button (right side)
+5. Fill in the inputs:
+   - **Strategy name:** `your-strategy-name` (e.g., `momentum-trader`)
+   - **Strategy path:** `execution_algos/your-strategy-name`
+6. Click **"Run workflow"** (green button)
+
+#### Step 3: Monitor Progress
+
+1. The workflow will appear in the workflow runs list
+2. Click on it to see real-time progress
+3. Wait for the green checkmark (✅) indicating success
+4. Review the workflow logs to see:
+   - Snapshot timestamp and commit SHA
+   - Files included in the snapshot
+   - S3 upload location
+
+#### Step 4: Verify Snapshot
+
+The workflow automatically verifies that your snapshot was uploaded successfully. Check the final step for the S3 path:
+
+```
+s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/
+```
+
+---
+
+### Method 2: Automatic Snapshot (Recommended for Production)
+
+Use this method to automatically create snapshots when you push code to special branches.
+
+#### Step 1: Create a Snapshot Branch
 
 ```bash
-export AWS_ACCESS_KEY_ID="..."
-export AWS_SECRET_ACCESS_KEY="..."
+# From your local repository
+git checkout -b snapshots/your-strategy-name
+
+# Example:
+git checkout -b snapshots/momentum-trader-v2
+```
+
+Branch naming convention: `snapshots/{strategy-name}`
+
+#### Step 2: Add or Update Your Strategy
+
+```bash
+# Make sure your strategy is in the execution_algos/ directory
+mkdir -p execution_algos/your-strategy-name
+cp your_code.py execution_algos/your-strategy-name/
+
+# Add backtesting results
+mkdir -p execution_algos/your-strategy-name/results
+cp backtest-results.json execution_algos/your-strategy-name/results/
+
+# Commit your changes
+git add execution_algos/your-strategy-name/
+git commit -m "Add momentum trading strategy with backtest results"
+```
+
+#### Step 3: Push to Trigger Snapshot
+
+```bash
+git push origin snapshots/your-strategy-name
+```
+
+This automatically triggers the snapshot workflow! The system will:
+- Detect the push to a `snapshots/*` branch
+- Extract the strategy name from the branch name
+- Package and upload the snapshot to S3
+
+#### Step 4: Check GitHub Actions
+
+1. Go to the **Actions** tab on GitHub
+2. You'll see the workflow running automatically
+3. Wait for completion and verify success
+
+---
+
+## 📋 Strategy Naming Conventions
+
+Follow these naming conventions for consistency:
+
+| Component | Format | Example |
+|-----------|--------|---------|
+| Strategy directory | `kebab-case` | `momentum-trader`, `mean-reversion-v2` |
+| Branch name | `snapshots/{strategy-name}` | `snapshots/momentum-trader` |
+| Python files | `snake_case.py` | `momentum_strategy.py` |
+| Results files | Specific names | `backtest-results.json`, `trade-history.csv` |
+
+---
+
+## 📊 Backtest Results Format
+
+For automatic performance metric extraction, use this JSON structure in `backtest-results.json`:
+
+```json
+{
+  "strategy_name": "Your Strategy Name",
+  "backtest_date": "2026-04-04T12:00:00Z",
+  "parameters": {
+    "param1": "value1",
+    "param2": "value2"
+  },
+  "performance": {
+    "total_return": 15.34,
+    "sharpe_ratio": 1.42,
+    "max_drawdown": -8.67,
+    "win_rate": 58.33,
+    "total_trades": 24,
+    "final_equity": 115340.00
+  },
+  "period": {
+    "start_date": "2025-04-04",
+    "end_date": "2026-04-04",
+    "trading_days": 252
+  }
+}
+```
+
+**Key Fields:**
+- `total_return`: Percentage return (e.g., 15.34 = 15.34%)
+- `sharpe_ratio`: Risk-adjusted return metric
+- `max_drawdown`: Maximum percentage loss from peak
+- `win_rate`: Percentage of profitable trades
+
+The snapshot system will automatically extract these metrics and include them in the snapshot metadata.
+
+---
+
+## 🔍 Retrieving Snapshots
+
+Snapshots are stored in S3 with the following structure:
+
+```
+s3://bucket-name/execution_algos/{strategy-name}/{timestamp}-{commit-sha}/
+├── code/
+│   ├── momentum_strategy.py
+│   └── requirements.txt
+├── results/
+│   ├── backtest-results.json
+│   └── trade-history.csv
+├── NOTES.md
+└── metadata.json
+```
+
+### Option 1: View via AWS Console
+
+1. Log in to AWS Console
+2. Navigate to S3 service
+3. Open your bucket (e.g., `agentic-trading-snapshots-*`)
+4. Browse to `execution_algos/your-strategy-name/`
+5. Select a timestamped snapshot folder
+6. Download files as needed
+
+### Option 2: Use AWS CLI
+
+```bash
+# List all snapshots for a strategy
+aws s3 ls s3://your-bucket-name/execution_algos/your-strategy-name/
+
+# Download a specific snapshot
+aws s3 sync s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/ ./local-folder/
+
+# Download just the metadata
+aws s3 cp s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/metadata.json ./
+```
+
+### Option 3: Use GitHub Actions (Future Enhancement)
+
+A snapshot retrieval workflow will be added in the future to download snapshots directly through GitHub Actions.
+
+---
+
+## 📊 Data Retrieval for Strategy Development
+
+Use the data retrieval system to fetch large datasets (research data, market data, historical bars) from AWS S3 for backtesting.
+
+### Quick Start: Download Data
+
+```bash
+# 1. List available datasets
+python /scripts/data_retriever.py list-datasets
+
+# 2. Fetch manifest to understand structure
+python /scripts/data_retriever.py fetch-manifest us-equities-bars-1m v1.0.0
+
+# 3. Download specific partition
+python /scripts/data_retriever.py sync-partition \
+  us-equities-bars-1m v1.0.0 "date=2026-04-01/symbol=AAPL"
+
+# Data now in: ./data-cache/us-equities-bars-1m/v1.0.0/partitions/...
+```
+
+### Load Data in Python
+
+```python
+import pandas as pd
+import glob
+
+# Find Parquet files for partition
+files = glob.glob(
+  "./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL/**/*.parquet",
+  recursive=True
+)
+
+# Load data
+df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+print(df.head())
+```
+
+### Docker: Isolated Execution
+
+```bash
+docker-compose run agent python /scripts/data_retriever.py list-datasets
+docker-compose run agent python /scripts/data_retriever.py sync-partition \
+  us-equities-bars-1m v1.0.0 "date=2026-04-01/symbol=AAPL"
+```
+
+### Cost Optimization
+
+- **Single partition (1 date, 1 symbol)**: ~5-20 MB, $0.00011
+- **40-day backtest**: 40 partitions, $0.0044 total
+- **Full dataset (40 GB)**: $20+ (avoid!)
+
+**Best practice**: Always use selective partition downloads for large datasets.
+
+### Complete Backtest Integration
+
+```python
+#!/usr/bin/env python3
+import subprocess
+import pandas as pd
+from pathlib import Path
+
+# 1. Download data
+subprocess.run([
+  "python", "/scripts/data_retriever.py", "sync-partition",
+  "us-equities-bars-1m", "v1.0.0", "date=2026-04-01/symbol=AAPL"
+], check=True)
+
+# 2. Load data
+cache_dir = Path("./data-cache/us-equities-bars-1m/v1.0.0/partitions/date=2026-04-01/symbol=AAPL")
+df = pd.read_parquet(list(cache_dir.glob("**/*.parquet"))[0])
+
+# 3. Run backtest
+results = {
+  "total_return": 0.15,
+  "sharpe_ratio": 1.2,
+  "max_drawdown": -0.08
+}
+
+# 4. Save results
+import json
+with open("./results/backtest-results.json", "w") as f:
+  json.dump(results, f)
+
+# 5. Commit and push (creates snapshot)
+# git add results/
+# git commit -m "Backtest with AAPL data"
+# git push origin snapshots/my-strategy
+```
+
+### Data Discovery Contract
+
+All datasets follow this structure:
+
+```
+s3://$S3_BUCKET_NAME/datasets/
+└── {dataset-name}/
+    └── {version}/
+        ├── manifest.json         # Dataset metadata
+        ├── schema.json           # Column definitions
+        ├── checksums.txt         # File integrity
+        └── partitions/
+            ├── date=YYYY-MM-DD/symbol=TICKER/part-000.parquet
+            └── ...
+```
+
+**manifest.json** contains:
+- Dataset name and version
+- Date range available
+- List of symbols
+- Total size in bytes
+- Partition structure
+
+See `docs/DATA_STORAGE_CONTRACT.md` for full specification.
+
+### Advanced: Selective Retrieval
+
+```python
+from datetime import datetime, timedelta
+
+# Strategy: Backtest momentum with 60 days of AAPL + MSFT
+dataset = "us-equities-bars-1m"
+version = "v1.0.0"
+start_date = datetime(2026, 3, 12)
+end_date = datetime(2026, 5, 10)
+
+partitions = []
+current = start_date
+while current <= end_date:
+    for symbol in ["AAPL", "MSFT"]:
+        date_str = current.strftime("%Y-%m-%d")
+        partition = f"date={date_str}/symbol={symbol}"
+        partitions.append(partition)
+    current += timedelta(days=1)
+
+print(f"Downloading {len(partitions)} partitions (~{len(partitions)*10} MB)...")
+for p in partitions:
+    subprocess.run([
+      "python", "/scripts/data_retriever.py", "sync-partition",
+      dataset, version, p
+    ], check=True)
+```
+
+### Troubleshooting Data Retrieval
+
+| Issue | Fix |
+|-------|-----|
+| "S3_BUCKET_NAME not set" | `export S3_BUCKET_NAME=your-bucket` |
+| "Partition not found" | Check manifest for exact path |
+| "Connection timeout" | Verify AWS credentials and region |
+| "Out of disk" | `rm -rf ./data-cache/` to clear cache |
+
+For complete reference: See `docs/AGENT_INTEGRATION_GUIDE.md`
+
+---
+
+### Manual Snapshot Command Sequence
+
+```bash
+# 1. Ensure strategy is in place
+ls execution_algos/your-strategy-name/
+
+# 2. Go to GitHub → Actions → Create Strategy Snapshot → Run workflow
+# 3. Input: strategy_name = "your-strategy-name"
+# 4. Input: strategy_path = "execution_algos/your-strategy-name"
+# 5. Click "Run workflow"
+```
+
+### Automatic Snapshot Command Sequence
+
+```bash
+# 1. Create snapshot branch
+git checkout -b snapshots/your-strategy-name
+
+# 2. Add your strategy
+mkdir -p execution_algos/your-strategy-name/results
+cp your_code.py execution_algos/your-strategy-name/
+cp backtest-results.json execution_algos/your-strategy-name/results/
+
+# 3. Commit and push
+git add execution_algos/your-strategy-name/
+git commit -m "Add strategy with results"
+git push origin snapshots/your-strategy-name
+
+# 4. Check GitHub Actions for status
+```
+
+---
+
+## ⚠️ Important Notes
+
+### Do's ✅
+- **Always** include meaningful backtest results in your snapshots
+- **Always** write a `NOTES.md` before snapshotting — hypothesis, implementation decisions, and backtest observations (see PROBLEM_DEFINITION.md §10 for the format)
+- **Use** descriptive strategy names (e.g., `momentum-trader-v2`, not `strategy1`)
+- **Verify** your strategy structure before triggering a snapshot
+- **Check** the Actions tab to confirm successful uploads
+- **Include** a `requirements.txt` file for reproducibility
+
+### Don'ts ❌
+- **Don't** commit large data files (> 100MB) to the repository
+- **Don't** include API keys or credentials in strategy code
+- **Don't** use special characters in strategy names (stick to lowercase, hyphens)
+- **Don't** rely solely on snapshots for version control (still use git commits)
+- **Don't** manually delete snapshots from S3 (they auto-expire after 30 days)
+
+---
+
+## 🐛 Troubleshooting
+
+### Snapshot Failed: "Strategy path does not exist"
+
+**Cause:** The specified path doesn't exist in the repository.
+
+**Solution:**
+1. Verify your strategy exists: `ls execution_algos/your-strategy-name/`
+2. Check that the path matches exactly (case-sensitive)
+3. Ensure you've committed and pushed your code before running the workflow
+
+### Snapshot Failed: "AWS credentials error"
+
+**Cause:** GitHub secrets are not configured correctly.
+
+**Solution:**
+1. Contact repository administrator
+2. Verify these secrets exist in GitHub Settings → Secrets:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REGION`
+   - `S3_BUCKET_NAME`
+
+### No Performance Metrics in Metadata
+
+**Cause:** `backtest-results.json` is missing or incorrectly formatted.
+
+**Solution:**
+1. Add `results/backtest-results.json` to your strategy directory
+2. Follow the JSON structure shown in "Backtest Results Format" section
+3. Validate JSON syntax: `cat backtest-results.json | python3 -m json.tool`
+
+### Snapshot Missing Files
+
+**Cause:** Files weren't in the expected locations or weren't committed.
+
+**Solution:**
+1. Ensure all files are in the strategy directory
+2. Commit all files: `git add execution_algos/your-strategy-name/`
+3. Push before triggering snapshot: `git push`
+4. Re-run the snapshot workflow
+
+---
+
+## 📞 Support
+
+For issues with the snapshot system:
+
+1. Check the **GitHub Actions logs** for detailed error messages
+2. Review this SKILLS.md document for best practices
+3. Consult the **AWS Setup Guide** (docs/AWS_SETUP_GUIDE.md) for infrastructure issues
+4. Check the **Implementation Plan** (docs/IMPLEMENTATION_PLAN.md) for system architecture
+
+---
+
+## 🎓 Example Workflow
+
+Here's a complete example of adding a new strategy and creating a snapshot:
+
+```bash
+# 1. Create your strategy locally
+mkdir -p execution_algos/rsi-reversal-strategy/results
+
+# 2. Write your strategy code
+cat > execution_algos/rsi-reversal-strategy/rsi_strategy.py << EOF
+# Your strategy code here
+def calculate_rsi(prices, period=14):
+    # RSI calculation
+    pass
+EOF
+
+# 3. Create backtest results
+cat > execution_algos/rsi-reversal-strategy/results/backtest-results.json << EOF
+{
+  "strategy_name": "RSI Reversal Strategy",
+  "performance": {
+    "total_return": 22.5,
+    "sharpe_ratio": 1.8,
+    "max_drawdown": -6.2,
+    "win_rate": 65.0
+  }
+}
+EOF
+
+# 4. Write agent reasoning (required before snapshotting)
+cat > execution_algos/rsi-reversal-strategy/NOTES.md << EOF
+# Strategy Notes: rsi-reversal-strategy
+
+## Hypothesis
+
+**Signal**: RSI oversold/overbought at top-of-book on 14-tick rolling window
+**Inefficiency exploited**: Short-term mean reversion after aggressive directional flow
+**Why it survives costs**: Edge (3–5 ticks) exceeds typical IS (~1.5 ticks) in liquid sessions
+**Parent strategy**: none — original hypothesis
+**Alternatives considered**: Bollinger band reversion (noisier signal on raw price), momentum (tried as ofi-v1, insufficient edge after costs)
+
+---
+
+## Implementation Decisions
+
+RSI period of 14 ticks chosen to match typical CME GLBX order bursts; shorter windows tested but produced too many false reversals.
+Entry only when participation cap allows full size — partial fills skipped to keep IS predictable.
+
+**Concerns**: RSI on tick data can produce near-constant overbought/oversold readings during trending sessions — added a 3-tick confirmation delay to reduce premature reversals.
+
+---
+
+## Backtest Observations
+
+**What drove performance**: Strong reversion in EUR/USD and GBP/USD during London open (07:00–10:00 UTC)
+**What underperformed**: NY afternoon session — trend continuation dominated, reversals did not complete within holding window
+**Hypothesis verdict**: Supported in morning sessions; does not hold in afternoon trending regime
+**Suggested refinement**: Add session filter restricting entries to 07:00–13:00 UTC
+EOF
+
+# 5. Create requirements file
+cat > execution_algos/rsi-reversal-strategy/requirements.txt << EOF
+pandas>=2.0.0
+numpy>=1.24.0
+ta-lib>=0.4.0
+EOF
+
+# 6. Commit your strategy
+git add execution_algos/rsi-reversal-strategy/
+git commit -m "Add RSI reversal strategy with backtest results"
+git push origin main
+
+# 7. Create automatic snapshot via branch
+git checkout -b snapshots/rsi-reversal-strategy
+git push origin snapshots/rsi-reversal-strategy
+
+# 8. Verify in GitHub Actions
+# Go to Actions tab and check for successful completion
+
+# 9. Done! Your strategy is safely backed up to S3 (including NOTES.md)
+```
+
+---
+
+---
+
+# 📊 Data Retrieval & Upload Skills
+
+This section describes how autonomous agents can retrieve trading data from AWS S3 and upload their own datasets.
+
+## 🎯 Available Datasets
+
+### GLBX MDP3 Market Data (Chicago CME Global FX)
+
+**Dataset:** `glbx-mdp3-market-data` | **Version:** `v1.0.0`
+
+- **Format:** DBN (Databento Binary Format)
+- **Compression:** zstd
+- **Size:** 8.37 GB
+- **Coverage:** 26 trading days (2026-03-08 to 2026-04-06)
+- **Exchange:** GLBX (Chicago Mercantile Exchange)
+- **Instruments:** Global FX futures (all symbols in one file per date)
+- **Partitioning:** By trading date (one .dbn.zst file per date)
+- **Location:** `s3://agentic-trading-snapshots-uchicago-spring-2026/datasets/glbx-mdp3-market-data/v1.0.0/`
+
+---
+
+## 🚀 How to Retrieve Data
+
+### Step 1: Set Up Environment
+
+```bash
+# Set your AWS credentials (already configured in CI/CD)
+export AWS_ACCESS_KEY_ID="your-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export AWS_REGION="us-east-2"
 export S3_BUCKET_NAME="agentic-trading-snapshots-uchicago-spring-2026"
 ```
 
-Inside Docker, these are passed through from the host via `docker-compose`.
-
----
-
-## Skill 1: Data Retrieval
-
-### Available dataset
-
-| Field | Value |
-|---|---|
-| Dataset | `glbx-mdp3-market-data` |
-| Version | `v1.0.0` |
-| Format | DBN (Databento binary) with zstd compression |
-| Coverage | 26 trading days, 2026-03-08 to 2026-04-06 |
-| Exchange | CME GLBX — Global FX futures |
-| Total size | 8.37 GB (~330 MB per date) |
-| Record types | `MBP1Msg` (top-of-book), `TradeMsg`, `OHLCVMsg` |
-
-### CLI: `scripts/data_retriever.py`
+### Step 2: List Available Datasets
 
 ```bash
-# Discover
+# List all available datasets
 python scripts/data_retriever.py list-datasets
-python scripts/data_retriever.py list-versions glbx-mdp3-market-data
 
-# Inspect
+# Output:
+# glbx-mdp3-market-data
+# historical-data
+# ... (more datasets)
+```
+
+### Step 3: Fetch Dataset Metadata
+
+```bash
+# Always fetch manifest first to understand what's available
 python scripts/data_retriever.py fetch-manifest glbx-mdp3-market-data v1.0.0
-python scripts/data_retriever.py fetch-schema   glbx-mdp3-market-data v1.0.0
 
-# Download one date (~330 MB, ~$0.01)
-python scripts/data_retriever.py sync-partition glbx-mdp3-market-data v1.0.0 "date=20260308"
-
-# Verify integrity
-python scripts/data_retriever.py validate glbx-mdp3-market-data v1.0.0
+# Output: manifest.json with partition list, checksums, date range
 ```
 
-Downloaded files are cached at:
+### Step 4: Download Specific Date Partitions
 
+```bash
+# Download a single date
+python scripts/data_retriever.py sync-partition \
+  glbx-mdp3-market-data v1.0.0 \
+  "date=2026-03-08"
+
+# Download multiple dates
+for date in 2026-03-08 2026-03-09 2026-03-10; do
+  python scripts/data_retriever.py sync-partition \
+    glbx-mdp3-market-data v1.0.0 \
+    "date=$date"
+done
+
+# Data downloaded to: ./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst
 ```
-data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=YYYYMMDD/data.dbn.zst
-```
 
-Re-running `sync-partition` on a cached date is a no-op — cached data is free to reuse.
-
-### Loading DBN in Python
+### Step 5: Load Data in Python
 
 ```python
 import databento_dbn as dbn
+from pathlib import Path
 
-path = "data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=20260308/data.dbn.zst"
-with open(path, "rb") as f:
-    df = dbn.DBNDecoder(f).to_df()
+# Load a single date partition
+dbn_file = Path("./data-cache/glbx-mdp3-market-data/v1.0.0/partitions/date=2026-03-08/data.dbn.zst")
 
-# Key MBP1 fields: ts_event, bid_px, ask_px, bid_sz, ask_sz, symbol
-# Key Trade fields: ts_event, price, size, side, action, symbol
+# Load DBN file
+records = dbn.load_from_file(str(dbn_file))
+
+# Convert to pandas DataFrame
+df = records.to_df()
+
+print(f"Loaded {len(df)} records")
+print(df.head())
+
+# Filter by symbol/ticker (optional)
+symbol_data = df[df['symbol'] == 'ES']  # E-mini S&P 500 futures
 ```
 
-For a multi-day backtest, concatenate per-date DataFrames with `pd.concat` and sort by `ts_event`.
+### Example: Complete Workflow
 
-### Cost
+```bash
+#!/bin/bash
+# Strategy backtest workflow
 
-| Scenario | Size | Cost |
-|---|---|---|
-| Single date | ~330 MB | ~$0.01 |
-| 10-day backtest | ~3.3 GB | ~$0.13 |
-| Full dataset | 8.37 GB | ~$0.32 |
+DATASET="glbx-mdp3-market-data"
+VERSION="v1.0.0"
+START_DATE="2026-03-08"
+END_DATE="2026-03-10"
 
-Cost budget: download at most 10 days per research iteration. Cached data is free.
+# 1. Fetch metadata
+python scripts/data_retriever.py fetch-manifest "$DATASET" "$VERSION"
 
-For the canonical S3 layout and manifest schema, see [docs/DATA_STORAGE_CONTRACT.md](docs/DATA_STORAGE_CONTRACT.md).
+# 2. Download date range
+for date_int in {20260308..20260310}; do
+  # Convert 20260308 to 2026-03-08
+  year=${date_int:0:4}
+  month=${date_int:4:2}
+  day=${date_int:6:2}
+  date_str="$year-$month-$day"
+  
+  echo "Downloading $date_str..."
+  python scripts/data_retriever.py sync-partition "$DATASET" "$VERSION" "date=$date_str"
+done
 
-For data retrieval errors, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#data-retrieval).
+# 3. Run backtest
+python your_strategy.py
+
+# 4. Save results
+# Results saved to snapshots/your-strategy-name/...
+```
+
+### Cost Information
+
+- **Single date partition (~330 MB):** ~$0.01
+- **10-day backtest (~3.3 GB):** ~$0.13
+- **Full dataset (26 days, 8.37 GB):** ~$0.32
+
+**Key insight:** Selective date retrieval costs 62% less than full downloads!
 
 ---
 
-## Skill 2: Strategy Snapshot
+## 📤 How to Upload Your Own Dataset
 
-A snapshot is a timestamped backup of a strategy — code, results, and agent reasoning — uploaded to S3 for 30 days. Snapshots survive force-pushes and branch deletions.
+### Prerequisites
 
-### Strategy directory layout
+- Dataset organized by trading date
+- Compressed to zstd format (optional but recommended)
+- Manifest, schema, and checksums files
+
+### Step 1: Prepare Local Dataset Structure
 
 ```
-strategies/<strategy-name>/
-├── <strategy_file>.py        # Strategy implementation
-├── NOTES.md                  # Agent reasoning (required — see PROBLEM_DEFINITION.md §10)
-├── requirements.txt          # Optional
-└── results/
-    ├── backtest-results.json # Required for metric extraction
-    ├── trade-history.csv     # Optional
-    └── charts.png            # Optional
+my-dataset/
+├── manifest.json          # Required
+├── schema.json            # Recommended
+├── checksums.txt          # Recommended
+└── partitions/
+    ├── date=2026-04-01/
+    │   └── data.dbn.zst
+    ├── date=2026-04-02/
+    │   └── data.dbn.zst
+    └── ... (one per trading date)
 ```
 
-Rules:
-- Strategy name is kebab-case (e.g., `ofi-v1`, `mean-reversion-r2`).
-- `NOTES.md` is required — it is the primary record of your reasoning and is read by future agents.
-- `backtest-results.json` follows the [format below](#backtest-results-format).
-
-### `backtest-results.json` format
+### Step 2: Create Manifest
 
 ```json
 {
-  "strategy_name": "your-strategy-name",
-  "backtest_date": "2026-04-15T00:00:00Z",
-  "performance": {
-    "total_return": 15.3,
-    "sharpe_ratio": 1.42,
-    "max_drawdown": -6.2,
-    "win_rate": 58.0,
-    "total_trades": 134,
-    "net_pnl": 3200.50,
-    "avg_IS": 0.000018,
-    "vs_twap_pct": 14.2,
-    "vs_vwap_pct": 11.8
+  "dataset_name": "my-trading-data",
+  "dataset_version": "v1.0.0",
+  "created_at": "2026-04-15T00:00:00Z",
+  "format": "dbn",
+  "compression": "zstd",
+  "partition_scheme": ["date"],
+  "partitions": [
+    "partitions/date=2026-04-01/data.dbn.zst",
+    "partitions/date=2026-04-02/data.dbn.zst"
+  ],
+  "total_size_bytes": 1000000000,
+  "date_range": {
+    "start": "2026-04-01",
+    "end": "2026-04-02"
   },
-  "period": { "start_date": "2026-03-08", "end_date": "2026-03-25" }
+  "exchange": "YOUR_EXCHANGE"
 }
 ```
 
-### Creating a snapshot
-
-**Automatic (preferred):** push to a `snapshots/*` branch. GitHub Actions picks it up and uploads.
+### Step 3: Upload to S3
 
 ```bash
-git checkout -b snapshots/<strategy-name>
-git add strategies/<strategy-name>/
-git commit -m "<strategy-name>: sharpe=X.XX, +X% vs TWAP/VWAP"
-git push origin snapshots/<strategy-name>
+# Sync entire dataset to S3
+DATASET_NAME="my-trading-data"
+VERSION="v1.0.0"
+
+aws s3 sync ./my-dataset \
+  "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$VERSION/" \
+  --region us-east-2 \
+  --no-progress
+
+echo "✓ Dataset uploaded to S3"
 ```
 
-**Manual fallback:** GitHub → Actions → "Create Strategy Snapshot" → Run workflow, with:
-- `strategy_name` = `<strategy-name>`
-- `strategy_path` = `strategies/<strategy-name>`
-
-Verify success in the Actions tab. The final log line shows the S3 path:
-
-```
-s3://<bucket>/strategies/<strategy-name>/2026-04-15T12-30-45Z-abc1234/
-```
-
-### Retrieving a snapshot
+### Step 4: Verify Upload
 
 ```bash
-# List all snapshots for a strategy
-aws s3 ls s3://$S3_BUCKET_NAME/strategies/<strategy-name>/
+# List uploaded files
+aws s3 ls "s3://$S3_BUCKET_NAME/datasets/$DATASET_NAME/$VERSION/" \
+  --recursive \
+  --region us-east-2
 
-# Download one
-aws s3 sync s3://$S3_BUCKET_NAME/strategies/<strategy-name>/2026-04-15T12-30-45Z-abc1234/ ./local-dir/
+# Fetch manifest to verify it's readable
+python scripts/data_retriever.py fetch-manifest "$DATASET_NAME" "$VERSION"
 ```
-
-Snapshot contents:
-
-```
-<timestamp>-<commit-sha>/
-├── code/                    # .py, requirements.txt
-├── results/                 # backtest-results.json, trade-history.csv
-├── NOTES.md
-└── metadata.json            # timestamp, commit SHA, extracted metrics
-```
-
-For snapshot errors, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#snapshots).
 
 ---
 
-## Naming conventions
+## 💡 Best Practices
 
-| Component | Format | Example |
-|---|---|---|
-| Strategy directory | kebab-case | `ofi-v1`, `mean-reversion-r2` |
-| Snapshot branch | `snapshots/<strategy-name>` | `snapshots/ofi-v1` |
-| Python files | snake_case | `order_flow_imbalance.py` |
-| Results files | fixed names | `backtest-results.json`, `trade-history.csv` |
+1. **Always fetch manifest first** - Understand what partitions exist before downloading
+2. **Use selective dates** - Don't download full dataset unless necessary
+3. **Cache locally** - Reuse downloaded data across multiple strategy runs
+4. **Validate checksums** - Verify data integrity using `checksums.txt`
+5. **Use Docker** - Ensure reproducibility across agent runs
 
-## Do's and don'ts
+---
 
-- **Do** fill in `NOTES.md` before snapshotting — hypothesis, implementation decisions, backtest observations.
-- **Do** include `requirements.txt` for reproducibility.
-- **Don't** commit files > 100 MB (use the data cache, not git).
-- **Don't** include API keys or credentials in strategy code.
-- **Don't** rely on snapshots as your only backup — commit to git too.
-- **Don't** delete snapshots manually; they auto-expire after 30 days.
+**Last Updated:** 2026-04-15  
+**System Version:** 1.0  
+**Retention Policy:** 30 days

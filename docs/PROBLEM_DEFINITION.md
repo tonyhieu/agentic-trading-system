@@ -104,10 +104,10 @@ Strategy net P&L must exceed **both** TWAP and VWAP net P&L by **at least 10%**.
 3. HYPOTHESIZE
    Write one paragraph: what inefficiency, what signal, why it survives costs.
    Note the parent strategy ID if this is a mutation of a prior attempt.
-   Write your reasoning to strategies/<name>/NOTES.md — Hypothesis section (see Section 10).
+   Write your reasoning to execution_algos/<name>/NOTES.md — Hypothesis section (see Section 10).
 
 4. IMPLEMENT
-   Write strategy in strategies/<name>/strategy.py
+   Write strategy in execution_algos/<name>/strategy.py
 
 5. BACKTEST
    Train period: days 1–18.  Test period: days 19–26.
@@ -116,7 +116,7 @@ Strategy net P&L must exceed **both** TWAP and VWAP net P&L by **at least 10%**.
 6. EVALUATE
    Compute IS, net P&L, Sharpe.
    Compare net P&L against TWAP and VWAP.
-   Append backtest observations to strategies/<name>/NOTES.md (see Section 10).
+   Append backtest observations to execution_algos/<name>/NOTES.md (see Section 10).
 
 7. DECIDE
    PASS  — beats both benchmarks by ≥ 10%  → snapshot (see Section 7), then enter Refinement Loop (see Section 6)
@@ -148,7 +148,7 @@ Once a strategy passes the gate, do not stop. Use the passing strategy as a base
 
 ```
 R1. IDENTIFY weaknesses
-    Re-read the baseline's backtest results and strategies/<baseline>/NOTES.md.
+    Re-read the baseline's backtest results and execution_algos/<baseline>/NOTES.md.
     Pinpoint the single biggest drag: time-of-day decay, parameter sensitivity,
     poor IS on large moves, concentrated risk on a few days, etc.
 
@@ -156,10 +156,10 @@ R2. PROPOSE one targeted change
     One change at a time — do not compound multiple edits.
     Examples: add a time-of-day filter, tighten the participation cap during
     high-spread regimes, condition signal on realized vol, adjust holding window.
-    Log your reasoning in strategies/<name>-r<N>/NOTES.md — Refinement Log section.
+    Log your reasoning in execution_algos/<name>-r<N>/NOTES.md — Refinement Log section.
 
 R3. IMPLEMENT the variant
-    strategies/<name>-r<N>/strategy.py
+    execution_algos/<name>-r<N>/strategy.py
     Set parent_id = <baseline strategy id> in the program database entry.
 
 R4. BACKTEST on full train+test split (same dates as baseline)
@@ -191,7 +191,7 @@ Snapshot the best-scoring variant as the final strategy (see Section 7).
 
 ### Step 1 — Write results and notes
 
-Create `strategies/<name>/results/backtest-results.json`:
+Create `execution_algos/<name>/results/backtest-results.json`:
 
 ```json
 {
@@ -212,7 +212,7 @@ Create `strategies/<name>/results/backtest-results.json`:
 }
 ```
 
-Ensure `strategies/<name>/NOTES.md` is complete — all three sections filled in (Hypothesis, Implementation Decisions, Backtest Observations). This file is included in the snapshot and is the primary record of your reasoning.
+Ensure `execution_algos/<name>/NOTES.md` is complete — all three sections filled in (Hypothesis, Implementation Decisions, Backtest Observations). This file is included in the snapshot and is the primary record of your reasoning.
 
 ### Step 2 — Snapshot from within Docker
 
@@ -220,7 +220,7 @@ See **SKILLS.md → "Strategy Snapshot skill"** for the full procedure. The auto
 
 ```bash
 git checkout -b snapshots/<strategy-name>
-git add strategies/<strategy-name>/
+git add execution_algos/<strategy-name>/
 git commit -m "<strategy-name>: sharpe=X.XX, +X% vs TWAP/VWAP"
 git push origin snapshots/<strategy-name>
 # GitHub Actions automatically uploads the snapshot to S3
@@ -236,10 +236,10 @@ There are two separate note files with different purposes:
 
 | File | Purpose | Audience |
 |---|---|---|
-| `strategies/<name>/NOTES.md` | Agent reasoning — hypothesis, implementation decisions, backtest observations | Future agents reading the program database |
+| `execution_algos/<name>/NOTES.md` | Agent reasoning — hypothesis, implementation decisions, backtest observations | Future agents reading the program database |
 | `research/NOTES.md` | Ambiguity alerts — things that are unclear and **require a human decision** | The human operator |
 
-Write to `research/NOTES.md` (and print an alert) when something is unclear enough that a human needs to decide. Write to `strategies/<name>/NOTES.md` for everything else. See Section 10 for the strategy NOTES.md format.
+Write to `research/NOTES.md` (and print an alert) when something is unclear enough that a human needs to decide. Write to `execution_algos/<name>/NOTES.md` for everything else. See Section 10 for the strategy NOTES.md format.
 
 ### When to write a global note
 
@@ -302,7 +302,7 @@ File: `research/program_database.json`
     "id": "ofi-v1",
     "parent_id": null,
     "hypothesis": "Order flow imbalance at top of book predicts short-term direction.",
-    "strategy_path": "strategies/ofi-v1/",
+    "strategy_path": "execution_algos/ofi-v1/",
     "scores": {
       "sharpe": 1.42,
       "net_pnl": 3200,

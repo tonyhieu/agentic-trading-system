@@ -19,8 +19,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 STARTING_BALANCE_USD = 1_000_000.0
 
 # Maps factory execution_algorithm_name -> on-disk directory under `execution_algos/`.
-# Run artifacts are tagged to the execution algorithm (the variable under study),
-# not the strategy. Add an entry when registering a new execution algorithm.
+# The trading strategy is held fixed across runs; the execution algorithm is the
+# variable under study, so results are tagged to it. Add an entry when registering
+# a new execution algorithm.
 EXECUTION_DIRS: dict[str, str] = {
     "simple": "simple_execution_strategy",
 }
@@ -94,7 +95,7 @@ def run_backtest(
 
     execution_dir_name = EXECUTION_DIRS.get(execution_algorithm_name, execution_algorithm_name)
     run_dir = persist(
-        run_parent_dir=REPO_ROOT / "execution_algos" / execution_dir_name,
+        strategy_dir=REPO_ROOT / "execution_algos" / execution_dir_name,
         metadata=metadata,
         metrics=metrics,
         reports=reports,
