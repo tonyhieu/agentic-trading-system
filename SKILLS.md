@@ -791,6 +791,64 @@ python scripts/data_retriever.py fetch-manifest "$DATASET_NAME" "$VERSION"
 
 ---
 
-**Last Updated:** 2026-04-15  
+**Last Updated:** 2026-04-23 
 **System Version:** 1.0  
 **Retention Policy:** 30 days
+
+---
+
+# 🐳 Docker Execution Skill
+
+This section describes how to build and run the backtesting environment using Docker.
+
+## Why Docker?
+
+Docker ensures every agent runs in an identical, reproducible environment regardless of the host machine. All dependencies (NautilusTrader, pandas, AWS CLI) are pre-installed in the image.
+
+## Prerequisites
+
+- Docker installed
+- `.env` file with AWS credentials at repo root
+
+## Quick Start
+
+### Build the image
+
+```bash
+docker build -t agentic-trading .
+```
+
+### Run a backtest
+
+```bash
+docker-compose run --rm agent
+```
+
+### Run a single command
+
+```bash
+# Check Python version
+docker-compose run --rm agent python --version
+
+# Verify NautilusTrader is installed
+docker-compose run --rm agent python -c "import nautilus_trader; print('ok')"
+
+# Interactive shell for debugging
+docker-compose run --rm dev
+```
+
+## Services
+
+| Service | Purpose |
+|---------|---------|
+| `agent` | Runs full backtest via `python main.py` |
+| `dev` | Interactive bash shell for development |
+| `aws` | AWS CLI utility for S3 operations |
+
+## Data Caching
+
+Downloaded market data is persisted in `./data-cache/` and mounted into the container, so re-runs don't re-download data.
+
+## Environment Variables
+
+All credentials are loaded from `.env` file. See `.env.example` for required variables.
