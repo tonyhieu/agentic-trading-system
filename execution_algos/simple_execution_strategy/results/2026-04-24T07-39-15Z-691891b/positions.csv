@@ -1,0 +1,2 @@
+trader_id,strategy_id,instrument_id,account_id,opening_order_id,closing_order_id,entry,side,quantity,peak_qty,ts_init,ts_opened,ts_last,ts_closed,duration_ns,avg_px_open,avg_px_close,commissions,realized_return,realized_pnl,is_snapshot
+BACKTESTER-001,ORBv1Strategy-000,GCM6.GLBX,GLBX-001,O-20260406-140010-001-000-1,O-20260406-140012-001-000-2,BUY,FLAT,0,1,1775484010061633007,2026-04-06 14:00:10.061633007+00:00,1775484012118778362,2026-04-06 14:00:12.118778362+00:00,2057145355,4708.8,4707.5,['0.00 USD'],-0.00028,-1.30 USD,False
