@@ -1,30 +1,30 @@
-# Dockerfile for autonomous agents with data retrieval
+# Dockerfile for agentic trading system
+# Runs the NautilusTrader backtest engine with AWS S3 data retrieval
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /workspace
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
     curl \
     git \
-    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install AWS CLI
-RUN pip install --no-cache-dir awscli
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Create cache directory
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY . .
+
 RUN mkdir -p /data-cache
 
-# Copy scripts
-COPY scripts/ /scripts/
-RUN chmod +x /scripts/*.py
+ENV VIRTUAL_ENV="/workspace/.venv" \
+    PATH="/workspace/.venv/bin:${PATH}" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/workspace:/workspace/.venv/lib/python3.12/site-packages" \
+    DATA_CACHE_DIR="/data-cache"
 
-# Set environment
-ENV PATH="/scripts:${PATH}" \
-    DATA_CACHE_DIR="/data-cache" \
-    PYTHONUNBUFFERED=1
-
-# Default command - list datasets
-CMD ["python", "/scripts/data_retriever.py", "list-datasets"]
+CMD ["python", "main.py"]

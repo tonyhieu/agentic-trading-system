@@ -1,49 +1,54 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # Autonomous agent with data retrieval capability
+
+  # Main agent: runs backtest and iterates on strategies
   agent:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file: .env
     environment:
-      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       DATA_CACHE_DIR: /data-cache
     volumes:
-      - ./workspace:/workspace
-      - ./data-cache:/data-cache
-      - ./strategies:/strategies
+      - ./data-cache:/data-cache   # persist downloaded market data across runs
+      - .:/workspace               # agent can read/write strategy code and results
+    working_dir: /workspace
+    command: python main.py
+
+  # Interactive shell: develop and debug inside the full environment
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      DATA_CACHE_DIR: /data-cache
+    volumes:
+      - ./data-cache:/data-cache   # persist downloaded market data across runs
+      - .:/workspace               # live-reload source code without rebuilding
     working_dir: /workspace
     command: bash
 
-  # AWS CLI utility container
+  # AWS CLI utility: inspect and sync S3 directly
   aws:
     image: amazon/aws-cli:latest
+    env_file: .env
     environment:
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    volumes:
-      - ./workspace:/workspace
-      - ./data-cache:/data-cache
-    working_dir: /workspace
-    entrypoint: aws
-
-  # Python development environment
-  dev:
-    image: python:3.11-slim
-    environment:
-      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     volumes:
-      - ./workspace:/workspace
       - ./data-cache:/data-cache
-      - ./scripts:/scripts
-      - ./strategies:/strategies
+      - .:/workspace
     working_dir: /workspace
-    command: bash -c "pip install awscli pandas pyarrow && bash"
+    entrypoint: aws
