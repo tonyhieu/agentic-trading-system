@@ -1,0 +1,41 @@
+{
+    "job_id": "GLBX-20260417-CS4M67XB4F",
+    "files": [
+        {
+            "filename": "condition.json",
+            "size": 242,
+            "hash": "sha256:95906a1ba7c0dfafe8549245b7314119667773af10d2b69af523e88e12202ef2",
+            "urls": {
+                "https": "https://api.databento.com/v0/batch/download/EFEFS73Y/GLBX-20260417-CS4M67XB4F/condition.json",
+                "ftp": "ftp://ftp.databento.com/EFEFS73Y/GLBX-20260417-CS4M67XB4F/condition.json"
+            }
+        },
+        {
+            "filename": "metadata.json",
+            "size": 686,
+            "hash": "sha256:21c5da57f35503504f0a74d765b57083420c57df2b2aef848fe930154b7418f7",
+            "urls": {
+                "https": "https://api.databento.com/v0/batch/download/EFEFS73Y/GLBX-20260417-CS4M67XB4F/metadata.json",
+                "ftp": "ftp://ftp.databento.com/EFEFS73Y/GLBX-20260417-CS4M67XB4F/metadata.json"
+            }
+        },
+        {
+            "filename": "glbx-mdp3-20260406.mbp-1.dbn.zst",
+            "size": 44818097,
+            "hash": "sha256:2b09f0c73ab64f3c21e516a6c42cc9325ff5ad8d547544826ef0aef1a8ee4b74",
+            "urls": {
+                "https": "https://api.databento.com/v0/batch/download/EFEFS73Y/GLBX-20260417-CS4M67XB4F/glbx-mdp3-20260406.mbp-1.dbn.zst",
+                "ftp": "ftp://ftp.databento.com/EFEFS73Y/GLBX-20260417-CS4M67XB4F/glbx-mdp3-20260406.mbp-1.dbn.zst"
+            }
+        },
+        {
+            "filename": "glbx-mdp3-20260407.mbp-1.dbn.zst",
+            "size": 76654702,
+            "hash": "sha256:08494e2746a1c0efa3ce5a7beda3706094a7da4a1a2845c42cf847d5cdd8a11d",
+            "urls": {
+                "https": "https://api.databento.com/v0/batch/download/EFEFS73Y/GLBX-20260417-CS4M67XB4F/glbx-mdp3-20260407.mbp-1.dbn.zst",
+                "ftp": "ftp://ftp.databento.com/EFEFS73Y/GLBX-20260417-CS4M67XB4F/glbx-mdp3-20260407.mbp-1.dbn.zst"
+            }
+        }
+    ]
+}
