@@ -27,7 +27,7 @@ Use this method when you want to manually trigger a snapshot for a specific stra
 Ensure your strategy follows this directory structure:
 
 ```
-strategies/
+execution_algos/
 └── your-strategy-name/
     ├── strategy_file.py          # Your strategy code
     ├── NOTES.md                  # Agent reasoning (required — see PROBLEM_DEFINITION.md §10)
@@ -39,7 +39,7 @@ strategies/
 ```
 
 **Important Notes:**
-- Place your strategy in the `strategies/` directory
+- Place your strategy in the `execution_algos/` directory
 - Use a descriptive, kebab-case name (e.g., `momentum-trader`, `mean-reversion-v2`)
 - Include a `results/backtest-results.json` file for automatic metric extraction
 - Include a `NOTES.md` capturing your hypothesis, implementation decisions, and backtest observations — this is included in the snapshot and read by future agents
@@ -52,7 +52,7 @@ strategies/
 4. Click **"Run workflow"** button (right side)
 5. Fill in the inputs:
    - **Strategy name:** `your-strategy-name` (e.g., `momentum-trader`)
-   - **Strategy path:** `strategies/your-strategy-name`
+   - **Strategy path:** `execution_algos/your-strategy-name`
 6. Click **"Run workflow"** (green button)
 
 #### Step 3: Monitor Progress
@@ -70,7 +70,7 @@ strategies/
 The workflow automatically verifies that your snapshot was uploaded successfully. Check the final step for the S3 path:
 
 ```
-s3://your-bucket-name/strategies/your-strategy-name/2026-04-04T12-30-45Z-abc1234/
+s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/
 ```
 
 ---
@@ -94,16 +94,16 @@ Branch naming convention: `snapshots/{strategy-name}`
 #### Step 2: Add or Update Your Strategy
 
 ```bash
-# Make sure your strategy is in the strategies/ directory
-mkdir -p strategies/your-strategy-name
-cp your_code.py strategies/your-strategy-name/
+# Make sure your strategy is in the execution_algos/ directory
+mkdir -p execution_algos/your-strategy-name
+cp your_code.py execution_algos/your-strategy-name/
 
 # Add backtesting results
-mkdir -p strategies/your-strategy-name/results
-cp backtest-results.json strategies/your-strategy-name/results/
+mkdir -p execution_algos/your-strategy-name/results
+cp backtest-results.json execution_algos/your-strategy-name/results/
 
 # Commit your changes
-git add strategies/your-strategy-name/
+git add execution_algos/your-strategy-name/
 git commit -m "Add momentum trading strategy with backtest results"
 ```
 
@@ -182,7 +182,7 @@ The snapshot system will automatically extract these metrics and include them in
 Snapshots are stored in S3 with the following structure:
 
 ```
-s3://bucket-name/strategies/{strategy-name}/{timestamp}-{commit-sha}/
+s3://bucket-name/execution_algos/{strategy-name}/{timestamp}-{commit-sha}/
 ├── code/
 │   ├── momentum_strategy.py
 │   └── requirements.txt
@@ -198,7 +198,7 @@ s3://bucket-name/strategies/{strategy-name}/{timestamp}-{commit-sha}/
 1. Log in to AWS Console
 2. Navigate to S3 service
 3. Open your bucket (e.g., `agentic-trading-snapshots-*`)
-4. Browse to `strategies/your-strategy-name/`
+4. Browse to `execution_algos/your-strategy-name/`
 5. Select a timestamped snapshot folder
 6. Download files as needed
 
@@ -206,13 +206,13 @@ s3://bucket-name/strategies/{strategy-name}/{timestamp}-{commit-sha}/
 
 ```bash
 # List all snapshots for a strategy
-aws s3 ls s3://your-bucket-name/strategies/your-strategy-name/
+aws s3 ls s3://your-bucket-name/execution_algos/your-strategy-name/
 
 # Download a specific snapshot
-aws s3 sync s3://your-bucket-name/strategies/your-strategy-name/2026-04-04T12-30-45Z-abc1234/ ./local-folder/
+aws s3 sync s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/ ./local-folder/
 
 # Download just the metadata
-aws s3 cp s3://your-bucket-name/strategies/your-strategy-name/2026-04-04T12-30-45Z-abc1234/metadata.json ./
+aws s3 cp s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/metadata.json ./
 ```
 
 ### Option 3: Use GitHub Actions (Future Enhancement)
@@ -380,11 +380,11 @@ For complete reference: See `docs/AGENT_INTEGRATION_GUIDE.md`
 
 ```bash
 # 1. Ensure strategy is in place
-ls strategies/your-strategy-name/
+ls execution_algos/your-strategy-name/
 
 # 2. Go to GitHub → Actions → Create Strategy Snapshot → Run workflow
 # 3. Input: strategy_name = "your-strategy-name"
-# 4. Input: strategy_path = "strategies/your-strategy-name"
+# 4. Input: strategy_path = "execution_algos/your-strategy-name"
 # 5. Click "Run workflow"
 ```
 
@@ -395,12 +395,12 @@ ls strategies/your-strategy-name/
 git checkout -b snapshots/your-strategy-name
 
 # 2. Add your strategy
-mkdir -p strategies/your-strategy-name/results
-cp your_code.py strategies/your-strategy-name/
-cp backtest-results.json strategies/your-strategy-name/results/
+mkdir -p execution_algos/your-strategy-name/results
+cp your_code.py execution_algos/your-strategy-name/
+cp backtest-results.json execution_algos/your-strategy-name/results/
 
 # 3. Commit and push
-git add strategies/your-strategy-name/
+git add execution_algos/your-strategy-name/
 git commit -m "Add strategy with results"
 git push origin snapshots/your-strategy-name
 
@@ -435,7 +435,7 @@ git push origin snapshots/your-strategy-name
 **Cause:** The specified path doesn't exist in the repository.
 
 **Solution:**
-1. Verify your strategy exists: `ls strategies/your-strategy-name/`
+1. Verify your strategy exists: `ls execution_algos/your-strategy-name/`
 2. Check that the path matches exactly (case-sensitive)
 3. Ensure you've committed and pushed your code before running the workflow
 
@@ -466,7 +466,7 @@ git push origin snapshots/your-strategy-name
 
 **Solution:**
 1. Ensure all files are in the strategy directory
-2. Commit all files: `git add strategies/your-strategy-name/`
+2. Commit all files: `git add execution_algos/your-strategy-name/`
 3. Push before triggering snapshot: `git push`
 4. Re-run the snapshot workflow
 
@@ -489,10 +489,10 @@ Here's a complete example of adding a new strategy and creating a snapshot:
 
 ```bash
 # 1. Create your strategy locally
-mkdir -p strategies/rsi-reversal-strategy/results
+mkdir -p execution_algos/rsi-reversal-strategy/results
 
 # 2. Write your strategy code
-cat > strategies/rsi-reversal-strategy/rsi_strategy.py << EOF
+cat > execution_algos/rsi-reversal-strategy/rsi_strategy.py << EOF
 # Your strategy code here
 def calculate_rsi(prices, period=14):
     # RSI calculation
@@ -500,7 +500,7 @@ def calculate_rsi(prices, period=14):
 EOF
 
 # 3. Create backtest results
-cat > strategies/rsi-reversal-strategy/results/backtest-results.json << EOF
+cat > execution_algos/rsi-reversal-strategy/results/backtest-results.json << EOF
 {
   "strategy_name": "RSI Reversal Strategy",
   "performance": {
@@ -513,7 +513,7 @@ cat > strategies/rsi-reversal-strategy/results/backtest-results.json << EOF
 EOF
 
 # 4. Write agent reasoning (required before snapshotting)
-cat > strategies/rsi-reversal-strategy/NOTES.md << EOF
+cat > execution_algos/rsi-reversal-strategy/NOTES.md << EOF
 # Strategy Notes: rsi-reversal-strategy
 
 ## Hypothesis
@@ -544,14 +544,14 @@ Entry only when participation cap allows full size — partial fills skipped to 
 EOF
 
 # 5. Create requirements file
-cat > strategies/rsi-reversal-strategy/requirements.txt << EOF
+cat > execution_algos/rsi-reversal-strategy/requirements.txt << EOF
 pandas>=2.0.0
 numpy>=1.24.0
 ta-lib>=0.4.0
 EOF
 
 # 6. Commit your strategy
-git add strategies/rsi-reversal-strategy/
+git add execution_algos/rsi-reversal-strategy/
 git commit -m "Add RSI reversal strategy with backtest results"
 git push origin main
 

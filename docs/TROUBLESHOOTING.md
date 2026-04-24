@@ -23,7 +23,7 @@ Is the workflow failing?
 
 **Symptoms:**
 ```
-❌ Error: Strategy path 'strategies/my-strategy' does not exist!
+❌ Error: Strategy path 'execution_algos/my-strategy' does not exist!
 Available directories:
 .github
 docs
@@ -38,22 +38,22 @@ docs
 
 ```bash
 # 1. Check if directory exists locally
-ls -la strategies/
+ls -la execution_algos/
 
 # 2. Create directory if missing
-mkdir -p strategies/my-strategy
-echo "# My Strategy" > strategies/my-strategy/strategy.py
+mkdir -p execution_algos/my-strategy
+echo "# My Strategy" > execution_algos/my-strategy/strategy.py
 
 # 3. Commit and push
-git add strategies/my-strategy/
+git add execution_algos/my-strategy/
 git commit -m "Add my strategy"
 git push origin main  # or your branch
 
 # 4. Verify in GitHub web interface
-# Go to your repo → strategies/ folder → confirm directory is there
+# Go to your repo → execution_algos/ folder → confirm directory is there
 
 # 5. Re-run workflow with exact path
-# Use: strategies/my-strategy (not ./strategies or /strategies)
+# Use: execution_algos/my-strategy (not ./strategies or /strategies)
 ```
 
 ### Error: "AWS credentials error" / "AccessDenied"
@@ -169,8 +169,8 @@ jobs:
 ```bash
 # Option 2: Reduce snapshot size
 # Check file sizes
-du -sh strategies/my-strategy/*
-du -sh strategies/my-strategy/results/*
+du -sh execution_algos/my-strategy/*
+du -sh execution_algos/my-strategy/results/*
 
 # Remove large files (> 100 MB)
 # Compress images
@@ -194,13 +194,13 @@ du -sh strategies/my-strategy/results/*
 
 ```bash
 # Step 1: Check S3 manually
-aws s3 ls s3://your-bucket/strategies/your-strategy/ --recursive
+aws s3 ls s3://your-bucket/execution_algos/your-strategy/ --recursive
 
 # Step 2: Look for the snapshot directory
 # Should see: 2026-04-04T12-30-45Z-abc1234/
 
 # Step 3: List contents of that directory
-aws s3 ls s3://your-bucket/strategies/your-strategy/2026-04-04T12-30-45Z-abc1234/
+aws s3 ls s3://your-bucket/execution_algos/your-strategy/2026-04-04T12-30-45Z-abc1234/
 
 # Step 4: If files are there but verification failed
 # → Re-run workflow (may be transient S3 issue)
@@ -225,7 +225,7 @@ aws s3 ls s3://your-bucket/strategies/your-strategy/2026-04-04T12-30-45Z-abc1234
 
 ```bash
 # 1. Check snapshot size
-du -sh strategies/my-strategy/
+du -sh execution_algos/my-strategy/
 
 # 2. Optimize file sizes
 # - Compress PNG images
@@ -283,21 +283,21 @@ aws s3 sync --cli-connect-timeout 300 \
 
 ```bash
 # 1. Verify results directory exists
-ls -la strategies/my-strategy/results/
+ls -la execution_algos/my-strategy/results/
 
 # 2. Check git status
 git status
 # Results files should not be in .gitignore
 
 # 3. Verify files are committed
-git ls-files strategies/my-strategy/results/
+git ls-files execution_algos/my-strategy/results/
 
 # 4. Check workflow logs
 # Look for "No JSON results found" messages
 # This indicates files don't exist in the expected location
 
 # 5. Ensure proper structure
-strategies/my-strategy/
+execution_algos/my-strategy/
 ├── strategy.py          ✅
 ├── results/
 │   ├── backtest-results.json  ✅
@@ -315,10 +315,10 @@ strategies/my-strategy/
 
 ```bash
 # 1. Validate JSON syntax
-cat strategies/my-strategy/results/backtest-results.json | python3 -m json.tool
+cat execution_algos/my-strategy/results/backtest-results.json | python3 -m json.tool
 
 # 2. Check for required fields
-cat strategies/my-strategy/results/backtest-results.json | jq '.performance'
+cat execution_algos/my-strategy/results/backtest-results.json | jq '.performance'
 
 # Should have: total_return, sharpe_ratio, max_drawdown, win_rate
 
@@ -348,13 +348,13 @@ cat strategies/my-strategy/results/backtest-results.json | jq '.performance'
 
 ```bash
 # 1. List all snapshots
-aws s3 ls s3://your-bucket/strategies/ --recursive | grep metadata.json
+aws s3 ls s3://your-bucket/execution_algos/ --recursive | grep metadata.json
 
 # 2. List snapshots for specific strategy
-aws s3 ls s3://your-bucket/strategies/my-strategy/
+aws s3 ls s3://your-bucket/execution_algos/my-strategy/
 
 # 3. Check snapshot age
-aws s3 ls s3://your-bucket/strategies/my-strategy/ --recursive | \
+aws s3 ls s3://your-bucket/execution_algos/my-strategy/ --recursive | \
   grep metadata.json | \
   awk '{print $1, $2, $4}'
 
@@ -378,7 +378,7 @@ aws s3 ls s3://your-bucket/strategies/my-strategy/ --recursive | \
 cat .github/workflows/snapshot-strategy.yml | head -20
 
 # 2. Download and inspect snapshot
-aws s3 sync s3://your-bucket/strategies/my-strategy/2026-04-04T12-30-45Z-abc1234/ ./temp/
+aws s3 sync s3://your-bucket/execution_algos/my-strategy/2026-04-04T12-30-45Z-abc1234/ ./temp/
 
 # 3. Check metadata
 cat ./temp/metadata.json | jq .
@@ -407,7 +407,7 @@ tree ./temp/
 aws s3 ls s3://your-bucket --recursive --summarize --human-readable
 
 # 2. Count snapshots
-aws s3 ls s3://your-bucket/strategies/ --recursive | grep metadata.json | wc -l
+aws s3 ls s3://your-bucket/execution_algos/ --recursive | grep metadata.json | wc -l
 
 # 3. Find large snapshots
 aws s3 ls s3://your-bucket --recursive --human-readable | \
@@ -432,11 +432,11 @@ aws s3api get-bucket-lifecycle-configuration --bucket your-bucket
 # Change "30" to "7"
 
 # Option 2: Delete all snapshots (CAREFUL!)
-# aws s3 rm s3://your-bucket/strategies/ --recursive
+# aws s3 rm s3://your-bucket/execution_algos/ --recursive
 # (Not recommended - defeats purpose of backups)
 
 # Option 3: Delete specific strategy snapshots
-aws s3 rm s3://your-bucket/strategies/old-strategy/ --recursive
+aws s3 rm s3://your-bucket/execution_algos/old-strategy/ --recursive
 ```
 
 ---
@@ -504,8 +504,8 @@ git checkout main
 git checkout -b snapshots/my-strategy-v2
 
 # 3. Add updated strategy
-cp -r /path/to/updated/strategy strategies/my-strategy/
-git add strategies/my-strategy/
+cp -r /path/to/updated/strategy execution_algos/my-strategy/
+git add execution_algos/my-strategy/
 git commit -m "Updated strategy"
 
 # 4. Push new branch
@@ -540,14 +540,14 @@ git push origin snapshots/my-strategy-v2
 
 4. **Validate strategy structure:**
    ```bash
-   ls -la strategies/my-strategy/
-   ls -la strategies/my-strategy/results/
-   cat strategies/my-strategy/results/backtest-results.json | python3 -m json.tool
+   ls -la execution_algos/my-strategy/
+   ls -la execution_algos/my-strategy/results/
+   cat execution_algos/my-strategy/results/backtest-results.json | python3 -m json.tool
    ```
 
 5. **Check S3 manually:**
    ```bash
-   aws s3 ls s3://your-bucket/strategies/my-strategy/ --recursive
+   aws s3 ls s3://your-bucket/execution_algos/my-strategy/ --recursive
    ```
 
 6. **Review workflow file:**
@@ -588,7 +588,7 @@ When asking for help, include:
 # Copy the exact error text
 
 # 3. Strategy structure
-ls -laR strategies/my-strategy/
+ls -laR execution_algos/my-strategy/
 
 # 4. Git status
 git status
@@ -612,14 +612,14 @@ cat .github/workflows/snapshot-strategy.yml
 
 ✅ **Always commit before creating snapshot**
 ```bash
-git add strategies/my-strategy/
+git add execution_algos/my-strategy/
 git commit -m "Add strategy"
 git push  # Don't forget this!
 ```
 
 ✅ **Validate JSON before pushing**
 ```bash
-cat strategies/my-strategy/results/backtest-results.json | python3 -m json.tool
+cat execution_algos/my-strategy/results/backtest-results.json | python3 -m json.tool
 ```
 
 ✅ **Use consistent naming conventions**

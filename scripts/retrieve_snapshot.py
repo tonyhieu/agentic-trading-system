@@ -53,7 +53,7 @@ class SnapshotRetriever:
             sys.exit(1)
     
     def list_strategies(self):
-        cmd = ['aws', 's3', 'ls', f's3://{self.bucket_name}/strategies/', '--region', self.region]
+        cmd = ['aws', 's3', 'ls', f's3://{self.bucket_name}/execution_algos/', '--region', self.region]
         output = self._run_aws(cmd)
         
         strategies = []
@@ -66,7 +66,7 @@ class SnapshotRetriever:
         return sorted(strategies)
     
     def list_snapshots(self, strategy_name):
-        cmd = ['aws', 's3', 'ls', f's3://{self.bucket_name}/strategies/{strategy_name}/', '--region', self.region]
+        cmd = ['aws', 's3', 'ls', f's3://{self.bucket_name}/execution_algos/{strategy_name}/', '--region', self.region]
         output = self._run_aws(cmd)
         
         snapshots = []
@@ -84,7 +84,7 @@ class SnapshotRetriever:
         return sorted(snapshots, key=lambda x: x['timestamp'], reverse=True)
     
     def download_snapshot(self, strategy_name, snapshot_path, output_dir='.'):
-        s3_path = f's3://{self.bucket_name}/strategies/{strategy_name}/{snapshot_path}/'
+        s3_path = f's3://{self.bucket_name}/execution_algos/{strategy_name}/{snapshot_path}/'
         local_path = f'{output_dir}/snapshots/{strategy_name}/{snapshot_path}'
         
         os.makedirs(local_path, exist_ok=True)
