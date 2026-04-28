@@ -40,7 +40,7 @@ execution_algos/
 
 **Important Notes:**
 - Place your algorithm in the `execution_algos/` directory
-- Use a descriptive, kebab-case name (e.g., `momentum-algo`, `mean-reversion-v2`)
+- Use a descriptive, kebab-case name (e.g., `my-algo-v1`, `execution-algo-v2`)
 - Include a `results/backtest-results.json` file for automatic metric extraction
 - Include a `NOTES.md` capturing your hypothesis, implementation decisions, and backtest observations — this is included in the snapshot and read by future agents
 
@@ -51,7 +51,7 @@ execution_algos/
 3. Click **"Create Execution Algorithm Snapshot"** workflow (left sidebar)
 4. Click **"Run workflow"** button (right side)
 5. Fill in the inputs:
-   - **Algorithm name:** `your-algo-name` (e.g., `momentum-algo`)
+   - **Algorithm name:** `your-algo-name` (e.g., `my-algo`)
    - **Algorithm path:** `execution_algos/your-algo-name`
 6. Click **"Run workflow"** (green button)
 
@@ -86,7 +86,7 @@ Use this method to automatically create snapshots when you push code to special 
 git checkout -b snapshots/your-algo-name
 
 # Example:
-git checkout -b snapshots/momentum-algo-v2
+git checkout -b snapshots/my-algo-v2
 ```
 
 Branch naming convention: `snapshots/{algo-name}`
@@ -133,7 +133,7 @@ Follow these naming conventions for consistency:
 | Component | Format | Example |
 |-----------|--------|---------|
 | Strategy directory | `kebab-case` | `momentum-trader`, `mean-reversion-v2` |
-| Branch name | `snapshots/{algo-name}` | `snapshots/momentum-algo` |
+| Branch name | `snapshots/{algo-name}` | `snapshots/my-algo` |
 | Python files | `snake_case.py` | `momentum_algo.py` |
 | Results files | Specific names | `backtest-results.json`, `trade-history.csv` |
 
@@ -145,7 +145,7 @@ For automatic performance metric extraction, use this JSON structure in `backtes
 
 ```json
 {
-  "algo_name": "Your Strategy Name",
+  "algo_name": "Your Execution Algorithm Name",
   "backtest_date": "2026-04-04T12:00:00Z",
   "parameters": {
     "param1": "value1",
@@ -382,9 +382,9 @@ For complete reference: See `docs/AGENT_INTEGRATION_GUIDE.md`
 # 1. Ensure strategy is in place
 ls execution_algos/your-algo-name/
 
-# 2. Go to GitHub → Actions → Create Strategy Snapshot → Run workflow
+# 2. Go to GitHub → Actions → Create Execution Algorithm Snapshot → Run workflow
 # 3. Input: algo_name = "your-algo-name"
-# 4. Input: strategy_path = "execution_algos/your-algo-name"
+# 4. Input: algo_path = "execution_algos/your-algo-name"
 # 5. Click "Run workflow"
 ```
 
@@ -489,10 +489,10 @@ Here's a complete example of adding a new strategy and creating a snapshot:
 
 ```bash
 # 1. Create your algorithm locally
-mkdir -p execution_algos/rsi-reversal-algo/results
+mkdir -p execution_algos/my-algo/results
 
 # 2. Write your algorithm code
-cat > execution_algos/rsi-reversal-algo/rsi_strategy.py << EOF
+cat > execution_algos/my-algo/my_algo.py << EOF
 # Your algorithm code here
 def calculate_rsi(prices, period=14):
     # RSI calculation
@@ -500,7 +500,7 @@ def calculate_rsi(prices, period=14):
 EOF
 
 # 3. Create backtest results
-cat > execution_algos/rsi-reversal-algo/results/backtest-results.json << EOF
+cat > execution_algos/my-algo/results/backtest-results.json << EOF
 {
   "algo_name": "RSI Reversal Strategy",
   "performance": {
@@ -513,8 +513,8 @@ cat > execution_algos/rsi-reversal-algo/results/backtest-results.json << EOF
 EOF
 
 # 4. Write agent reasoning (required before snapshotting)
-cat > execution_algos/rsi-reversal-algo/NOTES.md << EOF
-# Strategy Notes: rsi-reversal-algo
+cat > execution_algos/my-algo/NOTES.md << EOF
+# Strategy Notes: my-algo
 
 ## Hypothesis
 
@@ -544,20 +544,20 @@ Entry only when participation cap allows full size — partial fills skipped to 
 EOF
 
 # 5. Create requirements file
-cat > execution_algos/rsi-reversal-algo/requirements.txt << EOF
+cat > execution_algos/my-algo/requirements.txt << EOF
 pandas>=2.0.0
 numpy>=1.24.0
 ta-lib>=0.4.0
 EOF
 
 # 6. Commit your algorithm
-git add execution_algos/rsi-reversal-algo/
+git add execution_algos/my-algo/
 git commit -m "Add RSI reversal strategy with backtest results"
 git push origin main
 
 # 7. Create automatic snapshot via branch
-git checkout -b snapshots/rsi-reversal-algo
-git push origin snapshots/rsi-reversal-algo
+git checkout -b snapshots/my-algo
+git push origin snapshots/my-algo
 
 # 8. Verify in GitHub Actions
 # Go to Actions tab and check for successful completion
