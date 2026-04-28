@@ -485,7 +485,7 @@ For issues with the snapshot system:
 
 ## 🎓 Example Workflow
 
-Here's a complete example of adding a new strategy and creating a snapshot:
+Here's a complete example of adding a new execution algorithm and creating a snapshot:
 
 ```bash
 # 1. Create your algorithm locally
@@ -493,16 +493,20 @@ mkdir -p execution_algos/my-algo/results
 
 # 2. Write your algorithm code
 cat > execution_algos/my-algo/my_algo.py << EOF
-# Your algorithm code here
-def calculate_rsi(prices, period=14):
-    # RSI calculation
-    pass
+# Your execution algorithm code here
+class MyExecutionAlgorithm:
+    def __init__(self, exec_id):
+        self.exec_id = exec_id
+    
+    def execute(self, order):
+        # Your algorithm implementation
+        pass
 EOF
 
 # 3. Create backtest results
 cat > execution_algos/my-algo/results/backtest-results.json << EOF
 {
-  "algo_name": "RSI Reversal Strategy",
+  "algo_name": "My Execution Algorithm",
   "performance": {
     "total_return": 22.5,
     "sharpe_ratio": 1.8,
@@ -514,45 +518,42 @@ EOF
 
 # 4. Write agent reasoning (required before snapshotting)
 cat > execution_algos/my-algo/NOTES.md << EOF
-# Strategy Notes: my-algo
+# Execution Algorithm Notes: my-algo
 
 ## Hypothesis
 
-**Signal**: RSI oversold/overbought at top-of-book on 14-tick rolling window
-**Inefficiency exploited**: Short-term mean reversion after aggressive directional flow
-**Why it survives costs**: Edge (3–5 ticks) exceeds typical IS (~1.5 ticks) in liquid sessions
-**Parent strategy**: none — original hypothesis
-**Alternatives considered**: Bollinger band reversion (noisier signal on raw price), momentum (tried as ofi-v1, insufficient edge after costs)
+**Approach**: Describe the core execution strategy
+**Why it works**: Explain the edge or inefficiency being exploited
+**Why it survives costs**: Quantify the performance margin over transaction costs
+**Parent algorithm**: Link to any parent algorithm or note if original
+**Alternatives considered**: List other approaches tested and why they were rejected
 
 ---
 
 ## Implementation Decisions
 
-RSI period of 14 ticks chosen to match typical CME GLBX order bursts; shorter windows tested but produced too many false reversals.
-Entry only when participation cap allows full size — partial fills skipped to keep IS predictable.
-
-**Concerns**: RSI on tick data can produce near-constant overbought/oversold readings during trending sessions — added a 3-tick confirmation delay to reduce premature reversals.
+Document key implementation choices, parameter selections, and trade-offs made.
 
 ---
 
 ## Backtest Observations
 
-**What drove performance**: Strong reversion in EUR/USD and GBP/USD during London open (07:00–10:00 UTC)
-**What underperformed**: NY afternoon session — trend continuation dominated, reversals did not complete within holding window
-**Hypothesis verdict**: Supported in morning sessions; does not hold in afternoon trending regime
-**Suggested refinement**: Add session filter restricting entries to 07:00–13:00 UTC
+**What drove performance**: Conditions where the algorithm performs well
+**What underperformed**: Conditions where the algorithm struggles
+**Hypothesis verdict**: Was the hypothesis confirmed or rejected by backtesting?
+**Suggested refinement**: What changes might improve the algorithm?
 EOF
 
 # 5. Create requirements file
 cat > execution_algos/my-algo/requirements.txt << EOF
+nautilus-trader>=1.225.0
 pandas>=2.0.0
 numpy>=1.24.0
-ta-lib>=0.4.0
 EOF
 
 # 6. Commit your algorithm
 git add execution_algos/my-algo/
-git commit -m "Add RSI reversal strategy with backtest results"
+git commit -m "Add execution algorithm with backtest results"
 git push origin main
 
 # 7. Create automatic snapshot via branch
@@ -562,7 +563,7 @@ git push origin snapshots/my-algo
 # 8. Verify in GitHub Actions
 # Go to Actions tab and check for successful completion
 
-# 9. Done! Your strategy is safely backed up to S3 (including NOTES.md)
+# 9. Done! Your algorithm is safely backed up to S3 (including NOTES.md)
 ```
 
 ---
