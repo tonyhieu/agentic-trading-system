@@ -1,14 +1,14 @@
-name: Create Strategy Snapshot
+name: Create Execution Algorithm Snapshot
 
 on:
   workflow_dispatch:
     inputs:
-      strategy_name:
-        description: 'Name of the strategy'
+      algo_name:
+        description: 'Name of the execution algorithm'
         required: true
         type: string
-      strategy_path:
-        description: 'Path to strategy files'
+      algo_path:
+        description: 'Path to algorithm files'
         required: true
         type: string
   push:
@@ -38,21 +38,21 @@ jobs:
           echo "timestamp=$(date -u +%Y-%m-%dT%H-%M-%SZ)" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "name=${{ github.event.inputs.strategy_name }}" >> $GITHUB_OUTPUT
-            echo "path=${{ github.event.inputs.strategy_path }}" >> $GITHUB_OUTPUT
+            echo "name=${{ github.event.inputs.algo_name }}" >> $GITHUB_OUTPUT
+            echo "path=${{ github.event.inputs.algo_path }}" >> $GITHUB_OUTPUT
           else
             NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
             echo "name=$NAME" >> $GITHUB_OUTPUT
             echo "path=execution_algos/$NAME" >> $GITHUB_OUTPUT
           fi
       
-      - name: Verify strategy
+      - name: Verify algorithm
         run: |
           if [ ! -d "${{ steps.meta.outputs.path }}" ]; then
-            echo "Error: Strategy not found at ${{ steps.meta.outputs.path }}"
+            echo "Error: Algorithm not found at ${{ steps.meta.outputs.path }}"
             exit 1
           fi
-          echo "Strategy verified"
+          echo "Algorithm verified"
       
       - name: Create snapshot
         run: |
@@ -72,7 +72,7 @@ jobs:
       
       - name: Create metadata
         env:
-          STRATEGY_NAME: ${{ steps.meta.outputs.name }}
+          ALGO_NAME: ${{ steps.meta.outputs.name }}
           TIMESTAMP: ${{ steps.meta.outputs.timestamp }}
           COMMIT_SHA: ${{ steps.meta.outputs.commit }}
           COMMIT_SHA_FULL: ${{ github.sha }}
@@ -117,7 +117,7 @@ jobs:
         if: always()
         run: |
           echo "=========================================="
-          echo "Strategy: ${{ steps.meta.outputs.name }}"
+          echo "Execution Algorithm: ${{ steps.meta.outputs.name }}"
           echo "Timestamp: ${{ steps.meta.outputs.timestamp }}"
           echo "Status: ${{ job.status }}"
           echo "=========================================="
