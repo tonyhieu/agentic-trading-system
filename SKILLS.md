@@ -1,10 +1,10 @@
-# SKILLS: Strategy Snapshot System
+# SKILLS: Execution Algorithm Snapshot System
 
-This document provides instructions for autonomous agents on how to create snapshots of trading strategies using our automated backup system.
+This document provides instructions for autonomous agents on how to create snapshots of execution algorithms using our automated backup system.
 
 ## 📸 What is a Snapshot?
 
-A snapshot is a timestamped backup of your trading strategy that includes:
+A snapshot is a timestamped backup of your execution algorithm that includes:
 - **Code files** (.py, .ipynb, requirements.txt)
 - **Backtesting results** (JSON, CSV, charts)
 - **Metadata** (commit SHA, timestamp, performance metrics)
@@ -20,16 +20,16 @@ There are two methods to create a snapshot: **Manual** and **Automatic**.
 
 ### Method 1: Manual Snapshot (Recommended for Testing)
 
-Use this method when you want to manually trigger a snapshot for a specific strategy.
+Use this method when you want to manually trigger a snapshot for a specific execution algorithm.
 
-#### Step 1: Prepare Your Strategy
+#### Step 1: Prepare Your Execution Algorithm
 
-Ensure your strategy follows this directory structure:
+Ensure your execution algorithm follows this directory structure:
 
 ```
 execution_algos/
-└── your-strategy-name/
-    ├── strategy_file.py          # Your strategy code
+└── your-algo-name/
+    ├── algo_file.py              # Your execution algorithm code
     ├── NOTES.md                  # Agent reasoning (required — see PROBLEM_DEFINITION.md §10)
     ├── requirements.txt           # Python dependencies (optional)
     └── results/                   # Backtesting results (optional)
@@ -39,8 +39,8 @@ execution_algos/
 ```
 
 **Important Notes:**
-- Place your strategy in the `execution_algos/` directory
-- Use a descriptive, kebab-case name (e.g., `momentum-trader`, `mean-reversion-v2`)
+- Place your algorithm in the `execution_algos/` directory
+- Use a descriptive, kebab-case name (e.g., `my-algo-v1`, `execution-algo-v2`)
 - Include a `results/backtest-results.json` file for automatic metric extraction
 - Include a `NOTES.md` capturing your hypothesis, implementation decisions, and backtest observations — this is included in the snapshot and read by future agents
 
@@ -48,11 +48,11 @@ execution_algos/
 
 1. Go to your repository on GitHub
 2. Navigate to **Actions** tab
-3. Click **"Create Strategy Snapshot"** workflow (left sidebar)
+3. Click **"Create Execution Algorithm Snapshot"** workflow (left sidebar)
 4. Click **"Run workflow"** button (right side)
 5. Fill in the inputs:
-   - **Strategy name:** `your-strategy-name` (e.g., `momentum-trader`)
-   - **Strategy path:** `execution_algos/your-strategy-name`
+   - **Algorithm name:** `your-algo-name` (e.g., `my-algo`)
+   - **Algorithm path:** `execution_algos/your-algo-name`
 6. Click **"Run workflow"** (green button)
 
 #### Step 3: Monitor Progress
@@ -70,7 +70,7 @@ execution_algos/
 The workflow automatically verifies that your snapshot was uploaded successfully. Check the final step for the S3 path:
 
 ```
-s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/
+s3://your-bucket-name/execution_algos/your-algo-name/2026-04-04T12-30-45Z-abc1234/
 ```
 
 ---
@@ -83,39 +83,39 @@ Use this method to automatically create snapshots when you push code to special 
 
 ```bash
 # From your local repository
-git checkout -b snapshots/your-strategy-name
+git checkout -b snapshots/your-algo-name
 
 # Example:
-git checkout -b snapshots/momentum-trader-v2
+git checkout -b snapshots/my-algo-v2
 ```
 
-Branch naming convention: `snapshots/{strategy-name}`
+Branch naming convention: `snapshots/{algo-name}`
 
-#### Step 2: Add or Update Your Strategy
+#### Step 2: Add or Update Your Execution Algorithm
 
 ```bash
-# Make sure your strategy is in the execution_algos/ directory
-mkdir -p execution_algos/your-strategy-name
-cp your_code.py execution_algos/your-strategy-name/
+# Make sure your algorithm is in the execution_algos/ directory
+mkdir -p execution_algos/your-algo-name
+cp your_code.py execution_algos/your-algo-name/
 
 # Add backtesting results
-mkdir -p execution_algos/your-strategy-name/results
-cp backtest-results.json execution_algos/your-strategy-name/results/
+mkdir -p execution_algos/your-algo-name/results
+cp backtest-results.json execution_algos/your-algo-name/results/
 
 # Commit your changes
-git add execution_algos/your-strategy-name/
-git commit -m "Add momentum trading strategy with backtest results"
+git add execution_algos/your-algo-name/
+git commit -m "Add momentum execution algorithm with backtest results"
 ```
 
 #### Step 3: Push to Trigger Snapshot
 
 ```bash
-git push origin snapshots/your-strategy-name
+git push origin snapshots/your-algo-name
 ```
 
 This automatically triggers the snapshot workflow! The system will:
 - Detect the push to a `snapshots/*` branch
-- Extract the strategy name from the branch name
+- Extract the algorithm name from the branch name
 - Package and upload the snapshot to S3
 
 #### Step 4: Check GitHub Actions
@@ -133,8 +133,8 @@ Follow these naming conventions for consistency:
 | Component | Format | Example |
 |-----------|--------|---------|
 | Strategy directory | `kebab-case` | `momentum-trader`, `mean-reversion-v2` |
-| Branch name | `snapshots/{strategy-name}` | `snapshots/momentum-trader` |
-| Python files | `snake_case.py` | `momentum_strategy.py` |
+| Branch name | `snapshots/{algo-name}` | `snapshots/my-algo` |
+| Python files | `snake_case.py` | `momentum_algo.py` |
 | Results files | Specific names | `backtest-results.json`, `trade-history.csv` |
 
 ---
@@ -145,7 +145,7 @@ For automatic performance metric extraction, use this JSON structure in `backtes
 
 ```json
 {
-  "strategy_name": "Your Strategy Name",
+  "algo_name": "Your Execution Algorithm Name",
   "backtest_date": "2026-04-04T12:00:00Z",
   "parameters": {
     "param1": "value1",
@@ -182,9 +182,9 @@ The snapshot system will automatically extract these metrics and include them in
 Snapshots are stored in S3 with the following structure:
 
 ```
-s3://bucket-name/execution_algos/{strategy-name}/{timestamp}-{commit-sha}/
+s3://bucket-name/execution_algos/{algo-name}/{timestamp}-{commit-sha}/
 ├── code/
-│   ├── momentum_strategy.py
+│   ├── momentum_algo.py
 │   └── requirements.txt
 ├── results/
 │   ├── backtest-results.json
@@ -198,21 +198,21 @@ s3://bucket-name/execution_algos/{strategy-name}/{timestamp}-{commit-sha}/
 1. Log in to AWS Console
 2. Navigate to S3 service
 3. Open your bucket (e.g., `agentic-trading-snapshots-*`)
-4. Browse to `execution_algos/your-strategy-name/`
+4. Browse to `execution_algos/your-algo-name/`
 5. Select a timestamped snapshot folder
 6. Download files as needed
 
 ### Option 2: Use AWS CLI
 
 ```bash
-# List all snapshots for a strategy
-aws s3 ls s3://your-bucket-name/execution_algos/your-strategy-name/
+# List all snapshots for an algorithm
+aws s3 ls s3://your-bucket-name/execution_algos/your-algo-name/
 
 # Download a specific snapshot
-aws s3 sync s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/ ./local-folder/
+aws s3 sync s3://your-bucket-name/execution_algos/your-algo-name/2026-04-04T12-30-45Z-abc1234/ ./local-folder/
 
 # Download just the metadata
-aws s3 cp s3://your-bucket-name/execution_algos/your-strategy-name/2026-04-04T12-30-45Z-abc1234/metadata.json ./
+aws s3 cp s3://your-bucket-name/execution_algos/your-algo-name/2026-04-04T12-30-45Z-abc1234/metadata.json ./
 ```
 
 ### Option 3: Use GitHub Actions (Future Enhancement)
@@ -307,7 +307,7 @@ with open("./results/backtest-results.json", "w") as f:
 # 5. Commit and push (creates snapshot)
 # git add results/
 # git commit -m "Backtest with AAPL data"
-# git push origin snapshots/my-strategy
+# git push origin snapshots/my-algo
 ```
 
 ### Data Discovery Contract
@@ -380,11 +380,11 @@ For complete reference: See `docs/AGENT_INTEGRATION_GUIDE.md`
 
 ```bash
 # 1. Ensure strategy is in place
-ls execution_algos/your-strategy-name/
+ls execution_algos/your-algo-name/
 
-# 2. Go to GitHub → Actions → Create Strategy Snapshot → Run workflow
-# 3. Input: strategy_name = "your-strategy-name"
-# 4. Input: strategy_path = "execution_algos/your-strategy-name"
+# 2. Go to GitHub → Actions → Create Execution Algorithm Snapshot → Run workflow
+# 3. Input: algo_name = "your-algo-name"
+# 4. Input: algo_path = "execution_algos/your-algo-name"
 # 5. Click "Run workflow"
 ```
 
@@ -392,17 +392,17 @@ ls execution_algos/your-strategy-name/
 
 ```bash
 # 1. Create snapshot branch
-git checkout -b snapshots/your-strategy-name
+git checkout -b snapshots/your-algo-name
 
-# 2. Add your strategy
-mkdir -p execution_algos/your-strategy-name/results
-cp your_code.py execution_algos/your-strategy-name/
-cp backtest-results.json execution_algos/your-strategy-name/results/
+# 2. Add your algorithm
+mkdir -p execution_algos/your-algo-name/results
+cp your_code.py execution_algos/your-algo-name/
+cp backtest-results.json execution_algos/your-algo-name/results/
 
 # 3. Commit and push
-git add execution_algos/your-strategy-name/
+git add execution_algos/your-algo-name/
 git commit -m "Add strategy with results"
-git push origin snapshots/your-strategy-name
+git push origin snapshots/your-algo-name
 
 # 4. Check GitHub Actions for status
 ```
@@ -414,15 +414,15 @@ git push origin snapshots/your-strategy-name
 ### Do's ✅
 - **Always** include meaningful backtest results in your snapshots
 - **Always** write a `NOTES.md` before snapshotting — hypothesis, implementation decisions, and backtest observations (see PROBLEM_DEFINITION.md §10 for the format)
-- **Use** descriptive strategy names (e.g., `momentum-trader-v2`, not `strategy1`)
-- **Verify** your strategy structure before triggering a snapshot
+- **Use** descriptive algorithm names (e.g., `momentum-trader-v2`, not `strategy1`)
+- **Verify** your algorithm structure before triggering a snapshot
 - **Check** the Actions tab to confirm successful uploads
 - **Include** a `requirements.txt` file for reproducibility
 
 ### Don'ts ❌
 - **Don't** commit large data files (> 100MB) to the repository
 - **Don't** include API keys or credentials in strategy code
-- **Don't** use special characters in strategy names (stick to lowercase, hyphens)
+- **Don't** use special characters in algorithm names (stick to lowercase, hyphens)
 - **Don't** rely solely on snapshots for version control (still use git commits)
 - **Don't** manually delete snapshots from S3 (they auto-expire after 30 days)
 
@@ -435,7 +435,7 @@ git push origin snapshots/your-strategy-name
 **Cause:** The specified path doesn't exist in the repository.
 
 **Solution:**
-1. Verify your strategy exists: `ls execution_algos/your-strategy-name/`
+1. Verify your algorithm exists: `ls execution_algos/your-algo-name/`
 2. Check that the path matches exactly (case-sensitive)
 3. Ensure you've committed and pushed your code before running the workflow
 
@@ -456,7 +456,7 @@ git push origin snapshots/your-strategy-name
 **Cause:** `backtest-results.json` is missing or incorrectly formatted.
 
 **Solution:**
-1. Add `results/backtest-results.json` to your strategy directory
+1. Add `results/backtest-results.json` to your algorithm directory
 2. Follow the JSON structure shown in "Backtest Results Format" section
 3. Validate JSON syntax: `cat backtest-results.json | python3 -m json.tool`
 
@@ -466,7 +466,7 @@ git push origin snapshots/your-strategy-name
 
 **Solution:**
 1. Ensure all files are in the strategy directory
-2. Commit all files: `git add execution_algos/your-strategy-name/`
+2. Commit all files: `git add execution_algos/your-algo-name/`
 3. Push before triggering snapshot: `git push`
 4. Re-run the snapshot workflow
 
@@ -485,24 +485,28 @@ For issues with the snapshot system:
 
 ## 🎓 Example Workflow
 
-Here's a complete example of adding a new strategy and creating a snapshot:
+Here's a complete example of adding a new execution algorithm and creating a snapshot:
 
 ```bash
-# 1. Create your strategy locally
-mkdir -p execution_algos/rsi-reversal-strategy/results
+# 1. Create your algorithm locally
+mkdir -p execution_algos/my-algo/results
 
-# 2. Write your strategy code
-cat > execution_algos/rsi-reversal-strategy/rsi_strategy.py << EOF
-# Your strategy code here
-def calculate_rsi(prices, period=14):
-    # RSI calculation
-    pass
+# 2. Write your algorithm code
+cat > execution_algos/my-algo/my_algo.py << EOF
+# Your execution algorithm code here
+class MyExecutionAlgorithm:
+    def __init__(self, exec_id):
+        self.exec_id = exec_id
+    
+    def execute(self, order):
+        # Your algorithm implementation
+        pass
 EOF
 
 # 3. Create backtest results
-cat > execution_algos/rsi-reversal-strategy/results/backtest-results.json << EOF
+cat > execution_algos/my-algo/results/backtest-results.json << EOF
 {
-  "strategy_name": "RSI Reversal Strategy",
+  "algo_name": "My Execution Algorithm",
   "performance": {
     "total_return": 22.5,
     "sharpe_ratio": 1.8,
@@ -513,56 +517,53 @@ cat > execution_algos/rsi-reversal-strategy/results/backtest-results.json << EOF
 EOF
 
 # 4. Write agent reasoning (required before snapshotting)
-cat > execution_algos/rsi-reversal-strategy/NOTES.md << EOF
-# Strategy Notes: rsi-reversal-strategy
+cat > execution_algos/my-algo/NOTES.md << EOF
+# Execution Algorithm Notes: my-algo
 
 ## Hypothesis
 
-**Signal**: RSI oversold/overbought at top-of-book on 14-tick rolling window
-**Inefficiency exploited**: Short-term mean reversion after aggressive directional flow
-**Why it survives costs**: Edge (3–5 ticks) exceeds typical IS (~1.5 ticks) in liquid sessions
-**Parent strategy**: none — original hypothesis
-**Alternatives considered**: Bollinger band reversion (noisier signal on raw price), momentum (tried as ofi-v1, insufficient edge after costs)
+**Approach**: Describe the core execution strategy
+**Why it works**: Explain the edge or inefficiency being exploited
+**Why it survives costs**: Quantify the performance margin over transaction costs
+**Parent algorithm**: Link to any parent algorithm or note if original
+**Alternatives considered**: List other approaches tested and why they were rejected
 
 ---
 
 ## Implementation Decisions
 
-RSI period of 14 ticks chosen to match typical CME GLBX order bursts; shorter windows tested but produced too many false reversals.
-Entry only when participation cap allows full size — partial fills skipped to keep IS predictable.
-
-**Concerns**: RSI on tick data can produce near-constant overbought/oversold readings during trending sessions — added a 3-tick confirmation delay to reduce premature reversals.
+Document key implementation choices, parameter selections, and trade-offs made.
 
 ---
 
 ## Backtest Observations
 
-**What drove performance**: Strong reversion in EUR/USD and GBP/USD during London open (07:00–10:00 UTC)
-**What underperformed**: NY afternoon session — trend continuation dominated, reversals did not complete within holding window
-**Hypothesis verdict**: Supported in morning sessions; does not hold in afternoon trending regime
-**Suggested refinement**: Add session filter restricting entries to 07:00–13:00 UTC
+**What drove performance**: Conditions where the algorithm performs well
+**What underperformed**: Conditions where the algorithm struggles
+**Hypothesis verdict**: Was the hypothesis confirmed or rejected by backtesting?
+**Suggested refinement**: What changes might improve the algorithm?
 EOF
 
 # 5. Create requirements file
-cat > execution_algos/rsi-reversal-strategy/requirements.txt << EOF
+cat > execution_algos/my-algo/requirements.txt << EOF
+nautilus-trader>=1.225.0
 pandas>=2.0.0
 numpy>=1.24.0
-ta-lib>=0.4.0
 EOF
 
-# 6. Commit your strategy
-git add execution_algos/rsi-reversal-strategy/
-git commit -m "Add RSI reversal strategy with backtest results"
+# 6. Commit your algorithm
+git add execution_algos/my-algo/
+git commit -m "Add execution algorithm with backtest results"
 git push origin main
 
 # 7. Create automatic snapshot via branch
-git checkout -b snapshots/rsi-reversal-strategy
-git push origin snapshots/rsi-reversal-strategy
+git checkout -b snapshots/my-algo
+git push origin snapshots/my-algo
 
 # 8. Verify in GitHub Actions
 # Go to Actions tab and check for successful completion
 
-# 9. Done! Your strategy is safely backed up to S3 (including NOTES.md)
+# 9. Done! Your algorithm is safely backed up to S3 (including NOTES.md)
 ```
 
 ---
@@ -690,10 +691,10 @@ for date_int in {20260308..20260310}; do
 done
 
 # 3. Run backtest
-python your_strategy.py
+python your_algo.py
 
 # 4. Save results
-# Results saved to snapshots/your-strategy-name/...
+# Results saved to snapshots/your-algo-name/...
 ```
 
 ### Cost Information
