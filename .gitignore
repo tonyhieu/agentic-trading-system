@@ -53,3 +53,5 @@ Thumbs.db
 *.bak
 temp/
 tmp/
+docs/oracle_strategy_implementation.md
+/NautilusDocs
