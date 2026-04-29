@@ -43,14 +43,16 @@ Store and retrieve large research datasets (up to and beyond 40 GB) for agent tr
 
 ## Documentation
 
-### Strategy Snapshots
-- **[SKILLS.md](./SKILLS.md)** - Complete guide for agents on how to create and manage snapshots
-- **[AWS Setup Guide](./docs/AWS_SETUP_GUIDE.md)** - Step-by-step AWS infrastructure setup
-- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)** - System architecture and design decisions
+### For agents
+- **[CLAUDE.md](./CLAUDE.md)** — agent bootstrap (auto-loaded by Claude Code)
+- **[docs/OBJECTIVE.md](./docs/OBJECTIVE.md)** — the research brief
+- **[docs/skills/](./docs/skills/)** — data retrieval and snapshot procedures
+- **[research/config.yaml](./research/config.yaml)** — research hyperparameters
 
-### Data Management
-- **[Data Storage Contract](./docs/DATA_STORAGE_CONTRACT.md)** - S3 layout specification and manifest schema
-- **[Agent Integration Guide](./docs/AGENT_INTEGRATION_GUIDE.md)** - How agents retrieve and use data
+### For humans / operators
+- **[docs/operator/architecture.md](./docs/operator/architecture.md)** — system architecture and design decisions
+- **[docs/operator/aws-setup.md](./docs/operator/aws-setup.md)** — step-by-step AWS infrastructure setup
+- **[docs/operator/troubleshooting.md](./docs/operator/troubleshooting.md)** — common issues and fixes
 
 ## Repository Structure
 
@@ -66,19 +68,26 @@ agentic-trading-system/
 │       └── results/                 # Backtesting results
 │           ├── backtest-results.json
 │           └── trade-history.csv
+├── .claude/
+│   └── agents/researcher.md         # Research agent definition
 ├── .github/
 │   └── workflows/
-│       └── snapshot-strategy.yml    # Automated snapshot workflow
+│       └── snapshot-execution-algo.yml  # Automated snapshot workflow
 ├── docs/
-│   ├── AWS_SETUP_GUIDE.md          # Infrastructure setup
-│   └── IMPLEMENTATION_PLAN.md       # System design
-├── SKILLS.md                        # Agent instructions for snapshots
+│   ├── OBJECTIVE.md                 # Research brief (canonical for agents)
+│   ├── skills/                      # Backtest (run_backtest, metrics, registries), snapshot
+│   └── operator/                    # Architecture, AWS setup, troubleshooting
+├── research/
+│   ├── config.yaml                  # Research hyperparameters
+│   ├── program_database.json        # Append-only attempt log
+│   └── NOTES.md                     # Human assumption alerts
+├── CLAUDE.md                        # Agent bootstrap
 └── README.md                        # This file
 ```
 
 ## Quick Start for Agents
 
-Read **[docs/PROBLEM_DEFINITION.md](docs/PROBLEM_DEFINITION.md)** — it contains everything an agent needs: the metatask, how to access data, execution constraints, evaluation benchmarks, the research loop, and how to save results.
+Read **[docs/OBJECTIVE.md](docs/OBJECTIVE.md)** — it contains everything an agent needs: the metatask, how to access data, execution constraints, evaluation benchmarks, the research loop, and how to save results. All numeric values come from **[research/config.yaml](research/config.yaml)**.
 
 ### Create a Strategy Snapshot
 
@@ -105,7 +114,7 @@ git push origin snapshots/your-strategy-name
 3. Enter strategy name and path
 4. Click "Run workflow" button
 
-See [SKILLS.md](./SKILLS.md) for detailed instructions.
+See [docs/skills/snapshot.md](./docs/skills/snapshot.md) for detailed instructions.
 
 ## Snapshot Storage Structure
 
@@ -128,7 +137,7 @@ s3://bucket-name/execution_algos/
 
 For administrators setting up the infrastructure:
 
-1. Follow the [AWS Setup Guide](./docs/AWS_SETUP_GUIDE.md) to configure:
+1. Follow the [AWS Setup Guide](./docs/operator/aws-setup.md) to configure:
    - AWS account and S3 bucket
    - IAM user with minimal permissions
    - GitHub repository secrets
@@ -136,7 +145,7 @@ For administrators setting up the infrastructure:
 
 2. The GitHub Actions workflow is pre-configured and ready to use
 
-3. Share the [SKILLS.md](./SKILLS.md) guide with autonomous agents
+3. Point agents at [CLAUDE.md](./CLAUDE.md) and [docs/OBJECTIVE.md](./docs/OBJECTIVE.md)
 
 ## Example Execution Algorithm
 
@@ -177,7 +186,7 @@ This repository is designed for autonomous agents to iterate on trading strategi
 2. Develop execution algorithms in the `execution_algos/` directory
 3. Include comprehensive backtesting results
 4. Use the snapshot system to preserve iterations
-5. Follow naming conventions in SKILLS.md
+5. Follow naming conventions in [docs/skills/snapshot.md](./docs/skills/snapshot.md)
 
 ## License
 

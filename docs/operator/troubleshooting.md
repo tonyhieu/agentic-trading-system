@@ -142,7 +142,7 @@ aws s3api get-bucket-location --bucket your-bucket-name
 # Should match AWS_REGION secret
 
 # Step 5: If bucket doesn't exist, recreate it
-# See AWS_SETUP_GUIDE.md Step 3
+# See aws-setup.md Step 3
 ```
 
 ### Error: Workflow timeout
@@ -322,7 +322,7 @@ cat execution_algos/my-strategy/results/backtest-results.json | jq '.performance
 
 # Should have: total_return, sharpe_ratio, max_drawdown, win_rate
 
-# 3. Use correct JSON structure (see SKILLS.md)
+# 3. Use correct JSON structure (see docs/skills/snapshot.md)
 {
   "performance": {
     "total_return": 15.34,
@@ -563,9 +563,9 @@ git push origin snapshots/my-strategy-v2
 ### Self-Service Resources
 
 1. **Documentation:**
-   - SKILLS.md - Usage instructions
-   - AWS_SETUP_GUIDE.md - Infrastructure setup
-   - README_FOR_HUMANS.md - Architecture overview
+   - docs/skills/snapshot.md - Usage instructions
+   - aws-setup.md - Infrastructure setup
+   - architecture.md - Architecture overview
 
 2. **AWS Resources:**
    - [S3 Documentation](https://docs.aws.amazon.com/s3/)
@@ -637,7 +637,7 @@ cat execution_algos/my-strategy/results/backtest-results.json | python3 -m json.
 - Review lifecycle policy is working
 
 ✅ **Keep documentation updated**
-- Update SKILLS.md if workflow changes
+- Update docs/skills/snapshot.md if workflow changes
 - Document custom modifications
 - Share troubleshooting tips with team
 

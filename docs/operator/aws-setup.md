@@ -325,13 +325,10 @@ You now have:
 
 ## Next Steps
 
-Now that AWS infrastructure is ready, you can proceed with:
-1. Creating the GitHub Actions workflow (`.github/workflows/snapshot-strategy.yml`)
-2. Creating SKILLS.md documentation for agents
-3. Testing the snapshot system
-4. Implementing the rest of the plan
-
-**Ready for autopilot mode!** 🚀
+Now that AWS infrastructure is ready:
+1. The GitHub Actions workflow at `.github/workflows/snapshot-execution-algo.yml` is pre-configured.
+2. The agent skill documentation lives at `docs/skills/snapshot.md`.
+3. Test by pushing to a `snapshots/<id>` branch — the workflow auto-uploads.
 
 ---
 
