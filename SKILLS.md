@@ -1032,4 +1032,149 @@ Each evaluation incurs approximately:
 
 **Total per evaluation: ~$0.30**
 
+---
+
+## 🐛 Local Debugging: Free Algorithm Testing
+
+**RECOMMENDED:** Before using the cloud evaluator, test your execution algorithm locally using the free debugging script.
+
+### Why Use Local Testing?
+
+- **Cost**: Free (no AWS charges)
+- **Speed**: Instant feedback (2-3 minutes vs. 12+ minute cloud evaluation)
+- **Development**: Iterate rapidly without worrying about costs
+- **Debugging**: Full console output and error messages
+- **Same format**: Output matches Lambda evaluator exactly (same metrics, same JSON)
+
+### Local Evaluator Script
+
+Use `scripts/local-evaluator.py` to evaluate algorithms locally on in-sample data:
+
+```bash
+# Test an algorithm locally
+python3 scripts/local-evaluator.py <algorithm_name> [num_days]
+
+# Examples:
+python3 scripts/local-evaluator.py simple              # Test "simple" algo on 2 days
+python3 scripts/local-evaluator.py my_algo 3           # Test "my_algo" on 3 in-sample days
+```
+
+### How It Works
+
+1. **Checks for cached data** - If 2-3 days of in-sample data exist locally, uses them (skip S3 download)
+2. **Downloads (if needed)** - Fetches in-sample data from S3 (March 23-29, 2026)
+3. **Downloads algorithm** - Fetches your algorithm from `snapshots/{algorithm_name}` branch
+4. **Runs backtests** - Executes same backtest logic as Lambda (EMA cross strategy + your execution algorithm)
+5. **Computes metrics** - Generates 8 execution metrics (identical to cloud evaluator)
+6. **Saves report** - Stores JSON report to `local-cache/evaluation-reports/{algorithm_name}/`
+
+### Environment Variables
+
+```bash
+# Optional - defaults provided
+GITHUB_REPO="tonyhieu/agentic-trading-system"  # Your fork/repo
+GITHUB_TOKEN=""                                 # Token for private repos
+S3_BUCKET_NAME="agentic-trading-snapshots-uchicago-spring-2026"
+AWS_REGION="us-east-2"
+LOCAL_CACHE_DIR="./local-cache"                # Where to cache data
+```
+
+### Output Format
+
+Results are saved in two formats (both to `local-cache/evaluation-reports/{algo_name}/`):
+
+**JSON Report** (`{timestamp}_evaluation_report.json`):
+```json
+{
+  "algorithm_name": "my_algo",
+  "evaluation_timestamp": "2026-04-30T17:25:23.087-05:00",
+  "evaluation_type": "local_debug",
+  "metrics": {
+    "slippage_bps": {"mean": 1.2, "min": 0.5, "max": 2.1, "count": 3},
+    "execution_time_ms": {"mean": 45.3, ...},
+    "fill_accuracy_pct": {"mean": 99.8, ...},
+    ...
+  },
+  "in_sample_period": {
+    "dates": ["20260323", "20260324", "20260325"],
+    "duration_days": 3
+  }
+}
+```
+
+### Workflow
+
+**Step 1: Test Locally (Free)**
+```bash
+cd /Users/avo/GitHub/agentic-trading-system
+python3 scripts/local-evaluator.py my_algo 2
+```
+
+**Step 2: Review Results**
+```bash
+cat local-cache/evaluation-reports/my_algo/*/evaluation_report.json | python3 -m json.tool
+```
+
+**Step 3: Iterate & Refine**
+- Fix algorithm issues (if any detected)
+- Re-test locally until satisfied
+- No AWS costs, fast feedback loop
+
+**Step 4: Submit to Cloud (When Ready)**
+- Only after local testing passes
+- Push to `snapshots/{algo_name}` branch
+- Lambda evaluator runs automatically on out-of-sample data
+- ~$0.30 cost, ~12 minute wait
+
+### Common Issues
+
+**"No data found"** → Download S3 data (requires AWS credentials and S3_BUCKET_NAME)
+
+**"Import error"** → Algorithm must be valid Python, check `execution_algos/` examples
+
+**"Backtest failed"** → Check algorithm code, review console output for errors
+
+### Data
+
+Local evaluator uses **in-sample data** (2-3 days from March 23-29, 2026):
+- Same market conditions as what Lambda sees
+- Subset of ~19 in-sample partitions available
+- Cached locally after first download
+
+Cloud evaluator uses **out-of-sample data** (7 days from March 30 - April 6, 2026):
+- Never seen during development
+- True test of algorithm quality
+- Reserved for final evaluation only
+
+### Example: Full Development Cycle
+
+```bash
+# 1. Create new algorithm (push to snapshots/my_test_algo)
+
+# 2. Test locally first (free, instant feedback)
+python3 scripts/local-evaluator.py my_test_algo 3
+
+# 3. Review results
+cat local-cache/evaluation-reports/my_test_algo/*/evaluation_report.json | python3 -m json.tool
+
+# 4. Iterate & refine (repeat 2-3 until happy)
+
+# 5. Only then, submit for cloud evaluation
+# → Lambda will test on 7 days of out-of-sample data
+# → You'll get official metrics in 12 minutes
+# → Results in s3://agentic-trading-snapshots-uchicago-spring-2026/evaluation-reports/my_test_algo/
+```
+
+### Summary
+
+| Aspect | Local Testing | Cloud Evaluator |
+|--------|---------------|-----------------|
+| **Cost** | Free | ~$0.30 |
+| **Time** | 2-3 min | 12+ min |
+| **Data** | In-sample (train) | Out-of-sample (test) |
+| **Use Case** | Development/Debugging | Final Validation |
+| **Output** | Same format | Same format |
+
+**Rule: Always test locally before cloud evaluation. Save money, iterate faster.**
+
 Budget responsibly: 10 iterations = $3.00, 100 iterations = $30.00
