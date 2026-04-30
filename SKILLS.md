@@ -853,3 +853,183 @@ Downloaded market data is persisted in `./data-cache/` and mounted into the cont
 ## Environment Variables
 
 All credentials are loaded from `.env` file. See `.env.example` for required variables.
+
+---
+
+# 🎯 Execution Algorithm Evaluator Skill
+
+This section describes how to retrieve evaluation results from the automated evaluator function and important cost considerations.
+
+## ⚠️ CRITICAL: Cost and Resource Warning
+
+The Execution Algorithm Evaluator is a **production resource that incurs AWS costs**. Before requesting algorithm evaluation:
+
+1. **Run extensive local backtests first** - Verify your algorithm works correctly on your development machine
+2. **Test on sample data** - Don't submit untested code to the evaluator
+3. **Minimize iterations** - Each evaluation costs approximately **$0.30** (1 GB Lambda, ~12 minutes runtime)
+4. **Request evaluation sparingly** - Only after you've thoroughly validated locally
+
+**Abuse Policy:** Agents that repeatedly submit untested or buggy algorithms will have their evaluation privileges revoked. Test first, evaluate second.
+
+## Overview
+
+After you push an execution algorithm to a `snapshots/{algo_name}` branch, the evaluation system automatically:
+
+1. **Triggers Lambda Evaluator** - S3 event automatically invokes the evaluator
+2. **Runs 7-day backtest** - Tests against out-of-sample data (March 30 - April 6, 2026)
+3. **Computes metrics** - Generates 8 execution metrics from backtest results
+4. **Stores results** - Saves evaluation report to S3
+
+## Where to Find Evaluation Results
+
+### Location in S3
+
+Evaluation results are stored in your S3 bucket at:
+
+```
+s3://agentic-trading-snapshots-uchicago-spring-2026/
+  └── evaluation-reports/
+      └── {algo_name}/
+          ├── {timestamp}_evaluation_report.json      # Main results
+          ├── {timestamp}_backtest_logs.txt           # Execution logs
+          └── {timestamp}_metrics_summary.json        # Metric summary
+```
+
+### Accessing Results
+
+#### Via AWS CLI
+
+```bash
+# List all evaluation reports
+aws s3 ls s3://agentic-trading-snapshots-uchicago-spring-2026/evaluation-reports/ --recursive
+
+# Download a specific report
+aws s3 cp s3://agentic-trading-snapshots-uchicago-spring-2026/evaluation-reports/{algo_name}/{timestamp}_evaluation_report.json .
+
+# Stream report to console
+aws s3 cp s3://agentic-trading-snapshots-uchicago-spring-2026/evaluation-reports/{algo_name}/{timestamp}_evaluation_report.json - | python -m json.tool
+```
+
+#### Via Python Script
+
+```python
+import boto3
+import json
+
+s3 = boto3.client('s3', region_name='us-east-2')
+bucket = 'agentic-trading-snapshots-uchicago-spring-2026'
+
+# List all reports for an algorithm
+response = s3.list_objects_v2(
+    Bucket=bucket,
+    Prefix='evaluation-reports/my-algo-name/'
+)
+
+# Download and parse latest report
+for obj in response.get('Contents', []):
+    if 'evaluation_report.json' in obj['Key']:
+        response = s3.get_object(Bucket=bucket, Key=obj['Key'])
+        report = json.load(response['Body'])
+        print(report)
+```
+
+## Evaluation Report Structure
+
+Each evaluation report contains:
+
+```json
+{
+  "algorithm_name": "my-algo-v1",
+  "evaluation_date": "2026-04-30T00:00:00Z",
+  "backtest_period": {
+    "start": "2026-03-30",
+    "end": "2026-04-06",
+    "days_oos": 7
+  },
+  "execution_metrics": {
+    "slippage_bps": 12.5,              # Average slippage (basis points)
+    "execution_time_ms": 245.3,         # Average execution time
+    "fill_accuracy_pct": 98.7,          # % of orders filled at expected price
+    "latency_ms": 42.1,                 # Order latency
+    "cost_bps": 8.3,                    # Execution cost (basis points)
+    "orders_per_second": 15.2,          # Throughput
+    "execution_time_variance_ms": 89.4, # Variability
+    "peak_latency_ms": 156.3            # Maximum latency observed
+  },
+  "performance_summary": {
+    "total_trades": 523,
+    "successful_fills": 516,
+    "failed_fills": 7,
+    "avg_profit_per_trade": 1.23,
+    "total_pnl": 642.09
+  },
+  "status": "completed",
+  "errors": []
+}
+```
+
+## Monitoring Evaluation Progress
+
+### Check CloudWatch Logs
+
+```bash
+# Stream Lambda logs in real-time
+aws logs tail /aws/lambda/execution-algorithm-evaluator --follow --region us-east-2
+
+# View last 50 lines
+aws logs tail /aws/lambda/execution-algorithm-evaluator --max-items 50 --region us-east-2
+```
+
+### Check Function Execution
+
+```bash
+# Get function invocation metrics for last hour
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/Lambda \
+  --metric-name Invocations \
+  --dimensions Name=FunctionName,Value=execution-algorithm-evaluator \
+  --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Sum \
+  --region us-east-2
+```
+
+## Troubleshooting Evaluations
+
+### Status: "pending"
+Algorithm is queued for evaluation. Check back in 5-10 minutes.
+
+### Status: "failed" with error "Branch not found"
+- Verify `snapshots/{algo_name}` branch exists in repository
+- Check branch name spelling and formatting (kebab-case)
+- Ensure branch has been pushed to GitHub
+
+### Status: "failed" with error "Algorithm import error"
+- Algorithm code has syntax errors
+- Missing required dependencies in `requirements.txt`
+- Review backtest logs in S3 for detailed error message
+
+### Status: "timeout" after 15 minutes
+- Backtest took too long on 7 days of data
+- Algorithm may have performance issues
+- Consider profiling locally first
+
+## Best Practices
+
+1. **Local validation first** - Always backtest locally before submitting to evaluator
+2. **Include NOTES.md** - Document your algorithm's approach for future review
+3. **Check results quickly** - Results are retained for 30 days; download before they expire
+4. **Archive good results** - Keep copies of successful evaluation reports for comparison
+5. **Iterate thoughtfully** - Each evaluation iteration costs money; make it count
+
+## Cost Tracking
+
+Each evaluation incurs approximately:
+- **Compute**: $0.20 (1 GB memory × 10-12 minutes)
+- **S3 storage**: $0.01 per evaluation report (retrieval costs included in monthly)
+- **Data transfer**: Minimal (within AWS region)
+
+**Total per evaluation: ~$0.30**
+
+Budget responsibly: 10 iterations = $3.00, 100 iterations = $30.00
