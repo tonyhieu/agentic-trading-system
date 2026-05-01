@@ -25,8 +25,9 @@ engine.dispose()
 ```
 
 **Strategy is locked by config.** Do not pass a `strategy_name` other than
-`cfg["strategy"]["name"]`. The whole point of execution-algorithm research
-is that the strategy is the constant.
+`cfg["strategy"]["name"]`. The strategy block is opaque — do not vary it,
+inspect its implementation, or reason about its mechanics. The execution
+algorithm is the only variable under study.
 
 The backtest engine handles data sync internally —
 `backtest_engine/data_loader.py:load_dbn_partition()` calls
@@ -34,24 +35,17 @@ The backtest engine handles data sync internally —
 through Nautilus's `DatabentoDataLoader`. You do not call `data_retriever.py`
 directly.
 
-## 2. Strategy — held fixed by config
+## 2. Strategy — opaque, held fixed by config
 
-`research/config.yaml → strategy.name` is the active strategy and the agent
-must use it on every run. The strategy generates the signal; it is the
-*constant* in your research, while the execution algorithm is the variable.
+The `strategy` block in `config.yaml` is opaque to you. Read
+`cfg["strategy"]["name"]` and `cfg["strategy"]["kwargs"]` and pass both
+through to `run_backtest()` unchanged. Do not inspect strategy
+implementation files, registries, or kwargs semantics — your task is
+execution, not signal generation. The strategy is the constant; the
+execution algorithm is the only variable under study.
 
-Currently locked to **`oracle`** — a forward-looking signal source with
-configurable noise. Preprocessing kwargs (`horizon_seconds`, `sigma`,
-`seed`, `signal_interval_seconds`) live in `config.yaml → strategy.kwargs`.
-With `sigma > 0` the signal is deliberately imperfect; your execution
-algorithm has to handle that uncertainty rather than treat each signal as
-truth. See `backtest_engine/backtest_low_level.py:67` for how the kwargs
-feed into `build_oracle_signals`.
-
-Registry of available (but currently unused) strategies:
-`strategies/__init__.py → _STRATEGY_FACTORIES` — `ema_cross`, `momentum`,
-`oracle`. Switching the locked strategy is a human decision (edit
-`config.yaml`), not an agent decision.
+Switching the locked strategy is a human decision (edit `config.yaml`),
+not an agent decision.
 
 ## 3. Execution algorithms — the variable under study
 
@@ -148,8 +142,8 @@ Produced by `compute_metrics()` in `backtest_engine/results.py:153`:
 ## 6. Comparing to the baseline
 
 `research/config.yaml → pass_gate.baseline` names the execution algorithm to
-beat (default `simple`). Run both on the same `(strategy, date, symbol)`,
-then read both `metrics.json` files:
+beat (default `simple`). Run both on the same `(date, symbol)` with the
+same configured `strategy` block, then read both `metrics.json` files:
 
 ```python
 import json
@@ -192,8 +186,8 @@ Each call appends a fresh run dir under `results/`. Aggregating metrics
 
 ## 8. Footnote: raw data access
 
-If you need raw DBN data outside the backtest pipeline (exploratory analysis,
-custom signal extraction):
+If you need raw DBN data outside the backtest pipeline (exploratory analysis
+of market microstructure for execution-algorithm design):
 
 ```bash
 python scripts/data_retriever.py sync-partition \

@@ -44,7 +44,7 @@ record and adds the baseline comparison.
   "algo_name": "twap-volatility-aware",
   "backtest_date": "2026-04-29T14:32:00Z",
   "baseline": "simple",
-  "strategy_used": "oracle",
+  "strategy_used": "<value of cfg['strategy']['name']>",
   "symbol": "MESM6",
   "performance": {
     "realized_pnl":            3200.50,
@@ -108,6 +108,11 @@ directory (code, results/, NOTES.md, generated metadata) and uploads to:
 ```
 s3://<bucket>/execution_algos/<algo-id>/<timestamp>-<commit>/
 ```
+
+This same upload triggers the `execution-algorithm-evaluator` Lambda, which
+runs the algorithm against the test window in `config.yaml → data_window.test`
+and writes a report to `s3://<bucket>/evaluation-reports/<algo-id>/`. See
+`evaluate.md` for retrieving and interpreting that report.
 
 ## 5. Manual snapshot (fallback)
 
