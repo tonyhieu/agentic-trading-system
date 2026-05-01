@@ -23,32 +23,5 @@
     },
     "notes": "Train P&L delta is -0.77% vs the +5% gate (FAIL, not CLOSE; gap=5.77pp > close_margin_pct=2.0). Slippage uninformative — fill model reports 0.0 for both algos on every date (see research/NOTES.md). Win-rate rose +6-9pp under the defer but mean dollar P&L did not, suggesting the defer redistributes outcomes without enlarging them. Trade count drops ~25% because some deferred closes get superseded by later strategy reversals — the algo isn't a pure scheduling overlay. Test split is only 1 date (cached only — see RESULT WARNING in research/NOTES.md); not a basis for OOS claims either way.",
     "timestamp": "2026-04-30T22:15:00Z"
-  },
-  {
-    "id": "imbalance-open-filter",
-    "status": "fail",
-    "baseline": "simple",
-    "hypothesis": "Filter opening orders by top-of-book bid/ask imbalance (threshold=0.45): submit a BUY open only if bid_size/(bid_size+ask_size) >= 0.45, and a SELL open only if ask_size/(bid_size+ask_size) >= 0.45. Reduce-only (closing) orders always pass through immediately. Filtered opens are dropped, allowing the oracle to re-enter on the next signal cycle (~1s) if the forecast persists.",
-    "algorithm_path": "execution_algos/imbalance-open-filter/",
-    "scores": {
-      "train_dates": ["20260309", "20260313", "20260317"],
-      "test_dates": ["20260406"],
-      "train_pnl_sum_mine": 7384.5,
-      "train_pnl_sum_base": 7411.75,
-      "train_delta_pnl_pct": -0.368,
-      "train_mean_slippage_mine": 0.0,
-      "train_mean_slippage_base": 0.0,
-      "train_delta_slippage_pct": 0.0,
-      "test_delta_pnl_pct": 0.764,
-      "trade_count_mine_sum": 6247,
-      "trade_count_base_sum": 7393,
-      "winrate_mine_mean_train": 0.776,
-      "winrate_base_mean_train": 0.740,
-      "sharpe_mine_mean_train": 463.4,
-      "sharpe_base_mean_train": 457.4,
-      "passed": false
-    },
-    "notes": "Train P&L delta is -0.368% vs the +5% gate (FAIL; gap=5.368pp > close_margin_pct=2.0). Slippage uninformative — fill model reports 0.0 for both algos (see research/NOTES.md). Win rate improved consistently (+0.9pp, +3.2pp, +6.9pp across train dates) confirming the filter removes some losing trades; but at threshold=0.45 it also removes enough winning trades to produce net P&L loss on 2 of 3 train dates. Only 20260317 saw positive delta (+1.8%). Test date (1 day only — see RESULT WARNING) showed +0.764%. The mechanism shows promise on high-volume days; a stronger threshold (0.55+) or a volatility-conditional threshold may unlock more consistent P&L improvement. Same 4 cached partitions used as prior iteration (within budget).",
-    "timestamp": "2026-05-01T04:00:00Z"
   }
 ]

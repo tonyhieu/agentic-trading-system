@@ -13,10 +13,6 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.reduce-only-cooldown",
         "get_execution_algorithm",
     ),
-    "imbalance-open-filter": (
-        "execution_algos.imbalance-open-filter",
-        "get_execution_algorithm",
-    ),
 }
 
 
