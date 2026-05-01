@@ -50,18 +50,22 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
 
     `date` is YYYYMMDD (e.g. "20260406"); `symbol` is a Databento raw_symbol
     such as "MESM6" (Micro E-mini S&P 500, June 2026) or "GCM6" (Gold, June 2026).
-    """
-    bucket = os.environ["S3_BUCKET_NAME"]
-    region = os.environ.get("AWS_REGION", "us-east-1")
-    cache_dir = os.environ.get("DATA_CACHE_DIR", "./data-cache")
 
-    retriever = DataRetriever(bucket, region, cache_dir)
-    retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
+    If the file already exists in DATA_CACHE_DIR (e.g. a local symlink), the S3
+    sync is skipped entirely and S3_BUCKET_NAME is not required.
+    """
+    cache_dir = os.environ.get("DATA_CACHE_DIR", "./data-cache")
 
     dbn_path = (
         Path(cache_dir) / DATASET_NAME / DATASET_VERSION
         / "partitions" / f"date={date}" / "data.dbn.zst"
     )
+
+    if not dbn_path.exists():
+        bucket = os.environ["S3_BUCKET_NAME"]
+        region = os.environ.get("AWS_REGION", "us-east-1")
+        retriever = DataRetriever(bucket, region, cache_dir)
+        retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
 
     instrument = _build_instrument(symbol)
 
