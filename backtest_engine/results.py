@@ -127,10 +127,9 @@ def _sharpe_ratio(account: pd.DataFrame) -> float | None:
 
 
 def _execution_costs(orders: pd.DataFrame) -> dict[str, float | None]:
-    """Proxy for execution quality until arrival-price capture lands upstream.
+    """Per-order slippage (fill vs limit) and commissions, both reported by Nautilus.
 
-    Returns total commissions (account currency) plus mean and worst-case slippage
-    in instrument price units (multiply by the contract multiplier to get dollars).
+    For arrival-price IS, see `backtest_engine.arrival_price`.
     """
     total_comm = mean_slip = max_slip = None
 
