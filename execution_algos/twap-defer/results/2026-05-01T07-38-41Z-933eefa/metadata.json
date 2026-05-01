@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-05-01T07-38-41Z",
+  "git_sha_short": "933eefa",
+  "strategy_name": "oracle",
+  "strategy_kwargs": {
+    "instrument_id": "MESM6.GLBX",
+    "trade_size": "1"
+  },
+  "execution_algorithm_name": "twap-defer",
+  "execution_algorithm_kwargs": {},
+  "date": "20260309",
+  "symbol": "MESM6",
+  "venue": "GLBX",
+  "dataset_name": "glbx-mdp3-market-data",
+  "dataset_version": "v1.0.0",
+  "oracle_preprocessing": {
+    "horizon_seconds": 30.0,
+    "sigma": 0.5,
+    "seed": 42,
+    "signal_interval_seconds": 1.0
+  }
+}

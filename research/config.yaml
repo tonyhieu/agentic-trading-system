@@ -31,7 +31,7 @@ strategy:
 
 data_window:
   # Train/test split (ISO dates, inclusive). Must lie within the dataset's date_range.
-  train: ["2026-03-08", "2026-03-25"]
+  train: ["2026-03-08", "2026-03-10"]
   test:  ["2026-03-26", "2026-04-06"]
   # Cost cap: max date partitions an agent may download in a single iteration.
   # 10 days × ~330 MB ≈ $0.13 per iteration.
