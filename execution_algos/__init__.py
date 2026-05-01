@@ -9,6 +9,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.simple_execution_strategy",
         "get_execution_algorithm",
     ),
+    "cap-boost": (
+        "execution_algos.cap-boost",
+        "get_execution_algorithm",
+    ),
 }
 
 
