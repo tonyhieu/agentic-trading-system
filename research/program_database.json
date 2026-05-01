@@ -34,5 +34,23 @@
     },
     "notes": "FAIL — train pnl -18.56% vs simple aggregated over train dates 20260309 + 20260310 (twap-defer $4345.50 / 2161 trades, simple $5336.00 / 2161 trades). 20260308 not run. Trade counts match exactly — deferral did not change participation, only retiming. Hypothesis verdict: 'deferring is free P&L within the 30s oracle horizon' is contradicted; deferred fills land at worse oracle-edge prices because the signal quality decays inside the horizon. mean_slippage tied at 0.0 (zero-slippage fill model — see research/NOTES.md DATA ISSUE on cost-model). Suggested next attempt: do not retime fills inside the oracle horizon at all — instead try cap-compliance via skipping only at session-end edge cases, or focus the variable on order timing relative to book-state events rather than on quote-tick cadence.",
     "timestamp": "2026-05-01T07:56:21Z"
+  },
+  {
+    "id": "imbalance-skip",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Order-book imbalance conditioned skip: at submission time compute imbalance = (bid_size - ask_size) / (bid_size + ask_size). For a BUY, skip if imbalance > 0.5 (bid-heavy, buying pressure consuming the ask — adverse entry). For a SELL, skip if imbalance < -0.5 (ask-heavy, adverse). Reduce-only (close) orders submit immediately. No deferral — pure conditional skip at decision time, preserving quantity invariant. Draws from Almgren/Chriss (2000) §4 (value of drift/directional information) and Diverse Approaches 2026 (order-book imbalance as key execution state feature).",
+    "algorithm_path": "execution_algos/imbalance-skip/",
+    "scores": {
+      "sharpe": 293.07,
+      "realized_pnl": 5730.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 0.10,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 2267,
+      "passed": false
+    },
+    "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): imbalance-skip $5730.75 / 2267 trades vs simple $5725.00 / 2301 trades; delta_pnl = +0.10%, far below the +5.0% gate. Hypothesis directionally supported (win rate +0.56pp: 85.05% vs 84.49%) but effect size negligible. At threshold=0.5, the imbalance filter skips ~1-2% of trades and cannot discriminate winners from losers with enough power — the oracle fills are already highly profitable so skipping any subsets based on mild imbalance adds noise rather than value. Suggested next attempt: (1) higher threshold (0.8-0.9) targeting only extreme book events; (2) alternative book-state signal — e.g. compare recent mid-price moves to oracle direction (skip if price already ran in oracle direction, suggesting signal is stale), which is more directly linked to oracle decay than static imbalance.",
+    "timestamp": "2026-05-01T08:20:00Z"
   }
 ]
