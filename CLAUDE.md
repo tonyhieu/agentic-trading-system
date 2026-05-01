@@ -18,6 +18,7 @@ doing anything else.
   - `backtest.md` — running `run_backtest()`, metrics, registering a new execution algorithm
   - `analysis.md` — exploratory analysis of training-set market data (raw DBN inspection)
   - `snapshot.md` — saving a passing execution algorithm to S3
+  - `evaluate.md` — retrieving the Lambda evaluator's out-of-sample report after snapshotting
 - **Runtime state**: `research/`
   - `program_database.json` — append-only log of every attempt (read on entry, write on exit)
   - `NOTES.md` — assumption alerts for the human operator (§8)
