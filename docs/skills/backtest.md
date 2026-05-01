@@ -165,11 +165,14 @@ delta_slip_pct = (mine["mean_slippage"] - base["mean_slippage"]) / abs(base["mea
 
 Compare against the gate in `config.yaml → pass_gate`.
 
-## 7. Multi-date evaluation
+## 7. Multi-date evaluation (train window only)
 
-`run_backtest()` runs one date per call. For train/test evaluation, loop:
+`run_backtest()` runs one date per call. The agent backtests over the
+**train** window only — the test window is held out for the Lambda
+evaluator (`OBJECTIVE.md §5 step 5`, `docs/skills/evaluate.md`). Loop:
 
 ```python
+train_dates = [d.replace("-", "") for d in pd.date_range(*cfg["data_window"]["train"], freq="B").strftime("%Y-%m-%d")]
 shared = dict(
     strategy_name=cfg["strategy"]["name"],
     strategy_kwargs=cfg["strategy"]["kwargs"],
@@ -182,7 +185,8 @@ for date in train_dates:
 
 Each call appends a fresh run dir under `results/`. Aggregating metrics
 (mean Sharpe, sum P&L, win-rate weighted by trades) across per-date
-`metrics.json` files is the agent's responsibility.
+`metrics.json` files is the agent's responsibility. Do **not** add test
+dates to this loop — the OOS evaluation runs on Lambda after snapshot.
 
 ## 8. Footnote: raw data access
 

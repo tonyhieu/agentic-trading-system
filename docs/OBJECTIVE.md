@@ -14,6 +14,8 @@ Skills referenced from the loop steps:
 - `docs/skills/analysis.md` — exploratory analysis on training-set market
   data (load only when you need raw-tick inspection before implementing)
 - `docs/skills/snapshot.md` — saving a passing execution algorithm to S3
+- `docs/skills/evaluate.md` — retrieving the Lambda evaluator's OOS report
+  after snapshotting and merging it into `backtest-results.json`
 
 ---
 
@@ -41,10 +43,11 @@ until a passing algorithm is found or the iteration budget in
 1. READ  research/program_database.json + docs/literature/ for context
 2. HYPOTHESIZE → write Hypothesis section in NOTES.md before any code
 3. IMPLEMENT execution_algos/<algo-id>/execution_algorithm.py + register in factory
-4. BACKTEST your algo AND the baseline on train+test dates (one run_backtest per date per algo)
-5. COMPARE metrics.json deltas against pass_gate → PASS / CLOSE / FAIL
+4. BACKTEST your algo AND the baseline on **train** dates only (one run_backtest per date per algo). Test is held out for Lambda.
+5. COMPARE metrics.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
 6. APPEND entry to research/program_database.json + git commit
-7. On PASS: git push origin snapshots/<algo-id>
+7. On PASS: git push origin snapshots/<algo-id> — this triggers the Lambda evaluator on test
+8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (docs/skills/evaluate.md)
 ```
 
 For exploratory data analysis before step 3, see `docs/skills/analysis.md`.
@@ -78,10 +81,32 @@ and any snapshot built from it would mislead future agents.
 They are tunable. Pass them into your algorithm via
 `execution_algorithm_kwargs` or read the file inside your factory.
 
+### Quantity invariant (non-tunable)
+
+The execution algorithm **fragments, defers, or skips** parts of a parent
+order — it never increases its quantity. For every parent order the
+strategy submits:
+
+```
+sum(child_fills) ≤ parent.quantity
+```
+
+Strict inequality (`<`) is allowed when liquidity or constraints make a
+full fill infeasible (record a `research/NOTES.md` ASSUMPTION/DATA ISSUE
+in that case). Strict greater-than (`>`) is **never** allowed.
+
+Sizing is a strategy decision and is held fixed (§1). An algorithm that
+submits more contracts than the parent specifies — by spawning extra
+child orders, doubling sizes opportunistically, or otherwise inflating —
+is doing position sizing, not execution. The result is invalid
+regardless of realized P&L, and any snapshot built from it is rejected.
+
+### Tunable constraints
+
 | Field | What it requires |
 |---|---|
 | `top_of_book_only` | When true, fill at `ask_px` (buys) or `bid_px` (sells); never place orders that would walk the book. |
-| `participation_cap` | `order_size ≤ floor(participation_cap × top_of_book_qty)` per tick. In `on_order()`, read the current top-of-book size and cap your submission; defer any remainder to a later tick. |
+| `participation_cap` | Per-tick **ceiling**: `order_size_per_tick ≤ floor(participation_cap × top_of_book_qty)`. This is a cap, not a target — never inflate a parent order to use available book capacity. If the cap is 0 (book too thin), defer to a later tick; skipping is allowed under the quantity invariant when no later tick is feasible (e.g., session end). |
 | `intraday_flat` | When true, all positions closed by end of each session. Track session boundaries (data timestamps carry session info) and submit closing orders before the final tick. |
 
 Verify your algorithm respects these on every backtest. If you cannot
@@ -153,13 +178,20 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    Register in execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES.
    See docs/skills/backtest.md §3 for the minimal pattern.
 
-5. BACKTEST
-   For each date in config.yaml → data_window.train and .test, call
-   run_backtest() twice: once with your algo, once with the baseline
+5. BACKTEST (train window only)
+   For each date in config.yaml → data_window.train, call run_backtest()
+   twice: once with your algo, once with the baseline
    (cfg["pass_gate"]["baseline"]). Same strategy on both runs — strategy
    is config.yaml → strategy.name and DOES NOT vary.
+
+   The test window (config.yaml → data_window.test) is HELD OUT. It is
+   evaluated only by the Lambda after a successful snapshot push (§7,
+   docs/skills/evaluate.md). Do NOT call run_backtest() on test dates —
+   doing so leaks the held-out set (analysis.md §4) and invalidates the
+   OOS report. The PASS/FAIL decision in step 7 is made on train alone.
+
    See docs/skills/backtest.md §1 for the call signature and §7 for the
-   train+test loop pattern.
+   train-loop pattern.
 
 6. EVALUATE
    Read metrics.json from each run's results/<timestamp>-<sha>/ directory.
@@ -250,6 +282,20 @@ See **`docs/skills/snapshot.md`** for the full procedure. Quick version:
    ```
    GitHub Actions packages and uploads to S3.
 
+The S3 upload triggers the `execution-algorithm-evaluator` Lambda, which
+runs the algorithm against the held-out test window
+(`config.yaml → data_window.test`) and writes a report to
+`s3://<bucket>/evaluation-reports/<algo-id>/`. This is the ONLY place the
+test window is evaluated — only algorithms that pass on train get the
+paid OOS confirmation (~$0.30/run; cost discipline in `evaluate.md §2`).
+
+In a **follow-up invocation**, retrieve the OOS report and merge it into
+`results/backtest-results.json` as a parallel `performance_oos` block —
+do NOT overwrite the train-window `performance` numbers. Honesty rules
+(§8) require reporting OOS regressions raw: a train-pass + test-regress
+result is logged as such, not re-run for a more favourable test draw.
+See `docs/skills/evaluate.md` for retrieval and the report shape.
+
 ---
 
 ## 8. Assumptions, Unknowns, and Honest Reporting
@@ -314,7 +360,14 @@ File: `research/program_database.json` — JSON array, append-only.
 **Rules**:
 - Always **append**, never delete or rewrite.
 - Every attempt (pass/close/fail) gets an entry — failed entries prevent re-exploring dead ends.
-- `status` ∈ {`pass`, `close`, `fail`}.
+- `status` ∈ {`pass`, `close`, `fail`}, set from the **train** gate. The OOS
+  result from the Lambda is recorded separately in
+  `execution_algos/<algo-id>/results/backtest-results.json` under
+  `performance_oos` — not in this database.
+- A train-pass that regresses on OOS is honest research: the original entry
+  stays as `pass` (the train decision was real), and the OOS regression is
+  visible in `backtest-results.json`. Future agents reading the database
+  must also read the algorithm's `backtest-results.json` for the full picture.
 - `baseline` records which gate baseline was used (for reproducibility when the config changes).
 - No structured lineage between entries — if an algorithm builds on a prior one, that relationship lives in the algorithm's `NOTES.md` Hypothesis prose, not here.
 - Write and `git add` together with the algorithm code in one commit (§5 step 8).

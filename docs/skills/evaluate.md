@@ -107,9 +107,26 @@ specific keys.
 ```
 
 Map the report into your snapshot's `results/backtest-results.json`
-(`snapshot.md` §3) under the `period.test_dates` and a parallel
+(`snapshot.md` §3) under `period.test_dates` and a parallel
 `performance_oos` block — do **not** overwrite the train-window
 `performance` numbers. Both must remain auditable separately.
+
+**Format note.** The Lambda envelope above (`execution_metrics` /
+`performance_summary`) does not share field names with the local
+`compute_metrics()` output (`backtest.md §5`) used for the `performance`
+block. When you populate `performance_oos`, translate what's available:
+
+| `performance` field (local) | Source in Lambda report |
+|---|---|
+| `realized_pnl`, `total_pnl` | `performance_summary.total_pnl` |
+| `trade_count` | `performance_summary.total_trades` |
+| `total_commissions` | derive from `execution_metrics.cost_bps × starting_balance / 10000` |
+| `mean_slippage` (price units) | not directly available — record `execution_metrics.slippage_bps` separately |
+| `sharpe_ratio`, `max_drawdown_pct`, `win_rate` | not present in Lambda report — leave as `null` in `performance_oos` |
+
+Record raw values from the Lambda report. If a field is unavailable in
+the OOS report, write `null` rather than estimating — the honesty rules
+in `OBJECTIVE.md §8` require an honest gap, not a fabricated number.
 
 ## 6. Monitor a run in flight
 

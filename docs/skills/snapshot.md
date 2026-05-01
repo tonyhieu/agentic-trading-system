@@ -8,8 +8,9 @@ Only when the algorithm's `status` is **PASS** (§5 step 7) — i.e., realized
 P&L beats the baseline (`config.yaml → pass_gate.baseline`) by the required
 margin without regressing slippage. Do not snapshot CLOSE or FAIL outcomes.
 
-For refinement variants, snapshot only the variant that BEAT the parent
-baseline by the targets in `config.yaml → refinement.targets` (§6 step R5).
+For refinement variants, snapshot only the variant that beat the parent
+algorithm by the targets in `config.yaml → refinement.targets` (see
+`OBJECTIVE.md §6`).
 
 ## 2. Required directory shape
 
@@ -59,9 +60,10 @@ record and adds the baseline comparison.
     "vs_baseline_pnl_pct":     14.2,
     "vs_baseline_slippage_pct": -3.1
   },
+  "performance_oos": null,
   "period": {
     "train_dates": ["2026-03-08", "..."],
-    "test_dates":  ["2026-03-26", "..."]
+    "test_dates":  []
   },
   "run_dirs": [
     "results/2026-04-29T14-12-00Z-abc1234/",
@@ -69,6 +71,15 @@ record and adds the baseline comparison.
   ]
 }
 ```
+
+The `performance` block and `period.train_dates` are populated **at
+snapshot time** from local `metrics.json` files. The `performance_oos`
+block and `period.test_dates` are populated **post-snapshot**, in a
+follow-up invocation, after the Lambda evaluator has produced the OOS
+report (`docs/skills/evaluate.md`). Initialize `performance_oos` to
+`null` and `test_dates` to `[]` at snapshot time; merging them is a
+later commit. Do not run `run_backtest()` on test dates locally to
+populate them — that is data leakage (`analysis.md §4`).
 
 Aggregation rules (apply to your algorithm AND the baseline, then compute
 the `vs_baseline_*` deltas):
