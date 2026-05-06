@@ -21,6 +21,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.imbalance-skip",
         "get_execution_algorithm",
     ),
+    "momentum-skip": (
+        "execution_algos.momentum-skip",
+        "get_execution_algorithm",
+    ),
 }
 
 
