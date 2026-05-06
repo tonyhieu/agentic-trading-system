@@ -356,12 +356,18 @@ File: `research/program_database.json` — JSON array, append-only.
              "vs_baseline_pnl_pct": 14.2, "vs_baseline_slippage_pct": -3.1,
              "trade_count": 134, "passed": true},
   "notes": "Strong on high-vol; degrades when book is thin.",
-  "timestamp": "2026-04-15T14:32:00Z"
+  "timestamp": "2026-04-15T14:32:00Z",
+  "meta": {
+    "duration_seconds": null,
+    "tokens_used": null
+  }
 }
 ```
 
 **Rules**:
-- Always **append**, never delete or rewrite.
+- Always **append**, never delete or rewrite. The one exception is the
+  `meta` block on the most-recent entry, which is backfilled by a
+  `SubagentStop` hook (see *Execution metadata* below).
 - Every attempt (pass/close/fail) gets an entry — failed entries prevent re-exploring dead ends.
 - `status` ∈ {`pass`, `close`, `fail`}, set from the **train** gate. The OOS
   result from the Lambda is recorded separately in
@@ -374,6 +380,25 @@ File: `research/program_database.json` — JSON array, append-only.
 - `baseline` records which gate baseline was used (for reproducibility when the config changes).
 - No structured lineage between entries — if an algorithm builds on a prior one, that relationship lives in the algorithm's `NOTES.md` Hypothesis prose, not here.
 - Write and `git add` together with the algorithm code in one commit (§5 step 8).
+
+**Execution metadata (`meta` block)**:
+
+The agent writes `"meta": {"duration_seconds": null, "tokens_used": null}` as
+placeholders when appending the entry — both fields are diagnostic and do
+**not** affect the gate. A `SubagentStop` hook
+(`.claude/hooks/patch_program_db_tokens.py`, registered in
+`.claude/settings.json`) then backfills both from the subagent's transcript:
+
+- `duration_seconds` — wall-clock seconds from the subagent's first
+  message to its last message.
+- `tokens_used` — `{"input": ..., "output": ..., "cache_creation": ...,
+  "cache_read": ..., "total": ...}` summed across every assistant message
+  in the transcript.
+
+The hook auto-commits the patch as `chore(<algo-id>): backfill execution
+metadata` so the working tree stays clean. If the hook is disabled or
+fails, both fields remain `null` — that's fine; the field is informational
+and a future agent reading the database must tolerate `null`.
 
 ---
 
