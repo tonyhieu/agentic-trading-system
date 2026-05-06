@@ -52,5 +52,23 @@
     },
     "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): imbalance-skip $5730.75 / 2267 trades vs simple $5725.00 / 2301 trades; delta_pnl = +0.10%, far below the +5.0% gate. Hypothesis directionally supported (win rate +0.56pp: 85.05% vs 84.49%) but effect size negligible. At threshold=0.5, the imbalance filter skips ~1-2% of trades and cannot discriminate winners from losers with enough power — the oracle fills are already highly profitable so skipping any subsets based on mild imbalance adds noise rather than value. Suggested next attempt: (1) higher threshold (0.8-0.9) targeting only extreme book events; (2) alternative book-state signal — e.g. compare recent mid-price moves to oracle direction (skip if price already ran in oracle direction, suggesting signal is stale), which is more directly linked to oracle decay than static imbalance.",
     "timestamp": "2026-05-01T08:20:00Z"
+  },
+  {
+    "id": "momentum-skip",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Mid-price momentum conditioned skip: at submission time compare the current mid-price to the mid-price at the previous order decision. For a BUY, skip if mid rose >= 1 tick (0.25 pts) since the last signal decision (price already ran — adverse entry). For a SELL, skip if mid fell >= 1 tick. Reduce-only orders always submit. Pure skip, no deferral. Builds on imbalance-skip (prior iteration) using a different signal: inter-signal price momentum rather than static book depth imbalance.",
+    "algorithm_path": "execution_algos/momentum-skip/",
+    "scores": {
+      "sharpe": 293.58,
+      "realized_pnl": 5732.50,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 0.13,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 2261,
+      "passed": false
+    },
+    "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): momentum-skip $5732.50 / 2261 trades vs simple $5725.00 / 2301 trades; delta_pnl = +0.13%, far below the +5.0% gate. Hypothesis directionally supported (win rate +0.65pp: 85.18% vs 84.53%) but effect size negligible. Skip rate extremely low: ~1.7% overall (4.3%, 1.4%, 1.8% by date) — a 1-tick threshold between consecutive 1-second oracle signals barely fires. On 20260308, skipping 6 trades net-hurt P&L (-4.24%). Same structural failure as imbalance-skip: the oracle's ~84-85% win rate means coarse skip filters remove almost as many winners as losers. Suggested next attempt: batch oracle signals over a short window (e.g., 5 seconds) and execute only the net direction — reduces round-trips and focuses execution on the clearest multi-signal clusters, which may produce meaningful P&L delta without the discrimination problem of single-signal filters.",
+    "timestamp": "2026-05-06T18:00:00Z"
   }
 ]
