@@ -185,6 +185,10 @@ Each call appends a fresh run dir under `results/`. Aggregating metrics
 `metrics.json` files is the agent's responsibility. Do **not** add test
 dates to this loop — the OOS evaluation runs on Lambda after snapshot.
 
+Do not pre-run the algorithm before the paired loop. `run_backtest()`
+raises immediately on registration errors, so a smoke pass is redundant
+and pollutes `results/`.
+
 ## 8. Footnote: raw data access
 
 If you need raw DBN data outside the backtest pipeline (exploratory analysis
