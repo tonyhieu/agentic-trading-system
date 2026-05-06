@@ -24,12 +24,6 @@ doing anything else.
   - `NOTES.md` — assumption alerts for the human operator (§8)
 - **Algorithm code**: `execution_algos/<algo-id>/` — kebab-case IDs
 
-## If you are a human
-
-- Project overview: `README.md`
-- Architecture & infrastructure: `docs/operator/`
-- Available agents: `.claude/agents/`
-
 ## Conventions
 
 - Algorithm IDs are kebab-case and match `execution_algos/<algo-id>/` directory names
