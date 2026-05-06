@@ -322,7 +322,7 @@ cat execution_algos/my-strategy/results/backtest-results.json | jq '.performance
 
 # Should have: total_return, sharpe_ratio, max_drawdown, win_rate
 
-# 3. Use correct JSON structure (see docs/skills/snapshot.md)
+# 3. Use correct JSON structure (see .claude/skills/snapshot/SKILL.md)
 {
   "performance": {
     "total_return": 15.34,
@@ -563,7 +563,7 @@ git push origin snapshots/my-strategy-v2
 ### Self-Service Resources
 
 1. **Documentation:**
-   - docs/skills/snapshot.md - Usage instructions
+   - .claude/skills/snapshot/SKILL.md - Usage instructions
    - aws-setup.md - Infrastructure setup
    - architecture.md - Architecture overview
 
@@ -637,7 +637,7 @@ cat execution_algos/my-strategy/results/backtest-results.json | python3 -m json.
 - Review lifecycle policy is working
 
 ✅ **Keep documentation updated**
-- Update docs/skills/snapshot.md if workflow changes
+- Update .claude/skills/snapshot/SKILL.md if workflow changes
 - Document custom modifications
 - Share troubleshooting tips with team
 

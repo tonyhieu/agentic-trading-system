@@ -8,14 +8,15 @@ appear to conflict with the config, the config wins. This file describes what
 each parameter means and why; the config is the single source of truth for
 values.
 
-Skills referenced from the loop steps:
-- `docs/skills/backtest.md` — running `run_backtest()`, where artifacts land,
-  the metrics schema, and how to register a new execution algorithm
-- `docs/skills/analysis.md` — exploratory analysis on training-set market
-  data (load only when you need raw-tick inspection before implementing)
-- `docs/skills/snapshot.md` — saving a passing execution algorithm to S3
-- `docs/skills/evaluate.md` — retrieving the Lambda evaluator's OOS report
-  after snapshotting and merging it into `backtest-results.json`
+Skills referenced from the loop steps (preloaded into the researcher
+subagent via its `skills:` frontmatter; live at `.claude/skills/<name>/SKILL.md`):
+- `backtest` — running `run_backtest()`, where artifacts land, the metrics
+  schema, and how to register a new execution algorithm
+- `analysis` — exploratory analysis on training-set market data (load only
+  when you need raw-tick inspection before implementing)
+- `snapshot` — saving a passing execution algorithm to S3
+- `evaluate` — retrieving the Lambda evaluator's OOS report after
+  snapshotting and merging it into `backtest-results.json`
 
 ---
 
@@ -47,10 +48,10 @@ until a passing algorithm is found or the iteration budget in
 5. COMPARE metrics.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
 6. APPEND entry to research/program_database.json + git commit
 7. On PASS: git push origin snapshots/<algo-id> — this triggers the Lambda evaluator on test
-8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (docs/skills/evaluate.md)
+8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (the `evaluate` skill)
 ```
 
-For exploratory data analysis before step 3, see `docs/skills/analysis.md`.
+For exploratory data analysis before step 3, see the `analysis` skill.
 
 ---
 
@@ -60,8 +61,8 @@ For exploratory data analysis before step 3, see `docs/skills/analysis.md`.
 26 trading days from 2026-03-08 to 2026-04-06, CME GLBX FX futures.
 
 Data retrieval is wrapped by `run_backtest()` — you don't call
-`data_retriever.py` directly. See `docs/skills/backtest.md` for the entry
-point, record-type schema, and run artifacts. See `docs/skills/analysis.md`
+`data_retriever.py` directly. See the `backtest` skill for the entry
+point, record-type schema, and run artifacts. See the `analysis` skill
 if you need to inspect raw ticks for EDA.
 
 **Cost budget**: at most `config.yaml → data_window.max_days_per_iteration`
@@ -121,8 +122,9 @@ iteration.
 
 ### Metrics
 
-Produced by `compute_metrics()` (`backtest_engine/results.py:153`); full table
-in `docs/skills/backtest.md §5`. The metrics relevant to the gate:
+Produced by `compute_metrics()` (`backtest_engine/results.py:153`); full
+table in the `backtest` skill (metrics-schema.md). The metrics relevant
+to the gate:
 
 | Metric | Source field | Used for |
 |---|---|---|
@@ -176,7 +178,7 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
      - execution_algorithm.py — ExecAlgorithm subclass + get_execution_algorithm factory
      - __init__.py            — re-exports get_execution_algorithm
    Register in execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES.
-   See docs/skills/backtest.md §3 for the minimal pattern.
+   See the `backtest` skill §3 for the minimal pattern.
 
 5. BACKTEST (train window only)
    For each date in config.yaml → data_window.train, call run_backtest()
@@ -186,11 +188,12 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
 
    The test window (config.yaml → data_window.test) is HELD OUT. It is
    evaluated only by the Lambda after a successful snapshot push (§7,
-   docs/skills/evaluate.md). Do NOT call run_backtest() on test dates —
-   doing so leaks the held-out set (analysis.md §4) and invalidates the
-   OOS report. The PASS/FAIL decision in step 7 is made on train alone.
+   the `evaluate` skill). Do NOT call run_backtest() on test dates —
+   doing so leaks the held-out set (the `analysis` skill §3) and
+   invalidates the OOS report. The PASS/FAIL decision in step 7 is
+   made on train alone.
 
-   See docs/skills/backtest.md §1 for the call signature and §7 for the
+   See the `backtest` skill §1 for the call signature and §7 for the
    train-loop pattern.
 
 6. EVALUATE
@@ -267,7 +270,7 @@ gate at all, status=FAIL/CLOSE per §5 step 7.
 
 ## 7. Saving a Passing Algorithm
 
-See **`docs/skills/snapshot.md`** for the full procedure. Quick version:
+See the **`snapshot` skill** for the full procedure. Quick version:
 
 1. Confirm the latest run dir exists at
    `execution_algos/<algo-id>/results/<timestamp>-<sha>/` (created by
@@ -294,7 +297,7 @@ In a **follow-up invocation**, retrieve the OOS report and merge it into
 do NOT overwrite the train-window `performance` numbers. Honesty rules
 (§8) require reporting OOS regressions raw: a train-pass + test-regress
 result is logged as such, not re-run for a more favourable test draw.
-See `docs/skills/evaluate.md` for retrieval and the report shape.
+See the `evaluate` skill for retrieval and the report shape.
 
 ---
 

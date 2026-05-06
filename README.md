@@ -46,7 +46,7 @@ Store and retrieve large research datasets (up to and beyond 40 GB) for agent tr
 ### For agents
 - **[CLAUDE.md](./CLAUDE.md)** — agent bootstrap (auto-loaded by Claude Code)
 - **[docs/OBJECTIVE.md](./docs/OBJECTIVE.md)** — the research brief
-- **[docs/skills/](./docs/skills/)** — data retrieval and snapshot procedures
+- **[.claude/skills/](./.claude/skills/)** — preloaded research skills (`backtest`, `analysis`, `snapshot`, `evaluate`)
 - **[research/config.yaml](./research/config.yaml)** — research hyperparameters
 
 ### For humans / operators
@@ -69,13 +69,13 @@ agentic-trading-system/
 │           ├── backtest-results.json
 │           └── trade-history.csv
 ├── .claude/
-│   └── agents/researcher.md         # Research agent definition
+│   ├── agents/researcher.md         # Research agent definition
+│   └── skills/                      # Preloaded research skills (backtest, analysis, snapshot, evaluate)
 ├── .github/
 │   └── workflows/
 │       └── snapshot-execution-algo.yml  # Automated snapshot workflow
 ├── docs/
 │   ├── OBJECTIVE.md                 # Research brief (canonical for agents)
-│   ├── skills/                      # Backtest (run_backtest, metrics, registries), snapshot
 │   └── operator/                    # Architecture, AWS setup, troubleshooting
 ├── research/
 │   ├── config.yaml                  # Research hyperparameters
@@ -114,7 +114,7 @@ git push origin snapshots/your-strategy-name
 3. Enter strategy name and path
 4. Click "Run workflow" button
 
-See [docs/skills/snapshot.md](./docs/skills/snapshot.md) for detailed instructions.
+See [.claude/skills/snapshot/SKILL.md](./.claude/skills/snapshot/SKILL.md) for detailed instructions.
 
 ## Snapshot Storage Structure
 
@@ -186,7 +186,7 @@ This repository is designed for autonomous agents to iterate on trading strategi
 2. Develop execution algorithms in the `execution_algos/` directory
 3. Include comprehensive backtesting results
 4. Use the snapshot system to preserve iterations
-5. Follow naming conventions in [docs/skills/snapshot.md](./docs/skills/snapshot.md)
+5. Follow naming conventions in [.claude/skills/snapshot/SKILL.md](./.claude/skills/snapshot/SKILL.md)
 
 ## License
 

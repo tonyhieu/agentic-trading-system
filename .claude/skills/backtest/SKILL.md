@@ -1,4 +1,12 @@
-# Skill: Run a Backtest
+---
+name: backtest
+description: Run a backtest of an execution algorithm via run_backtest(), register a new algorithm in the factory, and aggregate per-date metrics across the train window for baseline comparison.
+when_to_use: Use when implementing a new execution algorithm, adding it to the factory registry, running it against the configured strategy, or comparing realized P&L and slippage to the baseline named in pass_gate.baseline.
+user-invocable: false
+allowed-tools: Read Edit Write Bash Grep Glob
+---
+
+# Backtest
 
 Single canonical source for running a backtest of an execution algorithm.
 
@@ -41,8 +49,7 @@ The `strategy` block in `config.yaml` is opaque to you. Read
 `cfg["strategy"]["name"]` and `cfg["strategy"]["kwargs"]` and pass both
 through to `run_backtest()` unchanged. Do not inspect strategy
 implementation files, registries, or kwargs semantics — your task is
-execution, not signal generation. The strategy is the constant; the
-execution algorithm is the only variable under study.
+execution, not signal generation.
 
 Switching the locked strategy is a human decision (edit `config.yaml`),
 not an agent decision.
@@ -51,7 +58,7 @@ not an agent decision.
 
 Registry: `execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES`.
 
-To add a new execution algorithm (your job per `OBJECTIVE.md §5 step 4`):
+To add a new execution algorithm:
 
 ```
 execution_algos/<algo-id>/
@@ -105,13 +112,13 @@ def get_execution_algorithm(exec_id: str = "MY_GENERIC_ALGO"):
 
 ## 4. Run artifacts
 
-`run_backtest()` calls `persist()` (in `backtest_engine/results.py`) which
+`run_backtest()` calls `persist()` (`backtest_engine/results.py`) which
 writes a per-run directory:
 
 ```
 execution_algos/<algo-id>/results/<YYYY-MM-DDTHH-MM-SSZ>-<short-sha>/
 ├── metadata.json   # run config: strategy, params, exec algo, params, date, symbol, git sha, dataset
-├── metrics.json    # summary stats — see §5
+├── metrics.json    # summary stats — see metrics-schema.md
 ├── account.csv     # equity curve
 ├── orders.csv      # order log (with commissions, slippage)
 ├── fills.csv       # fill log
@@ -121,23 +128,13 @@ execution_algos/<algo-id>/results/<YYYY-MM-DDTHH-MM-SSZ>-<short-sha>/
 The most recent run is the canonical record for the algorithm. The
 `<timestamp>-<short-sha>` directory name makes runs comparable and unique.
 
-## 5. Metrics schema (`metrics.json`)
+## 5. Metrics
 
-Produced by `compute_metrics()` in `backtest_engine/results.py:153`:
-
-| Field | Meaning |
-|---|---|
-| `starting_balance` | USD seed |
-| `final_equity` | end-of-run equity |
-| `total_return_pct` | `(final_equity − starting) / starting × 100` |
-| `realized_pnl` | sum of position realized P&L |
-| `max_drawdown_pct` | `min((equity − peak) / peak) × 100` |
-| `sharpe_ratio` | annualized Sharpe from 1-min equity returns (consistent across runs; absolute value imprecise — see code comment) |
-| `trade_count`, `winners`, `losers`, `win_rate` | trade-count breakdown |
-| `long_count`, `short_count` | side breakdown |
-| `order_count`, `fill_count` | order/fill counts |
-| `total_commissions` | sum across orders (account currency) |
-| `mean_slippage`, `max_abs_slippage` | execution-quality proxy (price units; multiply by contract multiplier for $) |
+The `metrics.json` schema and field-by-field meaning are in
+[metrics-schema.md](metrics-schema.md). Load that file when you need to
+look up a specific field — most iterations only need `realized_pnl`,
+`mean_slippage`, `sharpe_ratio`, `max_drawdown_pct`, `win_rate`,
+`trade_count`.
 
 ## 6. Comparing to the baseline
 
@@ -169,7 +166,7 @@ Compare against the gate in `config.yaml → pass_gate`.
 
 `run_backtest()` runs one date per call. The agent backtests over the
 **train** window only — the test window is held out for the Lambda
-evaluator (`OBJECTIVE.md §5 step 5`, `docs/skills/evaluate.md`). Loop:
+evaluator (see the `evaluate` skill). Loop:
 
 ```python
 train_dates = [d.replace("-", "") for d in pd.date_range(*cfg["data_window"]["train"], freq="B").strftime("%Y-%m-%d")]

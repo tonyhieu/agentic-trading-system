@@ -14,11 +14,11 @@ doing anything else.
 - **Hyperparameters**: `research/config.yaml` — single source of truth for
   numeric values (dates, gate thresholds, refinement targets, loop limits).
   When values here conflict with prose in OBJECTIVE.md, this file wins.
-- **Skills** (load on demand): `docs/skills/`
-  - `backtest.md` — running `run_backtest()`, metrics, registering a new execution algorithm
-  - `analysis.md` — exploratory analysis of training-set market data (raw DBN inspection)
-  - `snapshot.md` — saving a passing execution algorithm to S3
-  - `evaluate.md` — retrieving the Lambda evaluator's out-of-sample report after snapshotting
+- **Skills** (preloaded into the researcher subagent via its `skills:` frontmatter; live at `.claude/skills/<name>/SKILL.md`):
+  - `backtest` — running `run_backtest()`, metrics, registering a new execution algorithm
+  - `analysis` — exploratory analysis of training-set market data (raw DBN inspection)
+  - `snapshot` — saving a passing execution algorithm to S3
+  - `evaluate` — retrieving the Lambda evaluator's out-of-sample report after snapshotting
 - **Runtime state**: `research/`
   - `program_database.json` — append-only log of every attempt (read on entry, write on exit)
   - `NOTES.md` — assumption alerts for the human operator (§8)

@@ -1,12 +1,20 @@
-# Skill: Algorithm Snapshot
+---
+name: snapshot
+description: Save a passing execution algorithm to S3 by pushing a snapshots/<algo-id> branch, which triggers the GitHub Actions upload and the Lambda OOS evaluator.
+when_to_use: Use only when status is PASS — the algorithm beats the baseline by the configured pass_gate margins on the train window without slippage regression. Do not snapshot CLOSE or FAIL outcomes.
+user-invocable: false
+allowed-tools: Bash Read Write Edit
+---
+
+# Algorithm Snapshot
 
 How a research agent saves a passing execution algorithm to S3.
 
 ## 1. When to snapshot
 
-Only when the algorithm's `status` is **PASS** (§5 step 7) — i.e., realized
-P&L beats the baseline (`config.yaml → pass_gate.baseline`) by the required
-margin without regressing slippage. Do not snapshot CLOSE or FAIL outcomes.
+Only when the algorithm's `status` is **PASS** — i.e., realized P&L beats
+the baseline (`config.yaml → pass_gate.baseline`) by the required margin
+without regressing slippage. Do not snapshot CLOSE or FAIL outcomes.
 
 For refinement variants, snapshot only the variant that beat the parent
 algorithm by the targets in `config.yaml → refinement.targets` (see
@@ -76,10 +84,10 @@ The `performance` block and `period.train_dates` are populated **at
 snapshot time** from local `metrics.json` files. The `performance_oos`
 block and `period.test_dates` are populated **post-snapshot**, in a
 follow-up invocation, after the Lambda evaluator has produced the OOS
-report (`docs/skills/evaluate.md`). Initialize `performance_oos` to
+report (see the `evaluate` skill). Initialize `performance_oos` to
 `null` and `test_dates` to `[]` at snapshot time; merging them is a
 later commit. Do not run `run_backtest()` on test dates locally to
-populate them — that is data leakage (`analysis.md §4`).
+populate them — that is data leakage (see the `analysis` skill).
 
 Aggregation rules (apply to your algorithm AND the baseline, then compute
 the `vs_baseline_*` deltas):
@@ -123,7 +131,7 @@ s3://<bucket>/execution_algos/<algo-id>/<timestamp>-<commit>/
 This same upload triggers the `execution-algorithm-evaluator` Lambda, which
 runs the algorithm against the test window in `config.yaml → data_window.test`
 and writes a report to `s3://<bucket>/evaluation-reports/<algo-id>/`. See
-`evaluate.md` for retrieving and interpreting that report.
+the `evaluate` skill for retrieving and interpreting that report.
 
 ## 5. Manual snapshot (fallback)
 

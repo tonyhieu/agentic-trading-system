@@ -1,21 +1,29 @@
-# Skill: Cloud Evaluation (Lambda)
+---
+name: evaluate
+description: Retrieve the Lambda evaluator's out-of-sample report after snapshotting an algorithm and merge it into the algorithm's backtest-results.json as performance_oos.
+when_to_use: Use in a follow-up invocation after a successful snapshot push. The Lambda runs automatically on snapshot upload — this skill is only for fetching the report and merging it into the canonical summary.
+user-invocable: false
+allowed-tools: Bash Read Edit
+---
+
+# Cloud Evaluation (Lambda)
 
 How to retrieve out-of-sample evaluation results after snapshotting an
 algorithm. The Lambda evaluator is the *test-set* counterpart to local
-backtests — local runs use the train window in `config.yaml → data_window.train`;
-the Lambda runs the held-out test window in `config.yaml → data_window.test`.
+backtests — local runs use `config.yaml → data_window.train`; the Lambda
+runs the held-out `config.yaml → data_window.test`.
 
 ## 1. Trigger model
 
 You do not invoke the evaluator directly. The flow is:
 
-1. Push to `snapshots/<algo-id>` (see `snapshot.md` §4).
-2. The GitHub Actions workflow uploads the snapshot to
+1. Push to `snapshots/<algo-id>` (see the `snapshot` skill §4).
+2. The GitHub Actions workflow uploads to
    `s3://$S3_BUCKET_NAME/execution_algos/<algo-id>/<timestamp>-<commit>/`.
 3. An S3 event invokes the `execution-algorithm-evaluator` Lambda
    (region `us-east-2`).
-4. Lambda runs the snapshotted algorithm against the test window in
-   `config.yaml → data_window.test` and writes a report back to S3.
+4. Lambda runs the snapshotted algorithm against `data_window.test` and
+   writes a report back to S3.
 
 A successful snapshot push is the trigger. If the snapshot upload fails, no
 evaluation runs.
@@ -26,7 +34,7 @@ Each evaluation costs roughly **$0.30** (1 GB Lambda × ~12 minutes). The
 research loop budget in `OBJECTIVE.md` is finite — treat cloud evaluations
 as the gated, paid step that comes *after* train-window passes locally.
 
-- Run the local backtest loop (`backtest.md` §7) against
+- Run the local backtest loop (see the `backtest` skill §7) against
   `data_window.train` first and confirm the algorithm beats `pass_gate`.
 - Only then snapshot. Pushing untested code wastes budget.
 - Each refinement variant (`OBJECTIVE.md §6`) is a separate evaluation —
@@ -73,60 +81,20 @@ keys = sorted(o["Key"] for o in resp.get("Contents", [])
 report = json.load(s3.get_object(Bucket=bucket, Key=keys[-1])["Body"])
 ```
 
-## 5. Report shape (illustrative)
+## 5. Report shape and OOS merging
 
-The report's exact field names are produced by the Lambda and may drift.
-Treat the block below as a sketch — read the actual JSON before relying on
-specific keys.
-
-```json
-{
-  "algorithm_name": "<algo-id>",
-  "evaluation_date": "2026-04-30T14:45:00Z",
-  "backtest_period": { "start": "...", "end": "...", "days_oos": ... },
-  "execution_metrics": {
-    "slippage_bps":             ...,
-    "execution_time_ms":        ...,
-    "fill_accuracy_pct":        ...,
-    "latency_ms":               ...,
-    "cost_bps":                 ...,
-    "orders_per_second":        ...,
-    "execution_time_variance_ms": ...,
-    "peak_latency_ms":          ...
-  },
-  "performance_summary": {
-    "total_trades":         ...,
-    "successful_fills":     ...,
-    "failed_fills":         ...,
-    "avg_profit_per_trade": ...,
-    "total_pnl":            ...
-  },
-  "status": "completed",
-  "errors": []
-}
-```
+The Lambda report's exact field names may drift; read the actual JSON
+before relying on specific keys. The shape, the field-by-field mapping
+into `performance_oos`, and which fields are unavailable (record `null`
+rather than estimating, per `OBJECTIVE.md §8` honesty rules) are in
+[oos-report.md](oos-report.md). Load that file when you actually need to
+merge a report — most invocations only need the procedural steps in this
+file.
 
 Map the report into your snapshot's `results/backtest-results.json`
-(`snapshot.md` §3) under `period.test_dates` and a parallel
+(see the `snapshot` skill §3) under `period.test_dates` and a parallel
 `performance_oos` block — do **not** overwrite the train-window
 `performance` numbers. Both must remain auditable separately.
-
-**Format note.** The Lambda envelope above (`execution_metrics` /
-`performance_summary`) does not share field names with the local
-`compute_metrics()` output (`backtest.md §5`) used for the `performance`
-block. When you populate `performance_oos`, translate what's available:
-
-| `performance` field (local) | Source in Lambda report |
-|---|---|
-| `realized_pnl`, `total_pnl` | `performance_summary.total_pnl` |
-| `trade_count` | `performance_summary.total_trades` |
-| `total_commissions` | derive from `execution_metrics.cost_bps × starting_balance / 10000` |
-| `mean_slippage` (price units) | not directly available — record `execution_metrics.slippage_bps` separately |
-| `sharpe_ratio`, `max_drawdown_pct`, `win_rate` | not present in Lambda report — leave as `null` in `performance_oos` |
-
-Record raw values from the Lambda report. If a field is unavailable in
-the OOS report, write `null` rather than estimating — the honesty rules
-in `OBJECTIVE.md §8` require an honest gap, not a fabricated number.
 
 ## 6. Monitor a run in flight
 
@@ -168,13 +136,13 @@ when they regress vs train. A train pass plus a test regression is a
 legitimate research outcome — log it in `program_database.json` and
 `NOTES.md` rather than re-running until you get a favorable test draw.
 
-The hard boundary in `analysis.md` §4 (no EDA on test dates) exists for the
-same reason: the Lambda's report is only meaningful if test data was
+The hard boundary in the `analysis` skill (no EDA on test dates) exists for
+the same reason: the Lambda's report is only meaningful if test data was
 genuinely held out during design.
 
 ## 9. Retention
 
 Evaluation reports follow the same 30-day S3 lifecycle as snapshots
-(`snapshot.md` §7). The durable record is the `performance_oos` block you
-copy into `results/backtest-results.json` and commit alongside the
-algorithm.
+(see the `snapshot` skill §7). The durable record is the `performance_oos`
+block you copy into `results/backtest-results.json` and commit alongside
+the algorithm.

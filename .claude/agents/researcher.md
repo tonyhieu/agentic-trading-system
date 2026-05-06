@@ -3,6 +3,11 @@ name: "researcher"
 description: "use only when user invokes"
 model: sonnet
 color: cyan
+skills:
+  - backtest
+  - analysis
+  - snapshot
+  - evaluate
 ---
 
 ---
@@ -25,11 +30,15 @@ and the algorithm NOTES.md format (§10).
 All numeric values come from **`research/config.yaml`**. If config says
 something different from OBJECTIVE.md, the config wins.
 
-## Skills (load on demand)
+## Skills (preloaded)
 
-- `docs/skills/backtest.md` — running `run_backtest()`, the metrics it produces, and how to register a new execution algorithm.
-- `docs/skills/analysis.md` — exploratory analysis on training-set market data, when you need raw-tick inspection before implementing.
-- `docs/skills/snapshot.md` — when status=PASS and you push to `snapshots/<algo-id>`.
+The four research skills are injected into your context at startup via the
+`skills:` frontmatter field above:
+
+- `backtest` — running `run_backtest()`, the metrics it produces, and how to register a new execution algorithm.
+- `analysis` — exploratory analysis on training-set market data, when you need raw-tick inspection before implementing.
+- `snapshot` — when status=PASS and you push to `snapshots/<algo-id>`.
+- `evaluate` — retrieving the Lambda OOS report and merging it into `backtest-results.json` (post-snapshot follow-up).
 
 ## Inputs
 
@@ -54,7 +63,7 @@ The user prompt may be:
 4. **Execute one pass** of §5 from `OBJECTIVE.md`. If building on a prior
    algorithm, also follow §6's per-invocation specifics.
 5. **Append** to `research/program_database.json` per §9 (always — pass, close, or fail).
-6. **On PASS**: snapshot per `docs/skills/snapshot.md`. On CLOSE or FAIL: do not snapshot.
+6. **On PASS**: snapshot per the `snapshot` skill. On CLOSE or FAIL: do not snapshot.
 7. **Commit**: `git add execution_algos/<algo-id>/ research/program_database.json`
    then `git commit -m "<algo-id>: <status>, key scores"`.
 8. **Final message**: brief prose summary — status, algo_id, key scores,

@@ -1,4 +1,12 @@
-# Skill: Data Analysis (EDA)
+---
+name: analysis
+description: Exploratory analysis of training-set market data — load raw DBN ticks directly, separate from the run_backtest() pipeline, when a hypothesis depends on something only learnable from raw market data.
+when_to_use: Use when a step in your reasoning depends on something you can only learn from raw market data (e.g., a microstructure assumption). Skip when iteration just runs run_backtest() and reads metrics.json.
+user-invocable: false
+allowed-tools: Read Bash
+---
+
+# Data Analysis (EDA)
 
 For exploratory analysis of training-set market data — inspecting raw ticks
 directly, separate from the `run_backtest()` pipeline.
@@ -7,16 +15,7 @@ directly, separate from the `run_backtest()` pipeline.
 hypothesis. This skill covers only the mechanics: loading data, where to
 put outputs, and one hard boundary. It does not prescribe analyses.
 
-## 1. When to use
-
-Use this skill whenever a step in your reasoning depends on something you
-can only learn from the raw market data. If your hypothesis is purely
-procedural and rests on no microstructure assumption, you may not need it.
-
-You do NOT need this skill for iteration that just runs `run_backtest()`
-and reads `metrics.json`.
-
-## 2. Load raw DBN data
+## 1. Load raw DBN data
 
 ```python
 import subprocess
@@ -51,7 +50,7 @@ with open(dbn_file, "rb") as f:
 The available record types and full field list come back from
 `python scripts/data_retriever.py fetch-schema glbx-mdp3-market-data v1.0.0`.
 
-## 3. Where to put outputs
+## 2. Where to put outputs
 
 - **Findings** that shape your algorithm design → `execution_algos/<algo-id>/NOTES.md`
   under "Implementation Decisions". Note which dates you analyzed and which
@@ -59,7 +58,7 @@ The available record types and full field list come back from
 - **Charts** that materially support a hypothesis → `execution_algos/<algo-id>/results/eda-<short-title>.png`.
 - **Don't** commit raw DataFrames or large CSVs.
 
-## 4. Hard boundary: do not analyze test dates
+## 3. Hard boundary: do not analyze test dates
 
 The split in `config.yaml → data_window` is held out for one reason: test
 metrics must reflect performance on data your design has never seen. Loading
