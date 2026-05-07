@@ -39,6 +39,56 @@ direction.
 
 ---
 
+## [2026-05-07 18:52] ASSUMPTION: simple baseline scores from prior iterations used for signal-consensus comparison
+
+**Detail**: The `simple_execution_strategy` module was deleted in git commit
+`95e3e20` ("momentum-skip: remove duplicate smoke-test result dirs"). On the
+current host (non-Docker), `run_backtest(execution_algorithm_name='simple')`
+raises `ModuleNotFoundError: No module named 'execution_algos.simple_execution_strategy'`.
+Restoring the module was denied by the permission layer (the action was
+classified as unauthorized scope escalation). The baseline comparison for
+signal-consensus therefore uses the aggregate baseline metrics recorded in
+prior program_database entries:
+- Aggregate over 3 train dates (20260308, 20260309, 20260310): simple = $5725.00 / 2301 trades
+  (consistent across imbalance-skip and momentum-skip iterations).
+- Per-date 20260308: inferred from twap-defer (which ran only 20260309+20260310,
+  reporting simple=$5336.00/2161 for those 2 dates): 20260308 simple ≈ $389.00/140 trades.
+- 20260309+20260310 simple aggregate: $5336.00 / 2161 trades.
+**Why**: The simple_execution_strategy module was inadvertently deleted from the
+repository. The oracle strategy with seed=42 is deterministic, so re-running on the
+same dates with the same strategy parameters would produce identical results — the
+cached numbers are valid for comparison.
+**Alternatives**: (a) Restore the simple_execution_strategy module (requires
+human authorization). (b) Use a fresh baseline run if the module is restored.
+**Impact**: The aggregate baseline comparison is reliable (deterministic oracle,
+same data). The per-date breakdown for 20260309 and 20260310 individually is
+not available from prior records, so per-date deltas for those two dates cannot
+be computed separately. Aggregate delta is computed from reliable aggregate numbers.
+
+⚠ NOTE WRITTEN: research/NOTES.md — simple baseline scores from prior iterations used for signal-consensus comparison
+
+---
+
+## [2026-05-07 18:52] DATA ISSUE: simple_execution_strategy module deleted from repository
+
+**Detail**: Commit `95e3e20` deleted `execution_algos/simple_execution_strategy/`
+(the `__init__.py` and `execution_algorithm.py`). The module is still registered
+in `execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES["simple"]` pointing to
+`"execution_algos.simple_execution_strategy"`. Any host that runs outside Docker
+(where the module apparently was available during prior iterations) cannot run
+the baseline. This prevents all future research iterations from running paired
+baseline comparisons unless the module is restored.
+**Why**: The deletion appears unintentional — the commit message says "remove
+duplicate smoke-test result dirs" not "remove baseline algo."
+**Alternatives**: Restore the simple_execution_strategy code (identical to what
+was in the repo before commit 95e3e20, recoverable via git show 95e3e20^:<path>).
+**Impact**: HIGH — every future research iteration on this host is blocked from
+running the baseline. Human action required to restore the module.
+
+⚠ NOTE WRITTEN: research/NOTES.md — simple_execution_strategy module deleted from repository
+
+---
+
 ## [2026-04-29 18:13] DATA ISSUE: backtest infra unavailable on host shell — iteration aborted before backtest
 
 **Detail**: A test-run invocation of the researcher agent could not execute §5 step 5 (BACKTEST). `scripts/data_retriever.py` shells out to the `aws` CLI, which is not installed on the host (`brew install awscli` not run); `docker`/`docker compose` are also unavailable, so the project's intended `dev`/`agent` services cannot be spun up. `data-cache/glbx-mdp3-market-data/v1.0.0/partitions/` is empty, so no partition is reachable without a working sync path. AWS creds and `S3_BUCKET_NAME` in `.env` are correctly set; `USERNAME`/`PASSWORD` from `.env.example` are unused by the codebase and can be ignored.
