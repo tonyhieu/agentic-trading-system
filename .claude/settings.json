@@ -1,7 +1,9 @@
 {
   "permissions": {
     "deny": [
-      "Read(./strategies)"
+      "Read(./strategies)",
+      "Bash(chmod ./strategies)",
+      "Bash(sudo chmod*)"
     ],
   }
 }
