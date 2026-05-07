@@ -1,0 +1,76 @@
+# Hyperparameters for the autonomous research loop.
+#
+# When values here conflict with prose in docs/OBJECTIVE.md, this file wins.
+# OBJECTIVE.md describes WHAT each parameter means and WHY; this file is the
+# single source of truth for VALUES.
+#
+# The git history of this file is the audit trail — every program_database.json
+# entry can be paired with the config.yaml at that commit to know exactly which
+# parameters produced the result.
+
+dataset:
+  name: glbx-mdp3-market-data
+  version: v1.0.0
+
+strategy:
+  # The trading strategy is held FIXED across all execution-algorithm research.
+  # Must be a registered name in strategies/__init__.py → _STRATEGY_FACTORIES.
+  # The agent does not vary this — it is the constant; the execution algorithm
+  # is the variable under study.
+  name: oracle
+  # Passed to run_backtest() as strategy_kwargs. For oracle, the keys below
+  # are popped first and used as preprocessing options for build_oracle_signals
+  # (see backtest_engine/backtest_low_level.py:67); anything else falls through
+  # to the strategy factory. instrument_id and trade_size are set by
+  # run_backtest() when absent.
+  kwargs:
+    horizon_seconds:        30.0   # forecast window for the oracle signal
+    sigma:                   0.5   # noise added to the forecast (0 = perfect oracle)
+    seed:                    42    # RNG seed (reproducibility when sigma > 0)
+    signal_interval_seconds: 1.0   # cadence of generated signals
+
+data_window:
+  # Train/test split (ISO dates, inclusive). Must lie within the dataset's date_range.
+  train: ["2026-03-08", "2026-03-10"]
+  test:  ["2026-03-26", "2026-04-06"]
+  # Cost cap: max date partitions an agent may download in a single iteration.
+  # 10 days × ~330 MB ≈ $0.13 per iteration.
+  max_days_per_iteration: 10
+
+pass_gate:
+  # The execution algorithm to beat. Must be a registered name in
+  # execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES.
+  baseline: simple
+  # Realized P&L must beat the baseline by at least this margin to PASS (§4).
+  min_pnl_improvement_pct: 5.0
+  # Mean slippage may worsen by at most this margin. Positive number = tolerance
+  # for slightly worse slippage; lower is stricter; 0 forbids any regression.
+  max_slippage_regression_pct: 5.0
+  # Algorithms within this margin of either gate condition count as CLOSE
+  # (§5 step 7) — informational status; no formal retry counter.
+  close_margin_pct: 2.0
+
+execution_constraints:
+  top_of_book_only: true
+  participation_cap: 0.05      # ≤5% of top-of-book qty per tick
+  intraday_flat: true          # all positions closed by end of session
+
+loop:
+  # Total iterations across all invocations before the human should stop.
+  # The agent checks program_database.json on entry and refuses if exceeded.
+  max_iterations: 30
+  # Stop after N consecutive FAIL outcomes (§5).
+  stop_after_consecutive_failures: 3
+
+refinement:
+  # Used when an iteration builds on a prior passing algorithm (§6). The
+  # variant must improve at least one of these metrics by at least the delta
+  # shown — vs the prior algorithm's metrics.json — without meaningfully
+  # regressing the others. There is no formal lineage tracking (no parent_id);
+  # the relationship lives in the algorithm's NOTES.md hypothesis prose.
+  targets:
+    min_sharpe_delta:       0.10   # absolute Sharpe improvement
+    min_pnl_delta_pct:      2.0    # percentage points of realized P&L
+    max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
+    min_winrate_delta_pp:   2.0    # percentage points
+    min_mdd_delta_pp:      -1.0    # negative = less drawdown
