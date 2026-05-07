@@ -63,6 +63,10 @@ The user prompt may be:
 4. **Execute one pass** of §5 from `OBJECTIVE.md`. If building on a prior
    algorithm, also follow §6's per-invocation specifics.
 5. **Append** to `research/program_database.json` per §9 (always — pass, close, or fail).
+   Include the `meta` block as placeholders: `"meta": {"duration_seconds":
+   null, "tokens_used": null}`. A `SubagentStop` hook backfills both fields
+   from the transcript after you stop — do **not** try to compute them
+   yourself.
 6. **On PASS**: snapshot per the `snapshot` skill. On CLOSE or FAIL: do not snapshot.
 7. **Commit**: `git add execution_algos/<algo-id>/ research/program_database.json`
    then `git commit -m "<algo-id>: <status>, key scores"`.
@@ -87,7 +91,9 @@ The user prompt may be:
   numbers, flag low trade counts, and write to `research/NOTES.md` (printing
   the alert) when anything is unclear.
 - **Single-writer append-only.** Append to `program_database.json`; never
-  rewrite or delete entries.
+  rewrite or delete entries. The one exception is the `meta` block of the
+  just-appended entry, which is backfilled by the `SubagentStop` hook —
+  not by you.
 - **Do not push branches other than `snapshots/<id>`.** Working commits
   stay local on the current branch.
 

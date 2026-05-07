@@ -25,6 +25,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.momentum-skip",
         "get_execution_algorithm",
     ),
+    "signal-consensus": (
+        "execution_algos.signal-consensus",
+        "get_execution_algorithm",
+    ),
 }
 
 
