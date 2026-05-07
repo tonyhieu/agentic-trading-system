@@ -57,28 +57,18 @@
     "id": "momentum-skip",
     "status": "fail",
     "baseline": "simple",
-    "hypothesis": "Mid-price momentum conditioned skip: maintain a rolling window of recent mid-prices. For a BUY order, skip if mid has been rising (positive drift > threshold) \u2014 buying into a completed move. For a SELL, skip if mid has been falling (drift < -threshold). Reduce-only orders submit immediately. Threshold=half a MES tick (1.25e8 raw units), window=5 ticks, min_window=3. Inspired by imbalance-skip NOTES suggestion to compare recent mid-price moves to oracle direction.",
+    "hypothesis": "Mid-price momentum conditioned skip: at submission time compare the current mid-price to the mid-price at the previous order decision. For a BUY, skip if mid rose >= 1 tick (0.25 pts) since the last signal decision (price already ran — adverse entry). For a SELL, skip if mid fell >= 1 tick. Reduce-only orders always submit. Pure skip, no deferral. Builds on imbalance-skip (prior iteration) using a different signal: inter-signal price momentum rather than static book depth imbalance.",
     "algorithm_path": "execution_algos/momentum-skip/",
     "scores": {
-      "sharpe": 283.44,
-      "realized_pnl": 5387.75,
+      "sharpe": 293.58,
+      "realized_pnl": 5732.50,
       "mean_slippage": 0.0,
-      "vs_baseline_pnl_pct": -5.89,
+      "vs_baseline_pnl_pct": 0.13,
       "vs_baseline_slippage_pct": 0.0,
-      "trade_count": 2057,
+      "trade_count": 2261,
       "passed": false
     },
-    "notes": "FAIL \u2014 aggregated over all 3 train dates (20260308, 20260309, 20260310): momentum-skip $5387.75 / 2057 trades vs simple $5725.00 / 2301 trades; delta_pnl = -5.89%. Consistent ~6% loss across all 3 dates (-7.26%, -5.65%, -5.98%). Win rate improved by +1.13pp (85.66% vs 84.53%) confirming the filter removes some lower-quality entries, but 244 skipped trades at ~$2.32 avg profit each = ~$566 of foregone P&L. Oracle signal is profitable in expectation on nearly every order \u2014 momentum filter cannot identify a subpopulation that is net negative. Pattern: the 'skip bad orders' class of algorithms cannot beat this oracle because the oracle's edge dominates any microstructure filter at this time resolution.",
-    "timestamp": "2026-05-06T18:57:00Z",
-    "meta": {
-      "duration_seconds": 64.1,
-      "tokens_used": {
-        "input": 15,
-        "output": 816,
-        "cache_creation": 30041,
-        "cache_read": 121365,
-        "total": 152237
-      }
-    }
+    "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): momentum-skip $5732.50 / 2261 trades vs simple $5725.00 / 2301 trades; delta_pnl = +0.13%, far below the +5.0% gate. Hypothesis directionally supported (win rate +0.65pp: 85.18% vs 84.53%) but effect size negligible. Skip rate extremely low: ~1.7% overall (4.3%, 1.4%, 1.8% by date) — a 1-tick threshold between consecutive 1-second oracle signals barely fires. On 20260308, skipping 6 trades net-hurt P&L (-4.24%). Same structural failure as imbalance-skip: the oracle's ~84-85% win rate means coarse skip filters remove almost as many winners as losers. Suggested next attempt: batch oracle signals over a short window (e.g., 5 seconds) and execute only the net direction — reduces round-trips and focuses execution on the clearest multi-signal clusters, which may produce meaningful P&L delta without the discrimination problem of single-signal filters.",
+    "timestamp": "2026-05-06T18:00:00Z"
   }
 ]

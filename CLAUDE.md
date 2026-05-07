@@ -24,6 +24,10 @@ doing anything else.
   - `NOTES.md` — assumption alerts for the human operator (§8)
 - **Algorithm code**: `execution_algos/<algo-id>/` — kebab-case IDs
 
+### Restrictions
+
+- You are not allowed to read the `strategies/` folder. DO NOT READ THIS FOLDER.
+
 ## Conventions
 
 - Algorithm IDs are kebab-case and match `execution_algos/<algo-id>/` directory names
