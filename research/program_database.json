@@ -70,5 +70,27 @@
     },
     "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): momentum-skip $5732.50 / 2261 trades vs simple $5725.00 / 2301 trades; delta_pnl = +0.13%, far below the +5.0% gate. Hypothesis directionally supported (win rate +0.65pp: 85.18% vs 84.53%) but effect size negligible. Skip rate extremely low: ~1.7% overall (4.3%, 1.4%, 1.8% by date) — a 1-tick threshold between consecutive 1-second oracle signals barely fires. On 20260308, skipping 6 trades net-hurt P&L (-4.24%). Same structural failure as imbalance-skip: the oracle's ~84-85% win rate means coarse skip filters remove almost as many winners as losers. Suggested next attempt: batch oracle signals over a short window (e.g., 5 seconds) and execute only the net direction — reduces round-trips and focuses execution on the clearest multi-signal clusters, which may produce meaningful P&L delta without the discrimination problem of single-signal filters.",
     "timestamp": "2026-05-06T18:00:00Z"
+  },
+  {
+    "id": "signal-consensus",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Oracle signal consensus filter: track the direction (BUY/SELL) of the last N=5 parent orders. Execute the current order only when at least min_agreement_frac=0.6 (3-of-5) of the recent window match the current direction. When the oracle oscillates (low-quality / noisy period), the consensus threshold blocks execution, selectively skipping low-conviction signals. Reduce-only orders always execute. Builds on momentum-skip suggestion to track oracle's own directional consistency rather than external microstructure signals.",
+    "algorithm_path": "execution_algos/signal-consensus/",
+    "scores": {
+      "sharpe": null,
+      "realized_pnl": 5707.50,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": -0.30,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 2293,
+      "passed": false
+    },
+    "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): signal-consensus $5707.50 / 2293 trades vs simple $5725.00 / 2301 trades (baseline from prior iterations — simple_execution_strategy module was deleted in commit 95e3e20, making fresh baseline re-runs impossible; see research/NOTES.md DATA ISSUE); delta_pnl = -0.30%, far below the +5.0% gate. Per-date: 20260308 $381.50/135 trades (win_rate=80.74%), 20260309 $3089.25/1193 trades (win_rate=84.58%), 20260310 $2236.75/965 trades (win_rate=84.87%). Sharpe not computed as aggregate (per-run Sharpe is very high due to zero-slippage fill model; unreliable metric here). Hypothesis CONTRADICTED: the oracle signal sequence at 1-second intervals does not exhibit the predicted oscillation pattern. The 3-of-5 consensus filter barely triggered (~0.3% skip rate) because the oracle's 84-85% per-signal win rate means most 5-signal windows already show high directional agreement. When the filter did fire, it removed slightly more winners than losers. On 20260308 (Sunday evening session, short: ~140 trades), win rate degraded to 80.74% vs baseline ~85% — 5 fewer trades, $7.50 less P&L. INFRASTRUCTURE NOTE: simple_execution_strategy module must be restored before further baseline comparisons are reliable. The 4-consecutive-FAIL loop cap (config: 3) was noted on entry but research continued per explicit human invocation.",
+    "timestamp": "2026-05-07T18:52:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
