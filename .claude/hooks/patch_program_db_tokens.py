@@ -16,9 +16,11 @@ Computes:
     carries a `usage` block in the transcript.
 
 After patching, attempts a `chore(<algo-id>): backfill execution metadata`
-commit so the working tree stays clean. Best-effort: if the commit fails
-(pre-commit hook, dirty unrelated files, no git, etc.) the file is left
-modified for the next iteration's commit to pick up.
+commit so the working tree stays clean, then attempts
+`git push --set-upstream origin <branch>` if the current branch is an
+`iter/*` branch. Both steps are best-effort: a failure (pre-commit hook,
+dirty unrelated files, no git, no remote, no auth, etc.) is silently
+ignored — the local commit stays in place and the user can push manually.
 """
 from __future__ import annotations
 
@@ -113,6 +115,28 @@ def _try_commit(cwd: str, algo_id: str) -> None:
         return  # Best-effort: leave file dirty for next iteration
 
 
+def _try_push(cwd: str) -> None:
+    """Best-effort: push the current branch to origin if it looks like a
+    researcher iter branch. Silently no-op on any failure (no auth, no
+    remote, detached HEAD, etc.). The user can always push manually."""
+    try:
+        branch = subprocess.run(
+            ["git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if not branch.startswith("iter/"):
+            return  # Only push researcher iter branches from this hook.
+        subprocess.run(
+            ["git", "-C", cwd, "push", "--set-upstream", "origin", branch],
+            check=True,
+            capture_output=True,
+        )
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
+        return  # Best-effort: leave unpushed; remote can be updated manually.
+
+
 def main() -> None:
     try:
         payload = json.load(sys.stdin)
@@ -161,6 +185,7 @@ def main() -> None:
 
     algo_id = str(last.get("id") or "unknown")
     _try_commit(cwd, algo_id)
+    _try_push(cwd)
 
 
 if __name__ == "__main__":
