@@ -98,5 +98,27 @@
         "total": 52512
       }
     }
+  },
+  {
+    "id": "spread-filter",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Bid-ask spread conditioned skip: at order submission, compute current spread from top-of-book quote. Track a rolling window of 60 recent spread values. Skip open (non-reduce-only) orders when spread > 2.0 × median(recent_spreads). Reduce-only orders always execute. Wide spreads signal high uncertainty regimes where the oracle's noisy 30s forecast is less reliable. This is distinct from prior imbalance-skip (which used bid/ask depth ratio) — spread width captures a different dimension of market-maker uncertainty.",
+    "algorithm_path": "execution_algos/spread-filter/",
+    "scores": {
+      "sharpe": 102.64,
+      "realized_pnl": 1622.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2.25,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5510,
+      "passed": false
+    },
+    "notes": "FAIL — aggregated over all 3 train dates (20260308, 20260309, 20260310): spread-filter $1622.50/5510 trades vs simple $1586.75/5522 trades; delta_pnl=+2.25%, below the 3% CLOSE threshold. Win rate improved slightly (48.44% vs 48.32%). Slippage: both 0.0 (neutral). CRITICAL CONTEXT: sigma was changed from 0.5 to 5 in commit ab2360b between this iteration and all prior ones, reducing oracle win rate from ~84-85% to ~48% (near-random). All prior program_database scores are incomparable — they reflect a much higher-quality signal. The spread filter is directionally correct (positive delta) but fires too rarely (skip rate ~0.2%, -12 trades vs baseline) to overcome the noise in the low-sigma oracle. With sigma=5, the execution algo must identify losing trades in a near-coin-flip signal environment — a harder problem than at sigma=0.5. Human operator action needed: clarify whether sigma=5 is intentional. Suggested next: try lower spread threshold (1.2-1.5x) for higher skip rate, or composite filter combining spread + momentum.",
+    "timestamp": "2026-05-09T22:26:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
