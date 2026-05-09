@@ -107,17 +107,26 @@ Report raw numbers — see `OBJECTIVE.md §8` honesty rules.
 
 ## 4. Snapshot procedure (automatic, recommended)
 
+By the time you reach this skill, the iteration commit has already been
+made on the `iter/<algo-id>-<timestamp>` branch (researcher agent §5
+step 8). The snapshot is a re-pointed branch off that commit.
+
 ```bash
-# Branch
+# Fork the snapshot branch from the current (iter) branch — the algorithm
+# code and program DB append are already committed here.
 git checkout -b snapshots/<algo-id>
 
-# Stage everything for the algorithm + the program DB append
-git add execution_algos/<algo-id>/ research/program_database.json
-
-# Commit message: "<algo-id>: pnl=+X.X% vs baseline, sharpe=X.XX"
-git commit -m "twap-volatility-aware: pnl=+14.2% vs simple, sharpe=1.42"
-
 # Push — GitHub Actions auto-uploads to S3 on snapshots/* branches
+git push origin snapshots/<algo-id>
+```
+
+If you arrive at this skill on a branch where the iteration commit has
+*not* yet been made (e.g., manual snapshotting), stage and commit first:
+
+```bash
+git checkout -b snapshots/<algo-id>
+git add execution_algos/<algo-id>/ research/program_database.json
+git commit -m "<algo-id>: pnl=+X.X% vs baseline, sharpe=X.XX"
 git push origin snapshots/<algo-id>
 ```
 

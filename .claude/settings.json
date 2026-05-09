@@ -20,6 +20,6 @@
       "Bash(ls ./strategies*)",
       "Bash(find . -path ./strategies -prune)",
       "Bash(cat strategies/*)"
-    ],
+    ]
   }
 }

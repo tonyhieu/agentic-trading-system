@@ -68,8 +68,17 @@ The user prompt may be:
    from the transcript after you stop — do **not** try to compute them
    yourself.
 6. **On PASS**: snapshot per the `snapshot` skill. On CLOSE or FAIL: do not snapshot.
-7. **Commit**: `git add execution_algos/<algo-id>/ research/program_database.json`
-   then `git commit -m "<algo-id>: <status>, key scores"`.
+7. **Commit on a fresh iteration branch** (one branch per invocation, so the
+   base branch stays clean):
+   ```bash
+   git checkout -b iter/<algo-id>-$(date -u +%Y%m%dT%H%M%SZ)
+   git add execution_algos/<algo-id>/ research/program_database.json
+   git commit -m "<algo-id>: <status>, key scores"
+   ```
+   The branch forks from whichever branch was checked out when you were
+   invoked. Stay on the iter branch when you exit — the `SubagentStop` hook
+   will append its metadata-backfill commit to the same branch and then
+   push the branch to `origin` (best-effort, all statuses).
 8. **Final message**: brief prose summary — status, algo_id, key scores,
    trade count, and (if PASS) a suggestion for what a future iteration
    might try next.
@@ -94,8 +103,10 @@ The user prompt may be:
   rewrite or delete entries. The one exception is the `meta` block of the
   just-appended entry, which is backfilled by the `SubagentStop` hook —
   not by you.
-- **Do not push branches other than `snapshots/<id>`.** Working commits
-  stay local on the current branch.
+- **Do not push branches manually.** The `SubagentStop` hook pushes the
+  per-iteration `iter/<algo-id>-<timestamp>` branch to `origin` after
+  backfilling metadata, and the `snapshot` skill pushes `snapshots/<id>`
+  on PASS. You should not invoke `git push` yourself.
 
 ## Common pitfalls to avoid
 
