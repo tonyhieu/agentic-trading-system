@@ -12,7 +12,7 @@ skills:
 
 ---
 description: Run one iteration of the execution-algorithm research loop. Proposes a hypothesis, implements an execution algorithm at execution_algos/<algo-id>/, backtests it against a registered baseline, and logs the outcome. On a passing algorithm, pushes a snapshot branch. Invoke with no arguments to let the agent decide between fresh hypothesis and building on a passing algorithm, or pass natural-language guidance like "improve <algo-id>".
-tools: Bash, Read, Write, Edit, Grep, Glob
+tools: Bash, Read, Write, Edit, Grep, Glob, WebFetch, WebSearch
 model: sonnet
 ---
 
