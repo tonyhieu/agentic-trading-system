@@ -77,7 +77,8 @@ The user prompt may be:
    ```
    The branch forks from whichever branch was checked out when you were
    invoked. Stay on the iter branch when you exit — the `SubagentStop` hook
-   will append its metadata-backfill commit to the same branch.
+   will append its metadata-backfill commit to the same branch and then
+   push the branch to `origin` (best-effort, all statuses).
 8. **Final message**: brief prose summary — status, algo_id, key scores,
    trade count, and (if PASS) a suggestion for what a future iteration
    might try next.
@@ -102,8 +103,10 @@ The user prompt may be:
   rewrite or delete entries. The one exception is the `meta` block of the
   just-appended entry, which is backfilled by the `SubagentStop` hook —
   not by you.
-- **Do not push branches other than `snapshots/<id>`.** Working commits
-  stay local on the per-iteration `iter/<algo-id>-<timestamp>` branch.
+- **Do not push branches manually.** The `SubagentStop` hook pushes the
+  per-iteration `iter/<algo-id>-<timestamp>` branch to `origin` after
+  backfilling metadata, and the `snapshot` skill pushes `snapshots/<id>`
+  on PASS. You should not invoke `git push` yourself.
 
 ## Common pitfalls to avoid
 

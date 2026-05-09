@@ -46,7 +46,7 @@ until a passing algorithm is found or the iteration budget in
 3. IMPLEMENT execution_algos/<algo-id>/execution_algorithm.py + register in factory
 4. BACKTEST your algo AND the baseline on **train** dates only (one run_backtest per date per algo). Test is held out for Lambda.
 5. COMPARE metrics.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
-6. APPEND entry to research/program_database.json + git commit on a fresh `iter/<algo-id>-<timestamp>` branch
+6. APPEND entry to research/program_database.json + git commit on a fresh `iter/<algo-id>-<timestamp>` branch (the SubagentStop hook backfills `meta` and pushes the branch to `origin`)
 7. On PASS: git push origin snapshots/<algo-id> — this triggers the Lambda evaluator on test
 8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (the `evaluate` skill)
 ```
@@ -217,7 +217,8 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
      git add execution_algos/<algo-id>/ research/program_database.json
      git commit -m "<algo-id>: <status>, +X.X% pnl vs baseline"
    Stay on the iter branch when the invocation ends — the `SubagentStop`
-   metadata-backfill commit will land on the same branch.
+   hook will land its metadata-backfill commit on the same branch and then
+   push it to `origin` (best-effort; all statuses).
    Failed entries prevent re-exploring dead ends.
 ```
 
