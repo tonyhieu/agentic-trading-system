@@ -282,11 +282,17 @@
       "trade_count": 5116,
       "passed": true
     },
-    "notes": "PASS — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip-2skip $1768.00/5116 trades vs simple $1586.75/5522 trades; delta_pnl=+11.42%, above the 5.0% gate. Per-date: 20260308 +5.34% ($148.00/321 vs $140.50/351), 20260309 +8.53% ($941.75/2660 vs $867.75/2863), 20260310 +17.24% ($678.25/2135 vs $578.50/2308). Slippage 0.0 (neutral). Mean Sharpe 116.18. Max drawdown -0.0028%. Forced re-entry mechanism confirmed working — no cascade suppression. HOWEVER: refinement vs parent pnl-spread-skip NOT successful. Parent achieved +15.96%/$1840 vs this algo's +11.42%/$1768 (-4.54pp). Hypothesis CONTRADICTED: the adverse regime does NOT persistently last 2 oracle cycles; the 2nd skip removes winners that recovered. The 1-skip architecture in the parent is optimal for the training window. Parent pnl-spread-skip at +15.96% remains the current leader.",
+    "notes": "PASS \u2014 aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip-2skip $1768.00/5116 trades vs simple $1586.75/5522 trades; delta_pnl=+11.42%, above the 5.0% gate. Per-date: 20260308 +5.34% ($148.00/321 vs $140.50/351), 20260309 +8.53% ($941.75/2660 vs $867.75/2863), 20260310 +17.24% ($678.25/2135 vs $578.50/2308). Slippage 0.0 (neutral). Mean Sharpe 116.18. Max drawdown -0.0028%. Forced re-entry mechanism confirmed working \u2014 no cascade suppression. HOWEVER: refinement vs parent pnl-spread-skip NOT successful. Parent achieved +15.96%/$1840 vs this algo's +11.42%/$1768 (-4.54pp). Hypothesis CONTRADICTED: the adverse regime does NOT persistently last 2 oracle cycles; the 2nd skip removes winners that recovered. The 1-skip architecture in the parent is optimal for the training window. Parent pnl-spread-skip at +15.96% remains the current leader.",
     "timestamp": "2026-05-10T02:40:00Z",
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 4869.2,
+      "tokens_used": {
+        "input": 32,
+        "output": 11228,
+        "cache_creation": 38454,
+        "cache_read": 313846,
+        "total": 363560
+      }
     }
   }
 ]
