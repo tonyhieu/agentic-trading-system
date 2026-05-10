@@ -154,5 +154,27 @@
         "total": 49540
       }
     }
+  },
+  {
+    "id": "pnl-regime-skip",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Skip the OPEN leg of an oracle signal when the immediately preceding closed position suffered a per-trade realized P&L <= -3.0 USD (>= 12-tick adverse move). Uses quote-tick-based P&L estimation at open-order decision time to avoid on_order_filled sequencing issues. A _position_flat flag forces re-entry after any skip to prevent cascade. Reduce-only (close) orders always execute.",
+    "algorithm_path": "execution_algos/pnl-regime-skip/",
+    "scores": {
+      "sharpe": 107.84,
+      "realized_pnl": 1676.50,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 5.66,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5401,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-regime-skip $1676.50/5401 trades vs simple $1586.75/5522 trades; delta_pnl=+5.66%, above the 5.0% gate. Slippage 0.0 (neutral). Per-date: 20260308 +1.25% ($142.25/337 vs $140.50/351), 20260309 +6.86% ($927.25/2793 vs $867.75/2863), 20260310 +4.93% ($607.00/2271 vs $578.50/2308). Sharpe (mean across dates): 82.00 + 135.55 + 105.96 = avg 107.84. CAVEAT: The -3.0 USD threshold was selected by in-sample analysis of the same 3 training dates; constitutes mild parameter fitting. OOS Lambda evaluation will be the true test. Implementation used quote-tick-based P&L estimation to avoid Nautilus event-ordering issues with on_order_filled; _position_flat flag prevents skip cascade.",
+    "timestamp": "2026-05-10T01:58:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

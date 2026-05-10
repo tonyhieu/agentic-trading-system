@@ -33,6 +33,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ofi-skip",
         "get_execution_algorithm",
     ),
+    "pnl-regime-skip": (
+        "execution_algos.pnl-regime-skip",
+        "get_execution_algorithm",
+    ),
 }
 
 

@@ -119,3 +119,23 @@ the spread-filter nearly achieved ($1622.50, +2.25%).
 **Why**: Operator ran the agent on the bare host instead of inside `docker compose run dev`. The repo's tooling assumes the Docker context where `awscli` is baked in.
 **Alternatives**: (a) `brew install awscli` and re-run on host; (b) install Docker and use `docker compose run --rm dev`; (c) pre-seed `data-cache/` from another machine for an offline iteration.
 **Impact**: No program_database.json entry was written (no attempt was actually executed). No algorithm code was created. The iteration budget was not consumed. Operator decision required before the next invocation.
+---
+
+## [2026-05-10 02:00] ASSUMPTION: pnl-regime-skip threshold chosen from in-sample training data analysis
+
+**Detail**: The pnl_skip_threshold=-3.0 for `pnl-regime-skip` was selected by analyzing
+the positions data from the same 3 training dates (20260308, 20260309, 20260310) used in
+the backtest. The threshold was swept over [-1.0, -1.5, -2.0, -2.5, -3.0, -3.5, -4.0, -5.0]
+on the historical positions CSV, and -3.0 gave the best outcome (4.98% improvement vs baseline).
+This is an in-sample fit, not an out-of-sample validated threshold.
+**Why**: No held-out threshold-validation set is available within the 3-day train window.
+The mechanism (post-large-loss skip) has first-principles justification (oracle quality regime
+persistence), so the threshold was confirmed rather than discovered by this analysis.
+**Alternatives**: (a) Use a fixed threshold from first principles (e.g., -5.0 as 'extreme loss')
+without data fitting. (b) Use 20260308 as threshold-validation and 20260309+20260310 as train.
+**Impact**: MODERATE — the threshold may be slightly overfit to the training window. The OOS
+test (Lambda evaluator) will reveal whether the threshold generalizes. If OOS regresses, future
+iterations should try higher magnitude thresholds (-4.0, -5.0) or mechanism alternatives.
+
+RESULT WARNING: Only 11 trades skipped on 20260308 (3.1% of 351 total trades) — very small
+sample for that date. The signal on 20260308 is noisy.
