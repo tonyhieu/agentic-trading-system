@@ -294,5 +294,27 @@
         "total": 363560
       }
     }
+  },
+  {
+    "id": "pnl-streak-spread-skip",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Consecutive-2-loss streak + spread conditioned skip: skip OPEN orders when EITHER (a) the last TWO consecutive closed positions both had negative estimated PnL (any amount < 0 USD), OR (b) the current bid-ask spread exceeds 1.5x the rolling 60-tick median spread. Replaces the single-trade PnL threshold of -$3 (parent pnl-spread-skip) with a threshold-free streak signal. Forced re-entry (_position_flat) preserved to prevent cascade.",
+    "algorithm_path": "execution_algos/pnl-streak-spread-skip/",
+    "scores": {
+      "sharpe": 127.50,
+      "realized_pnl": 1910.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 20.39,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 4596,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-streak-spread-skip $1910.25/4596 trades vs simple $1586.75/5522 trades; delta_pnl=+20.39%, above the 5.0% gate. Per-date: 20260308 +15.30% ($162.00/285 vs $140.50/351), 20260309 +23.16% ($1068.75/2410 vs $867.75/2863), 20260310 +17.46% ($679.50/1901 vs $578.50/2308). Slippage 0.0 (neutral). Win rate: 50.96% vs 48.32% (+2.64 pp). Mean Sharpe: 127.50 vs 99.78. REFINEMENT vs pnl-spread-skip (parent, +15.96%): +3.82% PnL delta (target +2.0% — EXCEEDED), +9.85 Sharpe delta (target +0.10 — EXCEEDED). Skip rate: 926/5522 = 16.8% (vs ~4.1% for parent). CAVEAT: Higher skip rate increases overfitting risk. The streak fires on any two consecutive negative PnL estimates (even micro-losses near $0); in-sample fitting concern higher than parent. New leader: replaces pnl-spread-skip (+15.96%) as highest-performing algorithm on train window.",
+    "timestamp": "2026-05-10T02:56:24Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

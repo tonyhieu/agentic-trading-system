@@ -1,0 +1,339 @@
+"""Consecutive-loss streak + spread conditioned skip execution algorithm.
+
+Skips the OPEN leg of an oracle signal when EITHER:
+  (a) the last TWO consecutive closed positions BOTH had negative estimated
+      PnL (any amount < 0 USD) — a consecutive-loss streak, OR
+  (b) the current bid-ask spread exceeds spread_multiplier times the rolling
+      median spread over the last spread_window ticks (default 1.5x / 60).
+
+Reduce-only (close) orders are always submitted.
+
+The forced re-entry (_position_flat) guarantee from pnl-spread-skip is
+preserved: after any skip, the next OPEN order is always submitted to prevent
+cascade, regardless of both signals.
+
+The key difference from pnl-spread-skip (parent): the PnL trigger uses a
+threshold-free consecutive-loss streak (2 back-to-back negative trades)
+instead of a single-trade -$3 threshold. This captures the same serial
+correlation at all loss magnitudes, not just large losses.
+
+See execution_algos/pnl-streak-spread-skip/NOTES.md for the full hypothesis.
+"""
+from __future__ import annotations
+
+import statistics
+from collections import deque
+from pathlib import Path
+
+import yaml
+
+from nautilus_trader.execution.algorithm import ExecAlgorithm
+from nautilus_trader.execution.config import ExecAlgorithmConfig
+from nautilus_trader.model.enums import OrderSide
+from nautilus_trader.model.identifiers import ExecAlgorithmId
+
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def _load_config_values() -> tuple[float, int]:
+    """Read spread parameters from config.yaml if present, else defaults.
+
+    Returns
+    -------
+    tuple of (spread_multiplier, spread_window)
+    """
+    config_path = _REPO_ROOT / "research" / "config.yaml"
+    try:
+        with open(config_path) as f:
+            cfg = yaml.safe_load(f)
+        ec = cfg.get("execution_constraints", {})
+        spread_mult = float(ec.get("spread_multiplier", 1.5))
+        spread_win = int(ec.get("spread_window", 60))
+        return spread_mult, spread_win
+    except Exception:
+        return 1.5, 60
+
+
+class PnLStreakSpreadSkipConfig(ExecAlgorithmConfig, frozen=True):
+    """Configuration for the consecutive-loss streak + spread skip algorithm.
+
+    Parameters
+    ----------
+    spread_multiplier : float
+        The spread must exceed this multiple of the rolling median spread
+        to trigger a skip. Default 1.5.
+    spread_window : int
+        Number of recent spread observations used for the rolling median.
+        Default 60.
+    """
+
+    spread_multiplier: float = 1.5
+    spread_window: int = 60
+
+
+class PnLStreakSpreadSkipAlgorithm(ExecAlgorithm):
+    """Execution algorithm that skips on consecutive-loss streak OR wide-spread.
+
+    Opening orders (is_reduce_only == False):
+      - Track the estimated PnL of the two most recently completed positions
+        (using the same quote-tick estimation as pnl-regime-skip/pnl-spread-skip).
+      - Compute the current spread from the top-of-book quote and compare
+        to rolling median of recent spreads.
+      - Skip if EITHER:
+          (a) both _prev_pnl_1 < 0 AND _prev_pnl_2 < 0 (consecutive-loss streak)
+          (b) spread > spread_multiplier * median_spread (with warm-up >= 10)
+      - After any skip, _position_flat = True: the NEXT open is always submitted
+        to prevent cascade.
+
+    Closing orders (is_reduce_only == True):
+      - Always submitted immediately (intraday_flat compliance).
+
+    No order quantity is ever modified.
+    """
+
+    def __init__(self, config: PnLStreakSpreadSkipConfig) -> None:
+        super().__init__(config=config)
+        self._spread_multiplier: float = config.spread_multiplier
+        self._spread_window: int = config.spread_window
+
+        # PnL streak tracking: two most recent closed-position PnL estimates
+        # None = not yet available (need actual completed trades)
+        self._prev_pnl_1: float | None = None  # most recently closed
+        self._prev_pnl_2: float | None = None  # second most recently closed
+
+        # Per-trade open-price tracking (for PnL estimation at next open)
+        self._prev_open_price: float | None = None
+        self._prev_direction: int | None = None  # +1 for BUY, -1 for SELL
+
+        # Forced re-entry after any skip
+        self._position_flat: bool = True
+
+        # Spread tracking
+        self._spread_history: deque[float] = deque(maxlen=self._spread_window)
+
+        # Subscription tracking
+        self._subscribed: set[str] = set()
+
+    # ------------------------------------------------------------------
+    # Lifecycle
+    # ------------------------------------------------------------------
+
+    def on_start(self) -> None:
+        self.log.info(
+            f"PnLStreakSpreadSkipAlgorithm started "
+            f"(spread_mult={self._spread_multiplier}, "
+            f"spread_window={self._spread_window})."
+        )
+
+    def on_reset(self) -> None:
+        self._prev_pnl_1 = None
+        self._prev_pnl_2 = None
+        self._prev_open_price = None
+        self._prev_direction = None
+        self._position_flat = True
+        self._spread_history.clear()
+        self._subscribed.clear()
+
+    # ------------------------------------------------------------------
+    # Subscription helpers
+    # ------------------------------------------------------------------
+
+    def _ensure_subscribed(self, instrument_id) -> None:
+        key = str(instrument_id)
+        if key not in self._subscribed:
+            self.subscribe_quote_ticks(instrument_id)
+            self._subscribed.add(key)
+
+    # ------------------------------------------------------------------
+    # Spread computation
+    # ------------------------------------------------------------------
+
+    def _update_and_check_spread(self, quote) -> bool:
+        """Update the spread history and return True if spread triggers a skip."""
+        try:
+            ask = float(str(quote.ask_price))
+            bid = float(str(quote.bid_price))
+            spread = ask - bid
+        except Exception:
+            return False
+
+        self._spread_history.append(spread)
+
+        if len(self._spread_history) < 10:
+            return False
+
+        median_spread = statistics.median(self._spread_history)
+        if median_spread <= 0:
+            return False
+
+        triggered = spread > self._spread_multiplier * median_spread
+        if triggered:
+            self.log.debug(
+                f"Spread trigger: {spread:.6f} > {self._spread_multiplier:.1f}x "
+                f"median {median_spread:.6f}."
+            )
+        return triggered
+
+    # ------------------------------------------------------------------
+    # PnL estimation
+    # ------------------------------------------------------------------
+
+    def _estimate_prev_pnl(self, quote) -> float | None:
+        """Estimate per-trade P&L of the most recently closed position.
+
+        Uses the same approach as pnl-regime-skip: close price approximated
+        by the top-of-book quote available at the open-order decision time.
+        The price the position closes at == the fill price of the closing
+        (reduce-only) order, which is the ask (for a long close / BUY-to-close)
+        or the bid (for a short close / SELL-to-close). At open-order decision
+        time this is the current top-of-book.
+        """
+        if self._prev_open_price is None or self._prev_direction is None:
+            return None
+
+        try:
+            if self._prev_direction == -1:
+                # Previous was SELL (short). Close = BUY at ask.
+                close_price = float(str(quote.ask_price))
+            else:
+                # Previous was BUY (long). Close = SELL at bid.
+                close_price = float(str(quote.bid_price))
+        except Exception:
+            return None
+
+        # PnL = (close_price - open_price) * direction
+        # Positive for profitable, negative for loss
+        return (close_price - self._prev_open_price) * self._prev_direction
+
+    # ------------------------------------------------------------------
+    # Main order handler
+    # ------------------------------------------------------------------
+
+    def on_order(self, order) -> None:
+        """Route the order: submit immediately, or skip on streak OR spread signal."""
+        self._ensure_subscribed(order.instrument_id)
+
+        # Reduce-only orders always execute — intraday_flat compliance.
+        if order.is_reduce_only:
+            self.log.debug(
+                f"Submitting reduce-only order {order.client_order_id} immediately."
+            )
+            self.submit_order(order)
+            return
+
+        # Get current quote for spread and PnL estimation.
+        quote = self.cache.quote_tick(order.instrument_id)
+
+        # Update spread history (always, regardless of whether we skip).
+        spread_trigger = False
+        if quote is not None:
+            spread_trigger = self._update_and_check_spread(quote)
+
+        # First open of the session: no prior data, submit immediately.
+        if self._prev_open_price is None:
+            self.log.info(
+                f"No prior open; submitting {order.client_order_id} immediately."
+            )
+            self._record_open(order, quote)
+            return
+
+        # Re-entry after a skip: force submit to prevent cascade.
+        if self._position_flat:
+            self.log.info(
+                f"Re-entering after skip; submitting {order.client_order_id}."
+            )
+            self._record_open(order, quote)
+            return
+
+        # Estimate PnL of the just-closed position and check streak.
+        streak_trigger = False
+        if quote is not None:
+            prev_pnl = self._estimate_prev_pnl(quote)
+            if prev_pnl is not None:
+                # Update the PnL history: shift _prev_pnl_1 -> _prev_pnl_2
+                # and set new _prev_pnl_1.
+                self._prev_pnl_2 = self._prev_pnl_1
+                self._prev_pnl_1 = prev_pnl
+
+                # Streak trigger: both previous 2 trades were losses.
+                if (
+                    self._prev_pnl_1 is not None
+                    and self._prev_pnl_2 is not None
+                    and self._prev_pnl_1 < 0
+                    and self._prev_pnl_2 < 0
+                ):
+                    streak_trigger = True
+                    self.log.debug(
+                        f"Streak trigger: prev_pnl_1={prev_pnl:.4f}, "
+                        f"prev_pnl_2={self._prev_pnl_2:.4f} — both negative."
+                    )
+
+        # Apply skip: OR of the two conditions.
+        if streak_trigger or spread_trigger:
+            trigger_label = (
+                "streak+spread" if (streak_trigger and spread_trigger)
+                else ("streak" if streak_trigger else "spread")
+            )
+            self.log.info(
+                f"SKIP order {order.client_order_id} "
+                f"(trigger={trigger_label}) — adverse regime."
+            )
+            self._position_flat = True
+            # Do NOT call submit_order — quantity invariant allows sum(fills) < parent.qty.
+        else:
+            self.log.debug(
+                f"SUBMIT order {order.client_order_id} — normal regime."
+            )
+            self._record_open(order, quote)
+
+    def _record_open(self, order, quote) -> None:
+        """Submit the order and record its entry price for future PnL estimation."""
+        if quote is not None:
+            try:
+                if order.side == OrderSide.BUY:
+                    fill_price = float(str(quote.ask_price))
+                else:
+                    fill_price = float(str(quote.bid_price))
+                self._prev_open_price = fill_price
+            except Exception:
+                self._prev_open_price = None
+
+        self._prev_direction = 1 if order.side == OrderSide.BUY else -1
+        self._position_flat = False
+        self.submit_order(order)
+
+    def on_quote_tick(self, tick) -> None:
+        """Consume quote ticks to keep the cache populated."""
+        pass
+
+
+def get_execution_algorithm(
+    exec_id: str = "MY_GENERIC_ALGO",
+    spread_multiplier: float | None = None,
+    spread_window: int | None = None,
+) -> PnLStreakSpreadSkipAlgorithm:
+    """Instantiate and return the PnLStreakSpreadSkipAlgorithm.
+
+    Parameters
+    ----------
+    exec_id : str
+        Execution algorithm identifier registered with Nautilus.
+    spread_multiplier : float or None
+        Skip when spread > spread_multiplier x rolling median. Default 1.5.
+    spread_window : int or None
+        Rolling window length for median spread computation. Default 60.
+    """
+    cfg_mult, cfg_win = _load_config_values()
+
+    if spread_multiplier is None:
+        spread_multiplier = cfg_mult
+    if spread_window is None:
+        spread_window = cfg_win
+
+    config = PnLStreakSpreadSkipConfig(
+        exec_algorithm_id=ExecAlgorithmId(exec_id),
+        spread_multiplier=spread_multiplier,
+        spread_window=spread_window,
+    )
+    return PnLStreakSpreadSkipAlgorithm(config=config)
