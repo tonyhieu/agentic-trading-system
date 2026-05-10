@@ -82,12 +82,8 @@ jobs:
           ACTOR: ${{ github.actor }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          if [ -f scripts/generate_metadata.py ]; then
-            echo "Running scripts/generate_metadata.py"
-            python3 scripts/generate_metadata.py
-          else
-            echo "scripts/generate_metadata.py not found, writing fallback metadata.json"
-            cat > "$ROOT/metadata.json" <<'EOF'
+          echo "Writing metadata.json into $ROOT"
+          cat > "$ROOT/metadata.json" <<'EOF'
 {
   "algo_name": "${ALGO_NAME}",
   "timestamp": "${TIMESTAMP}",
@@ -100,7 +96,6 @@ jobs:
   "run_id": "${RUN_ID}"
 }
 EOF
-          fi
       
       - name: Display snapshot
         run: |
