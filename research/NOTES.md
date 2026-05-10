@@ -89,6 +89,30 @@ running the baseline. Human action required to restore the module.
 
 ---
 
+## [2026-05-09 22:25] DATA ISSUE: oracle sigma changed from 0.5 to 5 in config.yaml commit ab2360b
+
+**Detail**: Commit `ab2360b` (2026-05-09, "minor fixes") changed `config.yaml` `strategy.kwargs.sigma` from
+`0.5` to `5`. This changes the oracle noise level by 10×. Prior iterations (cap-boost through
+signal-consensus) ran with sigma=0.5 yielding ~84-85% win rate. Current iteration (spread-filter)
+and all future iterations run with sigma=5 yielding ~48% win rate (near-random). The oracle
+at sigma=5 is essentially a noisy signal with only marginal edge over random.
+**Why**: The commit message says "minor fixes" with no explanation of the sigma change. It may
+have been an intentional difficulty-increase by the human operator, or an accidental edit.
+**Alternatives**: (a) Restore sigma=0.5 to match prior iterations (requires human authorization).
+(b) Continue with sigma=5 — the research problem becomes: "how does an exec algo improve P&L when
+the underlying signal is near-random?" (c) Compare results across sigma values by noting the config
+hash in each program_database entry.
+**Impact**: HIGH — all prior program_database entries are INCOMPARABLE to current and future entries
+because they used sigma=0.5. The pass gate ($5725 baseline at sigma=0.5) no longer applies; the new
+baseline is ~$1587 over 3 train dates with sigma=5. The research direction is fundamentally different:
+with ~48% oracle win rate, the execution algorithm's impact is measured against a near-random signal
+rather than a highly-accurate one. The 5% gate means the algo must beat ~$1587 × 1.05 = ~$1666, which
+the spread-filter nearly achieved ($1622.50, +2.25%).
+
+⚠ NOTE WRITTEN: research/NOTES.md — oracle sigma changed 0.5 → 5 in commit ab2360b; all prior entries incomparable
+
+---
+
 ## [2026-04-29 18:13] DATA ISSUE: backtest infra unavailable on host shell — iteration aborted before backtest
 
 **Detail**: A test-run invocation of the researcher agent could not execute §5 step 5 (BACKTEST). `scripts/data_retriever.py` shells out to the `aws` CLI, which is not installed on the host (`brew install awscli` not run); `docker`/`docker compose` are also unavailable, so the project's intended `dev`/`agent` services cannot be spun up. `data-cache/glbx-mdp3-market-data/v1.0.0/partitions/` is empty, so no partition is reachable without a working sync path. AWS creds and `S3_BUCKET_NAME` in `.env` are correctly set; `USERNAME`/`PASSWORD` from `.env.example` are unused by the codebase and can be ignored.

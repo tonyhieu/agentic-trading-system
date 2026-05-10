@@ -163,7 +163,9 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
 2. READ docs/literature/
    Find an execution mechanism worth testing — order splitting, scheduling,
    conditional submission, etc. Use it for inspiration but feel free to come
-   up with your own ideas.
+   up with your own ideas. `WebSearch` and `WebFetch` (arxiv.org, github.com,
+   ssrn.com pre-allowed) are available if you want to supplement the local
+   literature with recent papers or reference implementations.
 
 3. HYPOTHESIZE
    Write one paragraph: what execution inefficiency, what mechanism, why it
