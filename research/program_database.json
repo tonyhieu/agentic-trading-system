@@ -182,5 +182,27 @@
         "total": 103760
       }
     }
+  },
+  {
+    "id": "pnl-spread-skip",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Combined post-loss regime skip AND wide-spread skip: skip OPEN orders when EITHER (a) the immediately preceding closed position suffered a realized P&L <= -3.0 USD (12+ tick adverse move), OR (b) the current bid-ask spread exceeds 1.5x the rolling 60-tick median spread. The two signals are orthogonal: PnL signal captures temporal regime persistence; spread signal captures contemporaneous market-maker uncertainty. OR combination targets different adverse trade types. Builds on pnl-regime-skip (PASS +5.66%) by adding spread as a second skip trigger. One targeted change vs parent.",
+    "algorithm_path": "execution_algos/pnl-spread-skip/",
+    "scores": {
+      "sharpe": 117.65,
+      "realized_pnl": 1840.00,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 15.96,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5296,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip $1840.00/5296 trades vs simple $1586.75/5522 trades; delta_pnl=+15.96%, above the 5.0% gate. Per-date: 20260308 +5.16% ($147.75/333 vs $140.50/351), 20260309 +15.99% ($1006.50/2762 vs $867.75/2863), 20260310 +18.54% ($685.75/2201 vs $578.50/2308). Slippage 0.0 (neutral). Win rate: 49.45% vs 48.32% (+1.14 pp). Mean Sharpe: 117.65 vs 99.78. Max drawdown: -0.3349% vs -0.4298% (improved). REFINEMENT vs pnl-regime-skip: +9.75% PnL delta (target +2%), +9.81 Sharpe delta (target +0.10) — both exceeded. CAVEAT: Dual in-sample parameter fitting (PnL -3.0 and spread 1.5x both from same training window). OOS Lambda will be the true test.",
+    "timestamp": "2026-05-10T02:08:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

@@ -139,3 +139,25 @@ iterations should try higher magnitude thresholds (-4.0, -5.0) or mechanism alte
 
 RESULT WARNING: Only 11 trades skipped on 20260308 (3.1% of 351 total trades) — very small
 sample for that date. The signal on 20260308 is noisy.
+
+---
+
+## [2026-05-10 02:07] ASSUMPTION: pnl-spread-skip uses dual in-sample fitted parameters
+
+**Detail**: `pnl-spread-skip` combines two thresholds both chosen from in-sample analysis
+on the same 3 training dates (20260308, 20260309, 20260310):
+- PnL threshold: -3.0 USD — inherited from `pnl-regime-skip` (in-sample sweep)
+- Spread multiplier: 1.5x — inherited from `spread-filter` (originally set from first
+  principles at 2.0x, then lowered to 1.5x in `spread-filter` iteration based on the
+  same training data). Both values were selected by analyzing the same dates used for
+  the final backtest.
+**Why**: No held-out threshold-validation set is available within the 3-day train window.
+Both thresholds were inherited from prior in-sample analysis rather than discovered fresh.
+**Alternatives**: (a) Use more conservative defaults (e.g., -4.0 USD, 2.0x spread)
+that require less empirical fitting. (b) Reserve one training date for threshold validation.
+**Impact**: MODERATE-HIGH — dual in-sample fitting increases overfitting risk vs single-
+parameter `pnl-regime-skip`. The OOS Lambda evaluator will be the true test. If OOS
+regresses significantly, future agents should tighten both thresholds toward first-principles
+defaults or test an AND combination (lower skip count, higher precision).
+
+⚠ NOTE WRITTEN: research/NOTES.md — pnl-spread-skip dual in-sample fitted parameters
