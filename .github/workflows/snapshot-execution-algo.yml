@@ -81,7 +81,26 @@ jobs:
           TRIGGERED_BY: ${{ github.event_name }}
           ACTOR: ${{ github.actor }}
           RUN_ID: ${{ github.run_id }}
-        run: python3 scripts/generate_metadata.py
+        run: |
+          if [ -f scripts/generate_metadata.py ]; then
+            echo "Running scripts/generate_metadata.py"
+            python3 scripts/generate_metadata.py
+          else
+            echo "scripts/generate_metadata.py not found, writing fallback metadata.json"
+            cat > "$ROOT/metadata.json" <<'EOF'
+{
+  "algo_name": "${ALGO_NAME}",
+  "timestamp": "${TIMESTAMP}",
+  "commit_short": "${COMMIT_SHA}",
+  "commit_full": "${COMMIT_SHA_FULL}",
+  "branch": "${BRANCH}",
+  "repository": "${REPOSITORY}",
+  "triggered_by": "${TRIGGERED_BY}",
+  "actor": "${ACTOR}",
+  "run_id": "${RUN_ID}"
+}
+EOF
+          fi
       
       - name: Display snapshot
         run: |
