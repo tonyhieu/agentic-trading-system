@@ -254,11 +254,17 @@
       "trade_count": 1161,
       "passed": false
     },
-    "notes": "FAIL — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip-2win $258.00/1161 trades vs simple $1586.75/5522 trades; delta_pnl=-83.74%, catastrophic underperformance. Per-date: 20260308 -77.58% ($31.50/4 vs $140.50/351), 20260309 -94.44% ($48.25/394 vs $867.75/2863), 20260310 -69.19% ($178.25/763 vs $578.50/2308). Root cause: removing the forced re-entry guarantee from the parent caused cascade suppression — after each 2-skip window expires, a new trigger fires immediately (spread/PnL conditions persist), arming another 2-skip window. The algo executed only 1161 trades vs 5522 baseline (79% skip rate vs parent's 4.1%). Win rate fell 2.58 pp below baseline (45.74% vs 48.32%). Hypothesis CONTRADICTED: the cascade prevention mechanism in the parent (forced re-entry after each skip) is not incidental — it is essential. Any future multi-skip extension must include a forced re-entry guarantee after the skip window expires.",
+    "notes": "FAIL \u2014 aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip-2win $258.00/1161 trades vs simple $1586.75/5522 trades; delta_pnl=-83.74%, catastrophic underperformance. Per-date: 20260308 -77.58% ($31.50/4 vs $140.50/351), 20260309 -94.44% ($48.25/394 vs $867.75/2863), 20260310 -69.19% ($178.25/763 vs $578.50/2308). Root cause: removing the forced re-entry guarantee from the parent caused cascade suppression \u2014 after each 2-skip window expires, a new trigger fires immediately (spread/PnL conditions persist), arming another 2-skip window. The algo executed only 1161 trades vs 5522 baseline (79% skip rate vs parent's 4.1%). Win rate fell 2.58 pp below baseline (45.74% vs 48.32%). Hypothesis CONTRADICTED: the cascade prevention mechanism in the parent (forced re-entry after each skip) is not incidental \u2014 it is essential. Any future multi-skip extension must include a forced re-entry guarantee after the skip window expires.",
     "timestamp": "2026-05-10T02:35:00Z",
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 4376.0,
+      "tokens_used": {
+        "input": 30,
+        "output": 9144,
+        "cache_creation": 34672,
+        "cache_read": 248796,
+        "total": 292642
+      }
     }
   }
 ]
