@@ -266,5 +266,27 @@
         "total": 292642
       }
     }
+  },
+  {
+    "id": "pnl-spread-skip-2skip",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "2-skip window extension of pnl-spread-skip with forced re-entry preserved: after an OR trigger fires (post-loss PnL <= -3.0 USD OR spread > 1.5x rolling 60-tick median), skip the next 2 consecutive OPEN orders before forcing re-entry. Unlike pnl-spread-skip-2win (FAIL -83.74%) which dropped forced re-entry causing cascade, this implementation uses a _skips_remaining counter that resets to -1 (normal) after 2 skips, guaranteeing re-entry before re-arming the trigger.",
+    "algorithm_path": "execution_algos/pnl-spread-skip-2skip/",
+    "scores": {
+      "sharpe": 116.18,
+      "realized_pnl": 1768.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 11.42,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5116,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip-2skip $1768.00/5116 trades vs simple $1586.75/5522 trades; delta_pnl=+11.42%, above the 5.0% gate. Per-date: 20260308 +5.34% ($148.00/321 vs $140.50/351), 20260309 +8.53% ($941.75/2660 vs $867.75/2863), 20260310 +17.24% ($678.25/2135 vs $578.50/2308). Slippage 0.0 (neutral). Mean Sharpe 116.18. Max drawdown -0.0028%. Forced re-entry mechanism confirmed working — no cascade suppression. HOWEVER: refinement vs parent pnl-spread-skip NOT successful. Parent achieved +15.96%/$1840 vs this algo's +11.42%/$1768 (-4.54pp). Hypothesis CONTRADICTED: the adverse regime does NOT persistently last 2 oracle cycles; the 2nd skip removes winners that recovered. The 1-skip architecture in the parent is optimal for the training window. Parent pnl-spread-skip at +15.96% remains the current leader.",
+    "timestamp": "2026-05-10T02:40:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

@@ -1,0 +1,30 @@
+{
+  "algo_name": "pnl-spread-skip-2skip",
+  "backtest_date": "2026-05-10T02:39:00Z",
+  "baseline": "simple",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 1768.00,
+    "sharpe_ratio": 116.18,
+    "max_drawdown_pct": -0.0028,
+    "win_rate": 0.4949,
+    "trade_count": 5116,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.1768,
+    "vs_baseline_pnl_pct": 11.42,
+    "vs_baseline_slippage_pct": 0.0
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "results/2026-05-10T02-35-49Z-cdf5551/",
+    "results/2026-05-10T02-38-38Z-cdf5551/",
+    "results/2026-05-10T02-37-09Z-cdf5551/"
+  ]
+}
