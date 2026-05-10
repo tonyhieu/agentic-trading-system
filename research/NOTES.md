@@ -161,3 +161,23 @@ regresses significantly, future agents should tighten both thresholds toward fir
 defaults or test an AND combination (lower skip count, higher precision).
 
 ⚠ NOTE WRITTEN: research/NOTES.md — pnl-spread-skip dual in-sample fitted parameters
+
+---
+
+## [2026-05-10 02:20] RESULT WARNING: pnl-spread-skip-and — only 16 skip decisions total
+
+**Detail**: `pnl-spread-skip-and` (AND combination of PnL regime + spread signals)
+fired on only 16 trades total across all 3 training dates (1 on 20260308, 11 on
+20260309, 4 on 20260310). The observed +2.79% P&L improvement vs baseline is
+based on this very small sample of skip decisions.
+**Why**: The two signals (PnL regime — fires right after a losing close; spread
+width — fires at the moment of wide spread) rarely co-occur at the same exact tick.
+The AND gate is so restrictive that it almost never fires.
+**Alternatives**: The OR combination (pnl-spread-skip) fires 226 times and achieves
++15.96%. The AND combination achieves similar P&L improvement per skip ($2.77 vs
+$1.15 for OR) but so rarely that aggregate P&L impact is negligible.
+**Impact**: CLOSE status (+2.79%) is valid but has low statistical confidence.
+The refinement hypothesis (AND > OR in precision) is contradicted — the signals
+are orthogonal in time, not in magnitude.
+
+⚠ NOTE WRITTEN: research/NOTES.md — pnl-spread-skip-and very low AND-skip count (16 total)

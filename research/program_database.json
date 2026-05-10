@@ -210,5 +210,27 @@
         "total": 162336
       }
     }
+  },
+  {
+    "id": "pnl-spread-skip-and",
+    "status": "close",
+    "baseline": "simple",
+    "hypothesis": "AND-combination PnL-regime + spread skip: skip OPEN orders only when BOTH (a) the immediately preceding closed position suffered P&L <= -3.0 USD AND (b) current spread > 1.5x rolling 60-tick median spread. Higher precision than the OR variant (pnl-spread-skip PASS +15.96%); targets only the intersection where both adverse signals fire simultaneously. One targeted change vs parent: OR -> AND, same thresholds.",
+    "algorithm_path": "execution_algos/pnl-spread-skip-and/",
+    "scores": {
+      "sharpe": 103.37,
+      "realized_pnl": 1631.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2.79,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5506,
+      "passed": false
+    },
+    "notes": "CLOSE — aggregated over 3 train dates (20260308, 20260309, 20260310): pnl-spread-skip-and $1631.00/5506 trades vs simple $1586.75/5522 trades; delta_pnl=+2.79%, above close_margin_pct (2.0%) but below pass gate (5.0%). Per-date: 20260308 +4.09% ($146.25/350 vs $140.50/351), 20260309 +3.34% ($896.75/2852 vs $867.75/2863), 20260310 +1.64% ($588.00/2304 vs $578.50/2308). Slippage 0.0 (neutral). Total AND-skips: 16 across 3 dates (vs 226 OR-skips in parent pnl-spread-skip). RESULT WARNING: only 16 skip decisions across 3 dates — statistical confidence in the +2.79% is low. Hypothesis CONTRADICTED: the two signals almost never co-occur at the same tick (both are time-localized differently — PnL fires right after a loss, spread fires during wide-spread moments; these rarely coincide). The AND criterion achieves ~7% of the parent OR variant's P&L gain with ~7% of the skips — not higher precision, just lower recall. Refinement NOT successful: parent pnl-spread-skip at +15.96% remains the superior algorithm. Suggested next: time-of-day skip filter, or 2-skip-window variant of the OR combination.",
+    "timestamp": "2026-05-10T02:20:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

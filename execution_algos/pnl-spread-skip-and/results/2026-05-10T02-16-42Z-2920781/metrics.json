@@ -1,0 +1,19 @@
+{
+  "starting_balance": 1000000.0,
+  "final_equity": 1000588.0,
+  "total_return_pct": 0.0588,
+  "realized_pnl": 588.0,
+  "max_drawdown_pct": -0.002599393691421476,
+  "sharpe_ratio": 101.80733767310765,
+  "trade_count": 2304,
+  "winners": 1133,
+  "losers": 984,
+  "win_rate": 0.4917534722222222,
+  "long_count": 1153,
+  "short_count": 1151,
+  "order_count": 4619,
+  "fill_count": 4608,
+  "total_commissions": 0.0,
+  "mean_slippage": 0.0,
+  "max_abs_slippage": 0.0
+}
