@@ -131,7 +131,7 @@
     "id": "ofi-skip",
     "status": "fail",
     "baseline": "simple",
-    "hypothesis": "Order-Flow Imbalance conditioned skip: compute a rolling EMA(N=20) of OFI = (bid_qty_delta - ask_qty_delta) per quote tick. Skip open orders when EMA(OFI) < -0.5 for BUY (adverse selling flow) or > +0.5 for SELL (adverse buying flow). Motivated by Kolm et al. (2023) finding that flow-based (stationary) features beat static book state for short-horizon price prediction. Orthogonal to spread-based approaches — OFI varies even when bid-ask spread is constant at 1 tick.",
+    "hypothesis": "Order-Flow Imbalance conditioned skip: compute a rolling EMA(N=20) of OFI = (bid_qty_delta - ask_qty_delta) per quote tick. Skip open orders when EMA(OFI) < -0.5 for BUY (adverse selling flow) or > +0.5 for SELL (adverse buying flow). Motivated by Kolm et al. (2023) finding that flow-based (stationary) features beat static book state for short-horizon price prediction. Orthogonal to spread-based approaches \u2014 OFI varies even when bid-ask spread is constant at 1 tick.",
     "algorithm_path": "execution_algos/ofi-skip/",
     "scores": {
       "sharpe": 100.84,
@@ -142,11 +142,17 @@
       "trade_count": 5462,
       "passed": false
     },
-    "notes": "FAIL — aggregated over 3 train dates (20260308, 20260309, 20260310): ofi-skip $1602.00 / 5462 trades vs simple $1586.75 / 5522 trades; delta_pnl = +0.96%, below both the 5.0% gate and the 3.0% CLOSE threshold. Per-date: 20260308 +0.53% (4 skipped), 20260309 +2.07% (31 skipped), 20260310 -0.61% (25 skipped). OFI filter fired on ~60 trades total (1.1% skip rate). Directionally positive on 20260309 but harmful on 20260310. Root cause: sigma=5 oracle with ~48% win rate cannot be selectively improved by low-frequency microstructure signals. The EMA-OFI threshold of 0.5 lots fires on persistent adverse flow only, which is rarer than individual tick events. Suggested next: try reduce-only order timing optimization or a fundamentally different architecture. Seven consecutive FAIL outcomes, all single-digit PnL improvements, consistently below the 5% gate with sigma=5. Human review of sigma=5 research setting is recommended.",
+    "notes": "FAIL \u2014 aggregated over 3 train dates (20260308, 20260309, 20260310): ofi-skip $1602.00 / 5462 trades vs simple $1586.75 / 5522 trades; delta_pnl = +0.96%, below both the 5.0% gate and the 3.0% CLOSE threshold. Per-date: 20260308 +0.53% (4 skipped), 20260309 +2.07% (31 skipped), 20260310 -0.61% (25 skipped). OFI filter fired on ~60 trades total (1.1% skip rate). Directionally positive on 20260309 but harmful on 20260310. Root cause: sigma=5 oracle with ~48% win rate cannot be selectively improved by low-frequency microstructure signals. The EMA-OFI threshold of 0.5 lots fires on persistent adverse flow only, which is rarer than individual tick events. Suggested next: try reduce-only order timing optimization or a fundamentally different architecture. Seven consecutive FAIL outcomes, all single-digit PnL improvements, consistently below the 5% gate with sigma=5. Human review of sigma=5 research setting is recommended.",
     "timestamp": "2026-05-10T01:24:00Z",
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 18.7,
+      "tokens_used": {
+        "input": 12,
+        "output": 1328,
+        "cache_creation": 17822,
+        "cache_read": 30378,
+        "total": 49540
+      }
     }
   }
 ]
