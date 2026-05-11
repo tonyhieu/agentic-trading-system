@@ -1,0 +1,634 @@
+#!/usr/bin/env python3
+"""
+Research-loop paired backtest runner.
+ 
+Runs an execution algorithm against the configured baseline on every date
+in `research/config.yaml -> data_window.train`, then aggregates per-date
+`metrics.json` files into a single `backtest-results.json` per the schema
+in `.claude/skills/snapshot/SKILL.md` section 3.
+ 
+This script is the canonical entry point for the local train-window phase
+of the research loop. It replaces the inline loop pattern that agents
+previously regenerated in their context every iteration (see the original
+SKILL.md backtest section 7).
+ 
+Design notes:
+  - SUBPROCESS ISOLATION: each backtest runs in a fresh `python` process,
+    bypassing the Nautilus single-process native-mem abort documented in
+    research/suggested_improvements.md P0 #4 and log.md OBSERVATIONS #2.
+    A single invocation can now safely chain algo + baseline across many
+    dates.
+ 
+Known limitations (not addressed here):
+  - Baseline runs re-execute every invocation (no caching keyed on
+    date + strategy_kwargs hash). Optimization for a follow-up if it
+    starts hurting iteration speed.
+  - program_database entries don't carry a strategy_kwargs hash, so
+    silent config changes (e.g. sigma=0.5 -> 5) aren't auto-detected.
+    Better solved at the database-write layer than here.
+  - Nautilus stderr still ~15 MB per run. Better solved by adjusting
+    Nautilus log level in backtest_engine/, not in this script.
+
+Usage:
+    python scripts/run_research_backtest.py --algo my-new-algo
+    python scripts/run_research_backtest.py --algo my-new-algo --dry-run
+    python scripts/run_research_backtest.py --baseline-only
+    python scripts/run_research_backtest.py --algo my-new-algo \\
+        --dates 20260308,20260309 --symbol MESM6
+
+Exit codes:
+    0  all runs succeeded, results written
+    1  one or more runs failed (or no comparable date pairs)
+    2  CLI / config error before any backtest started
+"""
+ 
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pandas as pd
+import yaml
+
+# Resolve repo root regardless of cwd, so the script works from any directory.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from backtest_engine.backtest_low_level import (  # noqa: E402
+    EXECUTION_DIRS,
+    STARTING_BALANCE_USD,
+    run_backtest,
+)
+
+DEFAULT_CONFIG = REPO_ROOT / "research" / "config.yaml"
+DEFAULT_SYMBOL = "MESM6"
+
+# Per-backtest timeout for subprocess isolation. A 1-day backtest should
+# complete in well under 60s; this is a sanity ceiling, not a normal-case
+# limit. If you regularly bump this, something else is wrong.
+SUBPROCESS_TIMEOUT_SEC = 600
+
+# Magic prefix on the child's stdout line carrying the result payload.
+# Anything goes after this prefix as long as it's a single line of JSON.
+METRICS_MARKER = "__METRICS_JSON__"
+
+
+# ---------------------------------------------------------------------------
+# CLI + config
+# ---------------------------------------------------------------------------
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Run an execution algorithm + baseline over the configured train window.",
+    )
+    p.add_argument(
+        "--algo",
+        help="Factory name of the execution algorithm to test (registered in "
+             "execution_algos/__init__.py). Required unless --baseline-only.",
+    )
+    p.add_argument(
+        "--config", type=Path, default=DEFAULT_CONFIG,
+        help=f"Path to config.yaml (default: {DEFAULT_CONFIG.relative_to(REPO_ROOT)}).",
+    )
+    p.add_argument(
+        "--symbol", default=DEFAULT_SYMBOL,
+        help=f"Instrument raw_symbol (default: {DEFAULT_SYMBOL}).",
+    )
+    p.add_argument(
+        "--dates",
+        help="Comma-separated YYYYMMDD list overriding config.yaml train dates. "
+             "Debugging-only; production runs should read from config.",
+    )
+    p.add_argument(
+        "--baseline-only", action="store_true",
+        help="Run only the baseline (refreshes its result dirs). Skip the algo.",
+    )
+    p.add_argument(
+        "--dry-run", action="store_true",
+        help="Print the (date, algo) backtest plan and exit without running.",
+    )
+    # Hidden: spawned recursively by run_one() to get subprocess isolation.
+    # Not for users; running it manually has no extra behavior worth exposing.
+    p.add_argument(
+        "--internal-single-run", action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    return p.parse_args()
+
+
+def load_config(path: Path) -> dict:
+    with path.open() as f:
+        return yaml.safe_load(f)
+
+
+def train_dates_from_config(cfg: dict) -> list[str]:
+    """Calendar-day YYYYMMDD list, both endpoints inclusive.
+
+    Uses freq='D' not freq='B'. GLBX FX futures trade Sunday evening through
+    Friday US time, so Sunday partitions exist in the dataset. Missing dates
+    surface downstream as a run_backtest() failure, which we catch and skip.
+    """
+    start, end = cfg["data_window"]["train"]
+    return pd.date_range(start, end, freq="D").strftime("%Y%m%d").tolist()
+
+
+# ---------------------------------------------------------------------------
+# Run-dir lookup
+# ---------------------------------------------------------------------------
+
+def algo_results_dir(algo_name: str) -> Path:
+    """Path to <algo>/results/ on disk.
+
+    EXECUTION_DIRS handles the legacy 'simple' -> 'simple_execution_strategy'
+    mapping; new algos use their factory name as the directory name.
+    """
+    dir_name = EXECUTION_DIRS.get(algo_name, algo_name)
+    return REPO_ROOT / "execution_algos" / dir_name / "results"
+
+
+def newest_run_dir_excluding(results_dir: Path, exclude: set[Path]) -> Path | None:
+    if not results_dir.exists():
+        return None
+    candidates = [
+        p for p in results_dir.iterdir()
+        if p.is_dir() and p not in exclude
+    ]
+    return max(candidates, key=lambda p: p.stat().st_mtime) if candidates else None
+
+
+# ---------------------------------------------------------------------------
+# Per-run execution
+# ---------------------------------------------------------------------------
+
+def _run_one_in_process(*, algo_name: str, date: str, cfg: dict, symbol: str) -> dict:
+    """Run ONE backtest in the current process. Used by the child subprocess.
+
+    Parents should call `run_one()` instead, which wraps this in a subprocess
+    to dodge Nautilus's single-process native-mem abort.
+
+    Raises RuntimeError if no new run dir appeared (engine never persisted)
+    or if trade_count == 0 (silent exec_id misroute — see log.md
+    OBSERVATIONS #1 in the spread-filter iteration).
+    """
+    results_dir = algo_results_dir(algo_name)
+    existing = {p for p in results_dir.iterdir() if p.is_dir()} if results_dir.exists() else set()
+
+    engine = run_backtest(
+        strategy_name=cfg["strategy"]["name"],
+        # Defensive copy: run_backtest pops keys from strategy_kwargs.
+        strategy_kwargs=dict(cfg["strategy"]["kwargs"]),
+        execution_algorithm_name=algo_name,
+        date=date,
+        symbol=symbol,
+    )
+    engine.dispose()
+
+    new_dir = newest_run_dir_excluding(results_dir, existing)
+    if new_dir is None:
+        raise RuntimeError(
+            f"No new run dir under {results_dir.relative_to(REPO_ROOT)} after "
+            f"run_backtest({algo_name}, {date}). Did persist() write?"
+        )
+    metrics = json.loads((new_dir / "metrics.json").read_text())
+    if metrics.get("trade_count", 0) == 0:
+        raise RuntimeError(
+            f"trade_count == 0 for ({algo_name}, {date}). "
+            f"Likely exec_id misroute (check {algo_name}'s factory passes "
+            f"exec_id='MY_GENERIC_ALGO'). See log.md OBSERVATIONS #1."
+        )
+    metrics["_run_dir"] = str(new_dir.relative_to(REPO_ROOT))
+    metrics["_date"] = date
+    return metrics
+
+
+def run_one(*, algo_name: str, date: str, symbol: str, config_path: Path) -> dict:
+    """Run one backtest in a FRESH subprocess, return its metrics.
+
+    Why subprocess: Nautilus engines hold native memory that engine.dispose()
+    doesn't fully release; running 2 backtests in the same Python process
+    crashes the second one (SIGABRT). A fresh process per backtest is the
+    standard workaround. See research/suggested_improvements.md P0 #4.
+
+    Child output protocol: the child prints `__METRICS_JSON__{...}` as its
+    last stdout line. Anything before that is Nautilus log noise we discard.
+    On any failure (non-zero exit, timeout, missing marker), raise
+    RuntimeError with a stderr/stdout tail to give the agent a fighting
+    chance to debug.
+    """
+    cmd = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--internal-single-run",
+        "--algo", algo_name,
+        "--dates", date,
+        "--symbol", symbol,
+        "--config", str(config_path),
+    ]
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=SUBPROCESS_TIMEOUT_SEC,
+            # Inherit env so DATA_CACHE_DIR, S3_BUCKET_NAME, etc. propagate.
+            env=os.environ.copy(),
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(
+            f"subprocess timed out after {SUBPROCESS_TIMEOUT_SEC}s "
+            f"({algo_name}, {date})"
+        )
+
+    if proc.returncode != 0:
+        # Negative returncode on POSIX = killed by signal; -6 = SIGABRT
+        # (the Nautilus native-mem abort we're isolating from each other).
+        sig_hint = ""
+        if proc.returncode < 0:
+            sig_hint = f" (killed by signal {-proc.returncode})"
+        tail = "\n".join(proc.stderr.splitlines()[-15:]) or "(empty stderr)"
+        raise RuntimeError(
+            f"subprocess exited {proc.returncode}{sig_hint} for "
+            f"({algo_name}, {date}). stderr tail:\n{tail}"
+        )
+
+    # Walk stdout in reverse so we tolerate trailing blank lines / log noise.
+    for line in reversed(proc.stdout.splitlines()):
+        line = line.strip()
+        if line.startswith(METRICS_MARKER):
+            return json.loads(line[len(METRICS_MARKER):])
+
+    tail = "\n".join(proc.stdout.splitlines()[-10:]) or "(empty stdout)"
+    raise RuntimeError(
+        f"subprocess exited 0 but emitted no {METRICS_MARKER} line for "
+        f"({algo_name}, {date}). stdout tail:\n{tail}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Aggregation (per snapshot/SKILL.md section 3 rules)
+# ---------------------------------------------------------------------------
+
+def _sum(metrics_list: list[dict], key: str, default=0) -> float:
+    return sum(m.get(key, default) for m in metrics_list)
+
+
+def aggregate(per_date: list[dict]) -> dict:
+    """Aggregate per-date metrics into a single block.
+
+    Aggregation rules from snapshot/SKILL.md section 3:
+      - sums: realized_pnl, total_commissions, trade_count, winners, losers,
+              order_count, fill_count
+      - mean: sharpe_ratio (per-date mean — known to be coarse in zero-slip
+              fill model; see suggested_improvements.md section 5)
+      - min:  max_drawdown_pct (most negative)
+      - win_rate: recomputed from summed counts
+      - mean_slippage: trade-count-weighted mean
+      - max_abs_slippage: max across days
+      - total_return_pct: recomputed from summed pnl / starting_balance
+                         (no cross-day compounding)
+    """
+    if not per_date:
+        raise ValueError("aggregate() called with empty list")
+
+    summed_pnl     = _sum(per_date, "realized_pnl",     0.0)
+    summed_trades  = _sum(per_date, "trade_count",      0)
+    summed_winners = _sum(per_date, "winners",          0)
+
+    if summed_trades > 0:
+        mean_slip = sum(
+            m["mean_slippage"] * m["trade_count"] for m in per_date
+        ) / summed_trades
+    else:
+        mean_slip = sum(m["mean_slippage"] for m in per_date) / len(per_date)
+
+    return {
+        "realized_pnl":      summed_pnl,
+        "sharpe_ratio":      sum(m["sharpe_ratio"] for m in per_date) / len(per_date),
+        "max_drawdown_pct":  min(m["max_drawdown_pct"] for m in per_date),
+        "win_rate":          (summed_winners / summed_trades) if summed_trades else 0.0,
+        "trade_count":       summed_trades,
+        "winners":           summed_winners,
+        "losers":            _sum(per_date, "losers",     0),
+        "order_count":       _sum(per_date, "order_count", 0),
+        "fill_count":        _sum(per_date, "fill_count",  0),
+        "mean_slippage":     mean_slip,
+        "max_abs_slippage":  max(m["max_abs_slippage"] for m in per_date),
+        "total_commissions": _sum(per_date, "total_commissions", 0.0),
+        "total_return_pct":  (summed_pnl / STARTING_BALANCE_USD) * 100,
+    }
+
+
+def safe_pct_delta(mine: float, base: float) -> float:
+    """Percentage delta vs base, guarded against base == 0."""
+    if abs(base) < 1e-9:
+        return 0.0 if abs(mine - base) < 1e-9 else float("inf")
+    return (mine - base) / abs(base) * 100
+
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+
+def write_backtest_results(
+    *,
+    algo_name: str,
+    baseline_name: str,
+    cfg: dict,
+    symbol: str,
+    algo_agg: dict,
+    base_agg: dict,
+    train_dates: list[str],
+    run_dirs: list[str],
+) -> Path:
+    """Write <algo>/results/backtest-results.json per snapshot/SKILL.md section 3."""
+    perf_keys = (
+        "realized_pnl", "sharpe_ratio", "max_drawdown_pct", "win_rate",
+        "trade_count", "mean_slippage", "max_abs_slippage",
+        "total_commissions", "total_return_pct",
+    )
+    performance = {k: algo_agg[k] for k in perf_keys}
+    performance["vs_baseline_pnl_pct"]      = safe_pct_delta(algo_agg["realized_pnl"],  base_agg["realized_pnl"])
+    performance["vs_baseline_slippage_pct"] = safe_pct_delta(algo_agg["mean_slippage"], base_agg["mean_slippage"])
+
+    payload = {
+        "algo_name":     algo_name,
+        "backtest_date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "baseline":      baseline_name,
+        "strategy_used": cfg["strategy"]["name"],
+        "symbol":        symbol,
+        "performance":   performance,
+        "performance_oos": None,  # filled by the evaluate skill post-snapshot
+        "period": {
+            "train_dates": [f"{d[:4]}-{d[4:6]}-{d[6:]}" for d in train_dates],
+            "test_dates":  [],
+        },
+        "run_dirs": run_dirs,
+    }
+    out_path = algo_results_dir(algo_name) / "backtest-results.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n")
+    return out_path
+
+
+def classify_verdict(delta_pnl_pct: float, cfg: dict) -> str:
+    """Map a P&L delta to PASS / CLOSE / FAIL per config.yaml -> pass_gate.
+
+    Interpretation matches log.md OBSERVATIONS #8: CLOSE = [gate_min - close_margin, gate_min).
+    This is the agent's call in the end (OBJECTIVE.md section 5 step 7); we just suggest.
+    """
+    gate_min   = cfg["pass_gate"]["min_pnl_improvement_pct"]
+    gate_close = cfg["pass_gate"]["close_margin_pct"]
+    if delta_pnl_pct >= gate_min:
+        return "PASS"
+    if delta_pnl_pct >= gate_min - gate_close:
+        return "CLOSE"
+    return "FAIL"
+
+
+def print_summary(
+    *,
+    algo_name: str | None,
+    baseline_name: str,
+    algo_agg: dict | None,
+    base_agg: dict,
+    cfg: dict,
+) -> None:
+    print()
+    print("=" * 66)
+    print("Research-loop backtest summary")
+    print("=" * 66)
+    print(f"  strategy : {cfg['strategy']['name']}")
+    print(f"  baseline : {baseline_name}")
+    if algo_name:
+        print(f"  algorithm: {algo_name}")
+    print()
+
+    if algo_agg is None:
+        print("Baseline-only run — per-date aggregate:")
+        for k in ("realized_pnl", "sharpe_ratio", "trade_count", "mean_slippage"):
+            v = base_agg[k]
+            print(f"    {k:<22} {v:>14.4f}" if isinstance(v, float) else f"    {k:<22} {v:>14}")
+        print("=" * 66)
+        return
+
+    print(f"  {'metric':<24}{'algo':>14}{'baseline':>14}{'delta_%':>12}")
+    print("  " + "-" * 64)
+    rows = [
+        ("realized_pnl",     algo_agg["realized_pnl"],     base_agg["realized_pnl"]),
+        ("sharpe_ratio",     algo_agg["sharpe_ratio"],     base_agg["sharpe_ratio"]),
+        ("max_drawdown_pct", algo_agg["max_drawdown_pct"], base_agg["max_drawdown_pct"]),
+        ("win_rate",         algo_agg["win_rate"],         base_agg["win_rate"]),
+        ("trade_count",      algo_agg["trade_count"],      base_agg["trade_count"]),
+        ("mean_slippage",    algo_agg["mean_slippage"],    base_agg["mean_slippage"]),
+    ]
+    for name, mine, base in rows:
+        print(f"  {name:<24}{mine:>14.4f}{base:>14.4f}{safe_pct_delta(mine, base):>+12.2f}")
+
+    delta_pnl_pct = safe_pct_delta(algo_agg["realized_pnl"], base_agg["realized_pnl"])
+    verdict = classify_verdict(delta_pnl_pct, cfg)
+    gate_min   = cfg["pass_gate"]["min_pnl_improvement_pct"]
+    gate_close = cfg["pass_gate"]["close_margin_pct"]
+    print()
+    print(f"  Pass gate: min_pnl_improvement_pct={gate_min}, close_margin_pct={gate_close}")
+    print(f"  Suggested verdict (train-only): {verdict}  (delta_pnl_pct={delta_pnl_pct:+.2f})")
+    print()
+    print("  Note: this is an informational suggestion. The final PASS/CLOSE/FAIL")
+    print("  decision rests with the agent per OBJECTIVE.md section 5 step 7.")
+    if algo_agg["trade_count"] < 30:
+        print()
+        print(f"  ⚠ WARNING: trade_count={algo_agg['trade_count']} < 30. "
+              f"Sharpe and win_rate may be unreliable (OBJECTIVE.md section 8).")
+    print("=" * 66)
+
+
+# ---------------------------------------------------------------------------
+# Internal subprocess entry point
+# ---------------------------------------------------------------------------
+
+def _do_internal_single_run(args: argparse.Namespace) -> int:
+    """Execute exactly one backtest and print its metrics as JSON for the parent.
+
+    The parent invokes us with `--internal-single-run --algo X --dates YYYYMMDD
+    --symbol Z --config /path`. We run the backtest once, then print
+    `__METRICS_JSON__{...}` as the last stdout line for the parent to parse.
+
+    On failure we exit non-zero; parent surfaces stderr tail. Do not print
+    anything else to stdout after the marker line.
+    """
+    if not args.algo:
+        print("ERROR: --internal-single-run requires --algo", file=sys.stderr)
+        return 2
+    if not args.dates:
+        print("ERROR: --internal-single-run requires --dates", file=sys.stderr)
+        return 2
+
+    dates = [d.strip() for d in args.dates.split(",") if d.strip()]
+    if len(dates) != 1:
+        print(f"ERROR: --internal-single-run expects exactly one date, got {len(dates)}",
+              file=sys.stderr)
+        return 2
+
+    cfg = load_config(args.config)
+    try:
+        metrics = _run_one_in_process(
+            algo_name=args.algo,
+            date=dates[0],
+            cfg=cfg,
+            symbol=args.symbol,
+        )
+    except Exception as exc:  # noqa: BLE001 — message goes back to parent via stderr
+        print(f"_run_one_in_process raised: {exc}", file=sys.stderr)
+        return 1
+
+    # Parent reads the last stdout line starting with this marker; do not
+    # print anything after this point.
+    print(f"{METRICS_MARKER}{json.dumps(metrics)}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main() -> int:
+    args = parse_args()
+
+    # Internal subprocess: short-circuit before user-facing checks (which
+    # would reject e.g. --algo simple matching the baseline).
+    if args.internal_single_run:
+        return _do_internal_single_run(args)
+
+    if not args.algo and not args.baseline_only:
+        print("ERROR: --algo is required (unless --baseline-only).", file=sys.stderr)
+        return 2
+
+    cfg = load_config(args.config)
+    baseline = cfg["pass_gate"]["baseline"]
+
+    dates = (
+        [d.strip() for d in args.dates.split(",") if d.strip()]
+        if args.dates
+        else train_dates_from_config(cfg)
+    )
+    if not dates:
+        print("ERROR: empty date list.", file=sys.stderr)
+        return 2
+
+    if args.algo and args.algo == baseline:
+        print(f"ERROR: --algo ({args.algo}) is the same as the baseline. "
+              f"Use --baseline-only to refresh just the baseline.", file=sys.stderr)
+        return 2
+
+    # ----- plan -----
+    print(f"Plan: {len(dates) * (1 if args.baseline_only else 2)} backtest(s)")
+    print(f"  symbol  : {args.symbol}")
+    print(f"  strategy: {cfg['strategy']['name']}")
+    if not args.baseline_only:
+        print(f"  algo    : {args.algo}")
+    print(f"  baseline: {baseline}")
+    print(f"  dates   : {', '.join(dates)}")
+    if args.dry_run:
+        print()
+        for date in dates:
+            if not args.baseline_only:
+                print(f"  - run_backtest(execution_algorithm={args.algo}, date={date})")
+            print(f"  - run_backtest(execution_algorithm={baseline}, date={date})")
+        print()
+        print("(dry-run: no backtests executed)")
+        return 0
+
+    # ----- execute date-major (so we can pair algo + baseline cleanly) -----
+    algo_metrics: dict[str, dict] = {}
+    base_metrics: dict[str, dict] = {}
+    failures: list[tuple[str, str, str]] = []  # (algo_name, date, error)
+
+    for date in dates:
+        if not args.baseline_only:
+            print(f"\n>>> run_backtest({args.algo}, {date}) ...", flush=True)
+            try:
+                m = run_one(
+                    algo_name=args.algo, date=date,
+                    symbol=args.symbol, config_path=args.config,
+                )
+                algo_metrics[date] = m
+                print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                      f"sharpe={m['sharpe_ratio']:.2f}")
+            except Exception as exc:  # noqa: BLE001 — surface any failure to the agent
+                print(f"    FAIL {exc}", file=sys.stderr)
+                failures.append((args.algo, date, str(exc)))
+
+        print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
+        try:
+            m = run_one(
+                algo_name=baseline, date=date,
+                symbol=args.symbol, config_path=args.config,
+            )
+            base_metrics[date] = m
+            print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                  f"sharpe={m['sharpe_ratio']:.2f}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"    FAIL {exc}", file=sys.stderr)
+            failures.append((baseline, date, str(exc)))
+
+    # ----- report failures -----
+    if failures:
+        print(f"\n{len(failures)} run(s) failed:", file=sys.stderr)
+        for algo, date, err in failures:
+            print(f"  - {algo} @ {date}: {err}", file=sys.stderr)
+
+    if not base_metrics:
+        print("\nERROR: no successful baseline runs — cannot compute anything.", file=sys.stderr)
+        return 1
+
+    # ----- baseline-only branch -----
+    if args.baseline_only:
+        base_agg = aggregate(list(base_metrics.values()))
+        print_summary(algo_name=None, baseline_name=baseline,
+                      algo_agg=None, base_agg=base_agg, cfg=cfg)
+        return 0 if not failures else 1
+
+    if not algo_metrics:
+        print("\nERROR: no successful algo runs — cannot aggregate.", file=sys.stderr)
+        return 1
+
+    # ----- pair date-by-date (only dates where BOTH succeeded are comparable) -----
+    comparable = sorted(set(algo_metrics) & set(base_metrics))
+    dropped = sorted(set(dates) - set(comparable))
+    if dropped:
+        print(f"\n⚠ Dropping {len(dropped)} date(s) from aggregate (one side failed): "
+              f"{', '.join(dropped)}", file=sys.stderr)
+
+    if not comparable:
+        print("\nERROR: no dates where both algo and baseline succeeded.", file=sys.stderr)
+        return 1
+
+    algo_agg = aggregate([algo_metrics[d] for d in comparable])
+    base_agg = aggregate([base_metrics[d] for d in comparable])
+
+    out_path = write_backtest_results(
+        algo_name=args.algo,
+        baseline_name=baseline,
+        cfg=cfg,
+        symbol=args.symbol,
+        algo_agg=algo_agg,
+        base_agg=base_agg,
+        train_dates=comparable,
+        run_dirs=[algo_metrics[d]["_run_dir"] for d in comparable],
+    )
+    print(f"\nWrote: {out_path.relative_to(REPO_ROOT)}")
+
+    print_summary(algo_name=args.algo, baseline_name=baseline,
+                  algo_agg=algo_agg, base_agg=base_agg, cfg=cfg)
+
+    return 0 if not failures else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
