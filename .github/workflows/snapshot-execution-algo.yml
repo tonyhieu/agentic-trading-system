@@ -125,9 +125,7 @@ jobs:
         run: |
           PAYLOAD_FILE="$(mktemp)"
           RESPONSE_FILE="$(mktemp)"
-          cat > "$PAYLOAD_FILE" <<EOF
-{"execution_algorithm_name":"${ALGO_NAME}"}
-EOF
+          printf '{"execution_algorithm_name":"%s"}' "$ALGO_NAME" > "$PAYLOAD_FILE"
           echo "Invoking ${EVALUATOR_FUNCTION_NAME} in ${LAMBDA_REGION} for ${ALGO_NAME}"
           aws lambda invoke \
             --function-name "${EVALUATOR_FUNCTION_NAME}" \
@@ -137,21 +135,16 @@ EOF
             "$RESPONSE_FILE" \
             >/tmp/evaluator-invoke-metadata.json
           cat "$RESPONSE_FILE"
-          REPORT_KEY=$(python3 - "$RESPONSE_FILE" <<'PY'
-import json
-import sys
-response_path = sys.argv[1]
-with open(response_path, "r", encoding="utf-8") as fh:
-    response = json.load(fh)
-if response.get("statusCode") != 200:
-    raise SystemExit(f"Lambda returned non-200 statusCode: {response.get('statusCode')}")
-body = json.loads(response["body"])
-report_key = body.get("report_key")
-if not report_key:
-    raise SystemExit("Lambda response did not include report_key")
-print(report_key)
-PY
-)
+          STATUS_CODE=$(jq -r '.statusCode' "$RESPONSE_FILE")
+          if [ "$STATUS_CODE" != "200" ]; then
+            echo "Lambda returned non-200 statusCode: $STATUS_CODE"
+            exit 1
+          fi
+          REPORT_KEY=$(jq -r '.body | fromjson | .report_key' "$RESPONSE_FILE")
+          if [ -z "$REPORT_KEY" ] || [ "$REPORT_KEY" = "null" ]; then
+            echo "Lambda response did not include report_key"
+            exit 1
+          fi
           echo "Lambda report key: ${REPORT_KEY}"
           aws s3 ls "s3://${{ secrets.S3_BUCKET_NAME }}/${REPORT_KEY}" --region "${{ secrets.AWS_REGION }}"
       
