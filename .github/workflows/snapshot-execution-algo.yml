@@ -3,7 +3,6 @@ name: Create Execution Algorithm Snapshot
 on:
   push:
     branches:
-      - 'snapshot/**'
       - 'snapshots/**'
   workflow_dispatch:
     inputs:
@@ -43,7 +42,6 @@ jobs:
             echo "path=${{ github.event.inputs.algo_path }}" >> $GITHUB_OUTPUT
           else
             NAME="${{ github.ref_name }}"
-            NAME="${NAME#snapshot/}"
             NAME="${NAME#snapshots/}"
             echo "name=$NAME" >> $GITHUB_OUTPUT
             echo "path=execution_algos/$NAME" >> $GITHUB_OUTPUT
