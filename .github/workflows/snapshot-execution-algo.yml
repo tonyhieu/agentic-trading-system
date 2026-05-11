@@ -41,7 +41,8 @@ jobs:
             echo "name=${{ github.event.inputs.algo_name }}" >> $GITHUB_OUTPUT
             echo "path=${{ github.event.inputs.algo_path }}" >> $GITHUB_OUTPUT
           else
-            NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
+            NAME="${{ github.ref_name }}"
+            NAME="${NAME#snapshots/}"
             echo "name=$NAME" >> $GITHUB_OUTPUT
             echo "path=execution_algos/$NAME" >> $GITHUB_OUTPUT
           fi
@@ -115,6 +116,37 @@ jobs:
           echo "Uploading to $S3"
           aws s3 sync "$ROOT/" "$S3" --storage-class STANDARD --no-progress
           echo "Upload complete"
+
+      - name: Invoke evaluator
+        env:
+          EVALUATOR_FUNCTION_NAME: execution-algorithm-evaluator
+          LAMBDA_REGION: us-east-1
+          ALGO_NAME: ${{ steps.meta.outputs.name }}
+        run: |
+          PAYLOAD_FILE="$(mktemp)"
+          RESPONSE_FILE="$(mktemp)"
+          printf '{"execution_algorithm_name":"%s"}' "$ALGO_NAME" > "$PAYLOAD_FILE"
+          echo "Invoking ${EVALUATOR_FUNCTION_NAME} in ${LAMBDA_REGION} for ${ALGO_NAME}"
+          aws lambda invoke \
+            --function-name "${EVALUATOR_FUNCTION_NAME}" \
+            --region "${LAMBDA_REGION}" \
+            --cli-binary-format raw-in-base64-out \
+            --payload "file://${PAYLOAD_FILE}" \
+            "$RESPONSE_FILE" \
+            >/tmp/evaluator-invoke-metadata.json
+          cat "$RESPONSE_FILE"
+          STATUS_CODE=$(jq -r '.statusCode' "$RESPONSE_FILE")
+          if [ "$STATUS_CODE" != "200" ]; then
+            echo "Lambda returned non-200 statusCode: $STATUS_CODE"
+            exit 1
+          fi
+          REPORT_KEY=$(jq -r '.body | fromjson | .report_key' "$RESPONSE_FILE")
+          if [ -z "$REPORT_KEY" ] || [ "$REPORT_KEY" = "null" ]; then
+            echo "Lambda response did not include report_key"
+            exit 1
+          fi
+          echo "Lambda report key: ${REPORT_KEY}"
+          aws s3 ls "s3://${{ secrets.S3_BUCKET_NAME }}/${REPORT_KEY}" --region "${{ secrets.AWS_REGION }}"
       
       - name: Verify
         run: |
