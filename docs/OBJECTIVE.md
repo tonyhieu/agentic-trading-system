@@ -44,8 +44,8 @@ until a passing algorithm is found or the iteration budget in
 1. READ  research/program_database.json + docs/literature/ for context
 2. HYPOTHESIZE → write Hypothesis section in NOTES.md before any code
 3. IMPLEMENT execution_algos/<algo-id>/execution_algorithm.py + register in factory
-4. BACKTEST your algo AND the baseline on **train** dates only (one run_backtest per date per algo). Test is held out for Lambda.
-5. COMPARE metrics.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
+4. BACKTEST your algo + baseline over **train** dates with `python scripts/run_research_backtest.py --algo <algo-id>`. Test is held out for Lambda.
+5. COMPARE backtest-results.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
 6. APPEND entry to research/program_database.json + git commit on a fresh `iter/<algo-id>-<timestamp>` branch (the SubagentStop hook backfills `meta` and pushes the branch to `origin`)
 7. On PASS: git push origin snapshots/<algo-id> — this triggers the Lambda evaluator on test
 8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (the `evaluate` skill)
@@ -183,27 +183,38 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    See the `backtest` skill §3 for the minimal pattern.
 
 5. BACKTEST (train window only)
-   For each date in config.yaml → data_window.train, call run_backtest()
-   twice: once with your algo, once with the baseline
-   (cfg["pass_gate"]["baseline"]). Same strategy on both runs — strategy
-   is config.yaml → strategy.name and DOES NOT vary.
+   Run:
+
+       python scripts/run_research_backtest.py --algo <algo-id>
+
+   This reads config.yaml → data_window.train and pairs your algo with the
+   baseline (cfg["pass_gate"]["baseline"]) on each train date in fresh
+   subprocesses (one BacktestEngine per process — required to avoid
+   Nautilus's single-process native-memory abort). It then aggregates per
+   snapshot/SKILL.md §3 into
+   execution_algos/<algo-id>/results/backtest-results.json. Same strategy
+   on both runs — strategy is config.yaml → strategy.name and DOES NOT vary.
 
    The test window (config.yaml → data_window.test) is HELD OUT. It is
    evaluated only by the Lambda after a successful snapshot push (§7,
-   the `evaluate` skill). Do NOT call run_backtest() on test dates —
-   doing so leaks the held-out set (the `analysis` skill §3) and
-   invalidates the OOS report. The PASS/FAIL decision in step 7 is
-   made on train alone.
+   the `evaluate` skill). Do NOT pass test dates to the runner (or call
+   run_backtest() on them) — doing so leaks the held-out set
+   (the `analysis` skill §3) and invalidates the OOS report. The
+   PASS/FAIL decision in step 7 is made on train alone.
 
-   See the `backtest` skill §1 for the call signature and §7 for the
-   train-loop pattern.
+   For the run_backtest() call signature (used internally by the runner,
+   or directly for one-off debugging), see the `backtest` skill §1.
 
 6. EVALUATE
-   Read metrics.json from each run's results/<timestamp>-<sha>/ directory.
-   Aggregate across train dates (mean Sharpe, sum P&L, etc. — your call).
-   Compute deltas vs baseline:
-     delta_pnl_pct  = (mine.realized_pnl - base.realized_pnl) / abs(base.realized_pnl) * 100
-     delta_slip_pct = (mine.mean_slippage - base.mean_slippage) / abs(base.mean_slippage) * 100
+   The runner from step 5 wrote
+   execution_algos/<algo-id>/results/backtest-results.json containing
+   the aggregated performance block plus vs_baseline_pnl_pct and
+   vs_baseline_slippage_pct. Read it and verify the numbers match your
+   expectation given the hypothesis. For aggregation rules (sum / mean /
+   min / weighted) see snapshot/SKILL.md §3; for the underlying per-date
+   metrics if you need to drill down, see the
+   results/<timestamp>-<sha>/metrics.json files referenced in run_dirs.
+
    Append backtest observations to execution_algos/<algo-id>/NOTES.md (§10).
 
 7. DECIDE
