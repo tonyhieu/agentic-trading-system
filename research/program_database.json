@@ -126,5 +126,27 @@
         "total": 1085406
       }
     }
+  },
+  {
+    "id": "composite-filter",
+    "status": "close",
+    "baseline": "simple",
+    "hypothesis": "Composite conditional skip combining two independent microstructure signals. Skip open orders when BOTH: (1) current spread > 1.5x rolling-60-window median spread (elevated uncertainty) AND (2) recent mid-price momentum (last 5 observations) moved adversely to the trade direction (price rose before a BUY, or fell before a SELL). Builds on spread-filter (prior iteration) which suggested combining spread + momentum at lower threshold. Reduces-only orders always execute. Quantity invariant: skipped orders result in sum(child_fills) < parent.quantity, which is permitted by OBJECTIVE.md §3.",
+    "algorithm_path": "execution_algos/composite-filter/",
+    "scores": {
+      "sharpe": 105.14,
+      "realized_pnl": 1654.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 4.29,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5456,
+      "passed": false
+    },
+    "notes": "CLOSE — aggregated over all 3 train dates (20260308, 20260309, 20260310): composite-filter $1654.75/5456 trades vs simple $1586.75/5522 trades; delta_pnl=+4.29%, above 3% CLOSE threshold but below 5% PASS gate. Win rate improved on all 3 dates (0.4832→0.4861 aggregate). Max drawdown improved on all 3 dates. Per-date deltas: +4.45% (20260308, 2 skips), +5.24% (20260309, 32 skips), +2.81% (20260310, 32 skips). 20260309 individually passes the gate (+5.24%) but 20260310's weaker result (+2.81%) pulls aggregate below. Skip rate 0.3-1.1% — the AND condition is too selective. Slippage: both 0.0 (neutral, fill-model limitation). Suggested next: switch to OR logic (either spread OR adverse momentum triggers skip) or lower spread threshold to 1.2-1.3x for higher skip rate. Alternatively, run spread-filter alone at 1.3x threshold as a cleaner test.",
+    "timestamp": "2026-05-11T16:15:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
