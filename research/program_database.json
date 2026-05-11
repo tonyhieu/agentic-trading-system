@@ -126,5 +126,53 @@
         "total": 1085406
       }
     }
+  },
+  {
+    "id": "spread-filter-tight",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Bid-ask spread conditioned skip with a tighter 1.3x threshold (vs 2.0x in spread-filter). Builds directly on spread-filter which achieved +2.25% with only 0.2% skip rate at 2.0x. By lowering to 1.3x, the filter fires on ~4.5% of trades (5x more), producing a proportionally larger P&L delta. Under sigma=5 (48% oracle win rate), elevated spread identifies adverse entry moments where oracle reliability is lower — the skip filter removes a subset of trades with below-average win rate, improving aggregate P&L per executed trade.",
+    "algorithm_path": "execution_algos/spread-filter-tight/",
+    "scores": {
+      "sharpe": 117.23,
+      "realized_pnl": 1818.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 14.61,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5271,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over all 3 train dates (20260308, 20260309, 20260310): spread-filter-tight $1818.50/5271 trades vs simple $1586.75/5522 trades; delta_pnl=+14.61%, exceeding the +5.0% gate. Win rate improved +1.29pp (49.61% vs 48.32%). Slippage: both 0.0 (neutral — zero fill-cost model). Skip rate: 4.55% (251 fewer trades). Improvement consistent across all 3 dates: +28.5% on 20260308, +13.0% on 20260309, +13.6% on 20260310. Config: sigma=5, seed=42, horizon=30s. NOTE: this entry is back-ported from branch b822740 (spread-filter-tight: PASS); results directories were already present in working tree from that prior run. Suggested next attempt: (1) tune threshold to find optimal skip rate vs discriminating power; (2) add intraday session filter; (3) composite spread + momentum.",
+    "timestamp": "2026-05-11T18:15:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
+  },
+  {
+    "id": "streak-spread-skip",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Consecutive-loss streak + tight-spread conditioned skip: skip the open leg of an oracle signal when EITHER (a) last 2 consecutive closed positions both had negative estimated PnL (streak signal), OR (b) current spread > 1.3x rolling 60-tick median (spread signal, same as spread-filter-tight). Builds on spread-filter-tight (PASS, +14.61%). One targeted change: adds streak condition as a second OR skip trigger. The streak captures serial correlation in adverse oracle regimes not detected by spread alone.",
+    "algorithm_path": "execution_algos/streak-spread-skip/",
+    "scores": {
+      "sharpe": 128.06,
+      "realized_pnl": 1901.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 19.85,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 4554,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over all 3 train dates (20260308, 20260309, 20260310): streak-spread-skip $1901.75/4554 trades vs simple $1586.75/5522 trades; delta_pnl=+19.85%, exceeding the +5.0% gate. Win rate improved +2.60pp (50.92% vs 48.32%). Slippage: both 0.0 (neutral). Skip rate: 17.5% (968 fewer trades than baseline). Per-date: 20260308 $170.75/281 trades (+21.5%); 20260309 $1063.25/2385 trades (+22.5%); 20260310 $667.75/1888 trades (+15.4%). Improvement consistent across all 3 dates. Refinement vs spread-filter-tight: +5.24pp PnL delta (target 2.0pp, EXCEEDED). Sharpe: 128.06 vs 117.23 (+10.83 vs target 0.10, EXCEEDED). Config: sigma=5, seed=42, horizon=30s. SNAPSHOT NOTE (branch override active): would have pushed snapshots/streak-spread-skip per snapshot skill §4, but branch policy for this invocation prohibits push. Suggested next: (1) streak_lookback=3 for tighter precision; (2) AND composite (both streak AND spread) for higher precision lower skip rate; (3) time-of-day gating.",
+    "timestamp": "2026-05-11T18:40:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

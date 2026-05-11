@@ -28,7 +28,15 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
     "signal-consensus": (
         "execution_algos.signal-consensus",
         "get_execution_algorithm",
-    )
+    ),
+    "spread-filter-tight": (
+        "execution_algos.spread-filter-tight",
+        "get_execution_algorithm",
+    ),
+    "streak-spread-skip": (
+        "execution_algos.streak-spread-skip",
+        "get_execution_algorithm",
+    ),
 }
 
 
