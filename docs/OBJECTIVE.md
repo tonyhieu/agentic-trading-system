@@ -217,7 +217,7 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    expectation given the hypothesis. For aggregation rules (sum / mean /
    min / weighted) see snapshot/SKILL.md §3; for the underlying per-date
    metrics if you need to drill down, see the
-   results/<YYYYMMDD>-<sha>/metrics.json files referenced in run_dirs.
+   results/<YYYYMMDD>/metrics.json files referenced in run_dirs.
 
    Append backtest observations to execution_algos/<algo-id>/NOTES.md (§10).
 
@@ -295,7 +295,7 @@ gate at all, status=FAIL/CLOSE per §5 step 7.
 See the **`snapshot` skill** for the full procedure. Quick version:
 
 1. Confirm the latest run dir exists at
-   `execution_algos/<algo-id>/results/<YYYYMMDD>-<sha>/` (created by
+   `execution_algos/<algo-id>/results/<YYYYMMDD>/` (created by
    `run_backtest()`, one folder per trading date in the train window).
 2. Ensure `execution_algos/<algo-id>/NOTES.md` has all sections filled in (§10).
 3. From inside the project (Docker is fine):

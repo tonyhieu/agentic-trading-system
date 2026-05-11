@@ -417,20 +417,11 @@ def write_metadata(
 ) -> Path:
     """Write the consolidated `<algo>/results/metadata.json` reproduction file.
 
-    Constructed directly from `cfg`, the algorithm name, and the per-run dir
-    paths (which encode `<timestamp>-<short-sha>` in their names). No per-run
-    metadata sidecar is read or needed — the parent has everything required
-    to fully describe the reproduction.
+    Constructed directly from `cfg`, the algorithm name, and the per-run trading
+    dates. No per-run metadata sidecar is read or needed — the parent has
+    everything required to fully describe the reproduction.
     """
-    runs: list[dict] = []
-    for m in per_date_metrics:
-        run_dir_name = Path(m["_run_dir"]).name  # "<ts>-<sha>"
-        ts, sha = run_dir_name.rsplit("-", 1)
-        runs.append({
-            "date":          m["_date"],
-            "timestamp_utc": ts,
-            "git_sha_short": sha,
-        })
+    runs = [{"date": m["_date"]} for m in per_date_metrics]
 
     payload = {
         "strategy_name":             cfg["strategy"]["name"],
@@ -667,7 +658,31 @@ def main() -> int:
 
     # ----- baseline-only branch -----
     if args.baseline_only:
-        base_agg = aggregate(list(base_metrics.values()))
+        base_dates = sorted(base_metrics)
+        base_agg = aggregate([base_metrics[d] for d in base_dates])
+
+        # Write the same aggregate files as a normal --algo run, using the
+        # baseline as its own comparator. vs_baseline_* deltas come out as 0.
+        out_path = write_backtest_results(
+            algo_name=baseline,
+            baseline_name=baseline,
+            cfg=cfg,
+            symbol=args.symbol,
+            algo_agg=base_agg,
+            base_agg=base_agg,
+            train_dates=base_dates,
+            run_dirs=[base_metrics[d]["_run_dir"] for d in base_dates],
+        )
+        print(f"\nWrote: {out_path.relative_to(REPO_ROOT)}")
+
+        meta_path = write_metadata(
+            algo_name=baseline,
+            cfg=cfg,
+            symbol=args.symbol,
+            per_date_metrics=[base_metrics[d] for d in base_dates],
+        )
+        print(f"Wrote: {meta_path.relative_to(REPO_ROOT)}")
+
         print_summary(algo_name=None, baseline_name=baseline,
                       algo_agg=None, base_agg=base_agg, cfg=cfg)
         return 0 if not failures else 1
