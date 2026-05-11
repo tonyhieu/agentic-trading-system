@@ -66,11 +66,7 @@ The user prompt may be:
    Include the `meta` block as placeholders: `"meta": {"duration_seconds":
    null, "tokens_used": null}`. A `SubagentStop` hook backfills both fields
    from the transcript after you stop — do **not** try to compute them
-   yourself. Also populate the two required schema fields from §9:
-   `strategy_kwargs_hash` (compute from `cfg["strategy"]["kwargs"]` —
-   `"sha256:" + sha256(json.dumps(kwargs, sort_keys=True))[:12]`) and
-   `oos_retrieved_at: null` (the `evaluate` skill backfills it in a
-   follow-up invocation).
+   yourself. 
 6. **On PASS**: snapshot per the `snapshot` skill. On CLOSE or FAIL: do not snapshot.
 7. **Commit on a fresh iteration branch** (one branch per invocation, so the
    base branch stays clean):
@@ -83,16 +79,7 @@ The user prompt may be:
    invoked. Stay on the iter branch when you exit — the `SubagentStop` hook
    will append its metadata-backfill commit to the same branch and then
    push the branch to `origin` (best-effort, all statuses).
-8. **Append an `## OBSERVATIONS` section to `research/logs/log.md`** before
-   exiting (regardless of status). List anything that wasted compute, surprised
-   you, or seemed structurally off — wasted backtests, OOM retries, missing
-   helpers, ambiguous prose, infra friction. Bullet form is fine. This is
-   what enables the operator to turn one-time friction into harness
-   improvements between invocations; an iteration that skips this section
-   silently re-pays the same costs next time. Empty list ("no friction this
-   run") is a valid answer and should be stated explicitly.
-
-9. **Final message**: brief prose summary — status, algo_id, key scores,
+8. **Final message**: brief prose summary — status, algo_id, key scores,
    trade count, and (if PASS) a suggestion for what a future iteration
    might try next.
 
