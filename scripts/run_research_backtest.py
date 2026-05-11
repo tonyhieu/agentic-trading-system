@@ -283,16 +283,16 @@ def aggregate(per_date: list[dict]) -> dict:
     """Aggregate per-date metrics into a single block.
 
     Aggregation rules from snapshot/SKILL.md section 3:
-      - sums: realized_pnl, total_commissions, trade_count, winners, losers,
-              order_count, fill_count
-      - mean: sharpe_ratio (per-date mean — known to be coarse in zero-slip
-              fill model; see suggested_improvements.md section 5)
+      - sums: realized_pnl, unrealized_pnl, total_commissions, trade_count,
+              winners, losers, order_count, fill_count, is_total_price
+      - mean: sharpe_ratio (per-date mean of daily-scaled Sharpe)
       - min:  max_drawdown_pct (most negative)
       - win_rate: recomputed from summed counts
       - mean_slippage: trade-count-weighted mean
       - max_abs_slippage: max across days
-      - total_return_pct: recomputed from summed pnl / starting_balance
-                         (no cross-day compounding)
+      - is_weighted_bps: captured-order-count-weighted mean across dates
+      - total_return_pct: recomputed from (realized + unrealized) /
+                         starting_balance (no cross-day compounding)
     """
     if not per_date:
         raise ValueError("aggregate() called with empty list")
@@ -308,20 +308,41 @@ def aggregate(per_date: list[dict]) -> dict:
     else:
         mean_slip = sum(m["mean_slippage"] for m in per_date) / len(per_date)
 
+    # IS: captured-order-count-weighted mean of per-date is_weighted_bps. Skip
+    # dates where no orders captured an arrival mid (is_weighted_bps is None).
+    is_dates = [
+        m for m in per_date
+        if m.get("is_weighted_bps") is not None and m.get("arrival_mid_captured", 0) > 0
+    ]
+    total_captured = sum(m["arrival_mid_captured"] for m in is_dates)
+    if is_dates and total_captured > 0:
+        is_weighted_bps = sum(
+            m["is_weighted_bps"] * m["arrival_mid_captured"] for m in is_dates
+        ) / total_captured
+        is_total_price = sum(m.get("is_total_price") or 0.0 for m in is_dates)
+    else:
+        is_weighted_bps = None
+        is_total_price = None
+
+    summed_unrealized = _sum(per_date, "unrealized_pnl", 0.0)
+
     return {
-        "realized_pnl":      summed_pnl,
-        "sharpe_ratio":      sum(m["sharpe_ratio"] for m in per_date) / len(per_date),
-        "max_drawdown_pct":  min(m["max_drawdown_pct"] for m in per_date),
-        "win_rate":          (summed_winners / summed_trades) if summed_trades else 0.0,
-        "trade_count":       summed_trades,
-        "winners":           summed_winners,
-        "losers":            _sum(per_date, "losers",     0),
-        "order_count":       _sum(per_date, "order_count", 0),
-        "fill_count":        _sum(per_date, "fill_count",  0),
-        "mean_slippage":     mean_slip,
-        "max_abs_slippage":  max(m["max_abs_slippage"] for m in per_date),
-        "total_commissions": _sum(per_date, "total_commissions", 0.0),
-        "total_return_pct":  (summed_pnl / STARTING_BALANCE_USD) * 100,
+        "realized_pnl":       summed_pnl,
+        "unrealized_pnl": summed_unrealized,
+        "sharpe_ratio":       sum(m["sharpe_ratio"] for m in per_date) / len(per_date),
+        "max_drawdown_pct":   min(m["max_drawdown_pct"] for m in per_date),
+        "win_rate":           (summed_winners / summed_trades) if summed_trades else 0.0,
+        "trade_count":        summed_trades,
+        "winners":            summed_winners,
+        "losers":             _sum(per_date, "losers",     0),
+        "order_count":        _sum(per_date, "order_count", 0),
+        "fill_count":         _sum(per_date, "fill_count",  0),
+        "mean_slippage":      mean_slip,
+        "max_abs_slippage":   max(m["max_abs_slippage"] for m in per_date),
+        "total_commissions":  _sum(per_date, "total_commissions", 0.0),
+        "total_return_pct":   ((summed_pnl + summed_unrealized) / STARTING_BALANCE_USD) * 100,
+        "is_weighted_bps":    is_weighted_bps,
+        "is_total_price":     is_total_price,
     }
 
 
@@ -349,13 +370,23 @@ def write_backtest_results(
 ) -> Path:
     """Write <algo>/results/backtest-results.json per snapshot/SKILL.md section 3."""
     perf_keys = (
-        "realized_pnl", "sharpe_ratio", "max_drawdown_pct", "win_rate",
+        "realized_pnl", "unrealized_pnl",
+        "sharpe_ratio", "max_drawdown_pct", "win_rate",
         "trade_count", "mean_slippage", "max_abs_slippage",
         "total_commissions", "total_return_pct",
+        "is_weighted_bps", "is_total_price",
     )
     performance = {k: algo_agg[k] for k in perf_keys}
-    performance["vs_baseline_pnl_pct"]      = safe_pct_delta(algo_agg["realized_pnl"],  base_agg["realized_pnl"])
+    algo_total = algo_agg["realized_pnl"] + algo_agg["unrealized_pnl"]
+    base_total = base_agg["realized_pnl"] + base_agg["unrealized_pnl"]
+    performance["vs_baseline_pnl_pct"]      = safe_pct_delta(algo_total,                base_total)
     performance["vs_baseline_slippage_pct"] = safe_pct_delta(algo_agg["mean_slippage"], base_agg["mean_slippage"])
+    if algo_agg["is_weighted_bps"] is not None and base_agg["is_weighted_bps"] is not None:
+        performance["vs_baseline_is_bps"] = safe_pct_delta(
+            algo_agg["is_weighted_bps"], base_agg["is_weighted_bps"]
+        )
+    else:
+        performance["vs_baseline_is_bps"] = None
 
     payload = {
         "algo_name":     algo_name,
@@ -372,6 +403,47 @@ def write_backtest_results(
         "run_dirs": run_dirs,
     }
     out_path = algo_results_dir(algo_name) / "backtest-results.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n")
+    return out_path
+
+
+def write_metadata(
+    *,
+    algo_name: str,
+    cfg: dict,
+    symbol: str,
+    per_date_metrics: list[dict],
+) -> Path:
+    """Write the consolidated `<algo>/results/metadata.json` reproduction file.
+
+    Constructed directly from `cfg`, the algorithm name, and the per-run dir
+    paths (which encode `<timestamp>-<short-sha>` in their names). No per-run
+    metadata sidecar is read or needed — the parent has everything required
+    to fully describe the reproduction.
+    """
+    runs: list[dict] = []
+    for m in per_date_metrics:
+        run_dir_name = Path(m["_run_dir"]).name  # "<ts>-<sha>"
+        ts, sha = run_dir_name.rsplit("-", 1)
+        runs.append({
+            "date":          m["_date"],
+            "timestamp_utc": ts,
+            "git_sha_short": sha,
+        })
+
+    payload = {
+        "strategy_name":             cfg["strategy"]["name"],
+        "strategy_kwargs":           cfg["strategy"]["kwargs"],
+        "execution_algorithm_name":  algo_name,
+        "execution_algorithm_kwargs": {},
+        "symbol":                    symbol,
+        "dataset_name":              cfg["dataset"]["name"],
+        "dataset_version":           cfg["dataset"]["version"],
+        "runs":                      sorted(runs, key=lambda r: r["date"] or ""),
+    }
+
+    out_path = algo_results_dir(algo_name) / "metadata.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n")
     return out_path
@@ -421,23 +493,29 @@ def print_summary(
     print(f"  {'metric':<24}{'algo':>14}{'baseline':>14}{'delta_%':>12}")
     print("  " + "-" * 64)
     rows = [
-        ("realized_pnl",     algo_agg["realized_pnl"],     base_agg["realized_pnl"]),
-        ("sharpe_ratio",     algo_agg["sharpe_ratio"],     base_agg["sharpe_ratio"]),
-        ("max_drawdown_pct", algo_agg["max_drawdown_pct"], base_agg["max_drawdown_pct"]),
-        ("win_rate",         algo_agg["win_rate"],         base_agg["win_rate"]),
-        ("trade_count",      algo_agg["trade_count"],      base_agg["trade_count"]),
-        ("mean_slippage",    algo_agg["mean_slippage"],    base_agg["mean_slippage"]),
+        ("realized_pnl",       algo_agg["realized_pnl"],       base_agg["realized_pnl"]),
+        ("unrealized_pnl", algo_agg["unrealized_pnl"], base_agg["unrealized_pnl"]),
+        ("sharpe_ratio",       algo_agg["sharpe_ratio"],       base_agg["sharpe_ratio"]),
+        ("max_drawdown_pct",   algo_agg["max_drawdown_pct"],   base_agg["max_drawdown_pct"]),
+        ("win_rate",           algo_agg["win_rate"],           base_agg["win_rate"]),
+        ("trade_count",        algo_agg["trade_count"],        base_agg["trade_count"]),
+        ("mean_slippage",      algo_agg["mean_slippage"],      base_agg["mean_slippage"]),
     ]
     for name, mine, base in rows:
         print(f"  {name:<24}{mine:>14.4f}{base:>14.4f}{safe_pct_delta(mine, base):>+12.2f}")
+    if algo_agg.get("is_weighted_bps") is not None and base_agg.get("is_weighted_bps") is not None:
+        mine, base = algo_agg["is_weighted_bps"], base_agg["is_weighted_bps"]
+        print(f"  {'is_weighted_bps':<24}{mine:>14.4f}{base:>14.4f}{safe_pct_delta(mine, base):>+12.2f}")
 
-    delta_pnl_pct = safe_pct_delta(algo_agg["realized_pnl"], base_agg["realized_pnl"])
+    algo_total = algo_agg["realized_pnl"] + algo_agg["unrealized_pnl"]
+    base_total = base_agg["realized_pnl"] + base_agg["unrealized_pnl"]
+    delta_pnl_pct = safe_pct_delta(algo_total, base_total)
     verdict = classify_verdict(delta_pnl_pct, cfg)
     gate_min   = cfg["pass_gate"]["min_pnl_improvement_pct"]
     gate_close = cfg["pass_gate"]["close_margin_pct"]
     print()
     print(f"  Pass gate: min_pnl_improvement_pct={gate_min}, close_margin_pct={gate_close}")
-    print(f"  Suggested verdict (train-only): {verdict}  (delta_pnl_pct={delta_pnl_pct:+.2f})")
+    print(f"  Suggested verdict (train-only): {verdict}  (delta_pnl_pct={delta_pnl_pct:+.2f}, basis=realized+unrealized)")
     print()
     print("  Note: this is an informational suggestion. The final PASS/CLOSE/FAIL")
     print("  decision rests with the agent per OBJECTIVE.md section 5 step 7.")
@@ -623,6 +701,14 @@ def main() -> int:
         run_dirs=[algo_metrics[d]["_run_dir"] for d in comparable],
     )
     print(f"\nWrote: {out_path.relative_to(REPO_ROOT)}")
+
+    meta_path = write_metadata(
+        algo_name=args.algo,
+        cfg=cfg,
+        symbol=args.symbol,
+        per_date_metrics=[algo_metrics[d] for d in comparable],
+    )
+    print(f"Wrote: {meta_path.relative_to(REPO_ROOT)}")
 
     print_summary(algo_name=args.algo, baseline_name=baseline,
                   algo_agg=algo_agg, base_agg=base_agg, cfg=cfg)
