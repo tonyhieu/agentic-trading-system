@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/patch_program_db_tokens.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ssrn.com)"
+    ],
+    "deny": [
+      "Read(./strategies)",
+      "Bash(chmod ./strategies)",
+      "Bash(sudo chmod*)",
+      "Bash(ls ./strategies*)",
+      "Bash(find . -path ./strategies -prune)",
+      "Bash(cat strategies/*)"
+    ]
+  }
+}
