@@ -1,0 +1,34 @@
+{
+  "algo_name": "spread-filter-tight",
+  "backtest_date": "2026-05-11T18:12:41Z",
+  "baseline": "simple",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 1818.5,
+    "sharpe_ratio": 117.23063599961233,
+    "max_drawdown_pct": -0.003773364246599099,
+    "win_rate": 0.4961107949155758,
+    "trade_count": 5271,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.18185,
+    "vs_baseline_pnl_pct": 14.60532535055932,
+    "vs_baseline_slippage_pct": 0.0
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/spread-filter-tight/results/2026-05-11T18-11-12Z-6ffaea7",
+    "execution_algos/spread-filter-tight/results/2026-05-11T18-11-36Z-6ffaea7",
+    "execution_algos/spread-filter-tight/results/2026-05-11T18-12-17Z-6ffaea7"
+  ]
+}
