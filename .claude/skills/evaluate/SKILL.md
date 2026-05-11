@@ -21,7 +21,7 @@ You do not invoke the evaluator directly. The flow is:
 2. The GitHub Actions workflow uploads to
    `s3://$S3_BUCKET_NAME/execution_algos/<algo-id>/<timestamp>-<commit>/`.
 3. An S3 event invokes the `execution-algorithm-evaluator` Lambda
-   (region `us-east-2`).
+   (region `us-east-1`).
 4. Lambda runs the snapshotted algorithm against `data_window.test` and
    writes a report back to S3.
 

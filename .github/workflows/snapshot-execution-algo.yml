@@ -3,6 +3,7 @@ name: Create Execution Algorithm Snapshot
 on:
   push:
     branches:
+      - 'snapshot/**'
       - 'snapshots/**'
   workflow_dispatch:
     inputs:
@@ -41,7 +42,9 @@ jobs:
             echo "name=${{ github.event.inputs.algo_name }}" >> $GITHUB_OUTPUT
             echo "path=${{ github.event.inputs.algo_path }}" >> $GITHUB_OUTPUT
           else
-            NAME=$(echo "${{ github.ref_name }}" | sed 's|snapshots/||')
+            NAME="${{ github.ref_name }}"
+            NAME="${NAME#snapshot/}"
+            NAME="${NAME#snapshots/}"
             echo "name=$NAME" >> $GITHUB_OUTPUT
             echo "path=execution_algos/$NAME" >> $GITHUB_OUTPUT
           fi
@@ -115,6 +118,44 @@ jobs:
           echo "Uploading to $S3"
           aws s3 sync "$ROOT/" "$S3" --storage-class STANDARD --no-progress
           echo "Upload complete"
+
+      - name: Invoke evaluator
+        env:
+          EVALUATOR_FUNCTION_NAME: execution-algorithm-evaluator
+          LAMBDA_REGION: us-east-1
+          ALGO_NAME: ${{ steps.meta.outputs.name }}
+        run: |
+          PAYLOAD_FILE="$(mktemp)"
+          RESPONSE_FILE="$(mktemp)"
+          cat > "$PAYLOAD_FILE" <<EOF
+{"execution_algorithm_name":"${ALGO_NAME}"}
+EOF
+          echo "Invoking ${EVALUATOR_FUNCTION_NAME} in ${LAMBDA_REGION} for ${ALGO_NAME}"
+          aws lambda invoke \
+            --function-name "${EVALUATOR_FUNCTION_NAME}" \
+            --region "${LAMBDA_REGION}" \
+            --cli-binary-format raw-in-base64-out \
+            --payload "file://${PAYLOAD_FILE}" \
+            "$RESPONSE_FILE" \
+            >/tmp/evaluator-invoke-metadata.json
+          cat "$RESPONSE_FILE"
+          REPORT_KEY=$(python3 - "$RESPONSE_FILE" <<'PY'
+import json
+import sys
+response_path = sys.argv[1]
+with open(response_path, "r", encoding="utf-8") as fh:
+    response = json.load(fh)
+if response.get("statusCode") != 200:
+    raise SystemExit(f"Lambda returned non-200 statusCode: {response.get('statusCode')}")
+body = json.loads(response["body"])
+report_key = body.get("report_key")
+if not report_key:
+    raise SystemExit("Lambda response did not include report_key")
+print(report_key)
+PY
+)
+          echo "Lambda report key: ${REPORT_KEY}"
+          aws s3 ls "s3://${{ secrets.S3_BUCKET_NAME }}/${REPORT_KEY}" --region "${{ secrets.AWS_REGION }}"
       
       - name: Verify
         run: |
