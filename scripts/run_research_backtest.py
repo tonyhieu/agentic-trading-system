@@ -46,6 +46,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -113,6 +114,12 @@ def parse_args() -> argparse.Namespace:
         "--dry-run", action="store_true",
         help="Print the (date, algo) backtest plan and exit without running.",
     )
+    p.add_argument(
+        "--no-baseline-cache", action="store_true",
+        help="Re-run the baseline on every date, ignoring cached fingerprints. "
+             "Use this if you suspect engine/strategy code (which the fingerprint "
+             "does not cover) has changed.",
+    )
     # Hidden: spawned recursively by run_one() to get subprocess isolation.
     # Not for users; running it manually has no extra behavior worth exposing.
     p.add_argument(
@@ -163,6 +170,94 @@ def newest_run_dir_excluding(results_dir: Path, exclude: set[Path]) -> Path | No
 
 
 # ---------------------------------------------------------------------------
+# Result caching (baseline reuse across iterations)
+# ---------------------------------------------------------------------------
+#
+# The baseline runs once per train date per iteration today, even though its
+# inputs (strategy + kwargs + date + dataset version + baseline code) are
+# unchanged across most iterations. We persist a `cache_fingerprint.json`
+# next to every run's `metrics.json` and, before running the baseline, scan
+# its results dir for a prior run with an identical fingerprint.
+#
+# Scope: captures inputs reachable from cfg + the baseline algorithm's
+# `execution_algorithm.py` content. Changes to engine code, strategy code,
+# or other framework files are NOT captured — invalidate manually by
+# deleting baseline run dirs or passing --no-baseline-cache.
+
+CACHE_FINGERPRINT_NAME = "cache_fingerprint.json"
+
+
+def _algo_code_sha256(algo_name: str) -> str:
+    """sha256 of the algo's execution_algorithm.py on disk (working tree).
+
+    Reading the worktree (not a git ref) handles dirty edits correctly: an
+    uncommitted change yields a hash that won't match any committed run's
+    fingerprint, so the cache misses safely.
+    """
+    dir_name = EXECUTION_DIRS.get(algo_name, algo_name)
+    code_path = REPO_ROOT / "execution_algos" / dir_name / "execution_algorithm.py"
+    return hashlib.sha256(code_path.read_bytes()).hexdigest()
+
+
+def compute_cache_fingerprint(*, algo_name: str, date: str, symbol: str, cfg: dict) -> dict:
+    """Canonical fingerprint of a backtest's inputs for cache lookup.
+
+    Two runs with identical fingerprints are assumed to produce identical
+    metrics. The fingerprint uses cfg as-the-user-sees-it (pre-mutation by
+    run_backtest), so it doesn't depend on strategy-specific kwarg mangling
+    inside the engine.
+    """
+    return {
+        "algo_name": algo_name,
+        "date": date,
+        "symbol": symbol,
+        "strategy_name": cfg["strategy"]["name"],
+        "strategy_kwargs": cfg["strategy"]["kwargs"],
+        "dataset_name": cfg["dataset"]["name"],
+        "dataset_version": cfg["dataset"]["version"],
+        "algo_code_sha256": _algo_code_sha256(algo_name),
+    }
+
+
+def find_cached_metrics(*, algo_name: str, fingerprint: dict) -> dict | None:
+    """Look for a prior run with a matching fingerprint; return its metrics if found.
+
+    Returns the same shape `_run_one_in_process` returns (metrics.json
+    contents + `_run_dir` + `_date`) so the caller can substitute it
+    directly. Returns None if no matching run is on disk.
+    """
+    results_dir = algo_results_dir(algo_name)
+    if not results_dir.exists():
+        return None
+    for run_dir in results_dir.iterdir():
+        if not run_dir.is_dir():
+            continue
+        fp_path = run_dir / CACHE_FINGERPRINT_NAME
+        metrics_path = run_dir / "metrics.json"
+        if not fp_path.exists() or not metrics_path.exists():
+            continue
+        try:
+            cached_fp = json.loads(fp_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        if cached_fp != fingerprint:
+            continue
+        try:
+            metrics = json.loads(metrics_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        metrics["_run_dir"] = str(run_dir.relative_to(REPO_ROOT))
+        metrics["_date"] = fingerprint["date"]
+        return metrics
+    return None
+
+
+def write_cache_fingerprint(run_dir: Path, fingerprint: dict) -> None:
+    payload = json.dumps(fingerprint, indent=2, sort_keys=True) + "\n"
+    (run_dir / CACHE_FINGERPRINT_NAME).write_text(payload)
+
+
+# ---------------------------------------------------------------------------
 # Per-run execution
 # ---------------------------------------------------------------------------
 
@@ -202,6 +297,10 @@ def _run_one_in_process(*, algo_name: str, date: str, cfg: dict, symbol: str) ->
             f"Likely exec_id misroute (check {algo_name}'s factory passes "
             f"exec_id='MY_GENERIC_ALGO'). See log.md OBSERVATIONS #1."
         )
+    fingerprint = compute_cache_fingerprint(
+        algo_name=algo_name, date=date, symbol=symbol, cfg=cfg,
+    )
+    write_cache_fingerprint(new_dir, fingerprint)
     metrics["_run_dir"] = str(new_dir.relative_to(REPO_ROOT))
     metrics["_date"] = date
     return metrics
@@ -548,6 +647,7 @@ def main() -> int:
     algo_metrics: dict[str, dict] = {}
     base_metrics: dict[str, dict] = {}
     failures: list[tuple[str, str, str]] = []  # (algo_name, date, error)
+    baseline_cache_hits = 0
 
     for date in dates:
         if not args.baseline_only:
@@ -565,17 +665,34 @@ def main() -> int:
                 failures.append((args.algo, date, str(exc)))
 
         print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
-        try:
-            m = run_one(
-                algo_name=baseline, date=date,
-                symbol=args.symbol, config_path=args.config,
+        cached = None
+        if not args.no_baseline_cache:
+            fp = compute_cache_fingerprint(
+                algo_name=baseline, date=date, symbol=args.symbol, cfg=cfg,
             )
-            base_metrics[date] = m
-            print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                  f"sharpe={m['sharpe_ratio']:.2f}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"    FAIL {exc}", file=sys.stderr)
-            failures.append((baseline, date, str(exc)))
+            cached = find_cached_metrics(algo_name=baseline, fingerprint=fp)
+        if cached is not None:
+            base_metrics[date] = cached
+            baseline_cache_hits += 1
+            print(f"    HIT  (cache: {cached['_run_dir']}) "
+                  f"trades={cached['trade_count']} pnl={cached['realized_pnl']:.2f} "
+                  f"sharpe={cached['sharpe_ratio']:.2f}")
+        else:
+            try:
+                m = run_one(
+                    algo_name=baseline, date=date,
+                    symbol=args.symbol, config_path=args.config,
+                )
+                base_metrics[date] = m
+                print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                      f"sharpe={m['sharpe_ratio']:.2f}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"    FAIL {exc}", file=sys.stderr)
+                failures.append((baseline, date, str(exc)))
+
+    if baseline_cache_hits:
+        print(f"\nBaseline cache: {baseline_cache_hits}/{len(dates)} date(s) reused "
+              f"from prior runs.")
 
     # ----- report failures -----
     if failures:
