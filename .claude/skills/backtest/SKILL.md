@@ -118,7 +118,7 @@ Full results layout for an algorithm:
 execution_algos/<algo-id>/results/
 ├── backtest-results.json                       # committed — aggregate; written by scripts/run_research_backtest.py
 ├── metadata.json                               # committed — reproduction record (runs[]); written by write_metadata()
-└── <YYYY-MM-DDTHH-MM-SSZ>-<short-sha>/         # per-run dir (auto-created by run_backtest() → persist())
+└── <YYYYMMDD>-<short-sha>/                     # per-run dir (one per trading date, auto-created by run_backtest() → persist())
     ├── metrics.json                             # committed — summary stats; see metrics-schema.md
     ├── account.csv                              # gitignored — equity curve
     ├── orders.csv                               # gitignored — order log (with commissions, slippage)
@@ -134,8 +134,10 @@ Committed files: `backtest-results.json`, `metadata.json`, and each
 (`scripts/run_research_backtest.py`) then writes the two top-level files:
 `backtest-results.json` aggregates per-date metrics across the train window,
 and `metadata.json` reconstructs the reproduction record from `cfg` plus
-each per-run dir's `<timestamp>-<short-sha>` name. There is no per-run
-metadata sidecar — the dir name itself is the per-run identity.
+each per-run dir's `<YYYYMMDD>-<short-sha>` name. There is no per-run
+metadata sidecar — the dir name itself (trading date + commit short SHA)
+is the per-run identity. Rerunning the same trading date at the same
+commit raises `FileExistsError` — remove the old directory first.
 
 The top-level `metadata.json` is the canonical reproduction record for the
 algorithm.

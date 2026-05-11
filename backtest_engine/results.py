@@ -206,11 +206,20 @@ def persist(
     metrics: dict[str, Any],
     reports: Reports,
 ) -> Path:
-    """Write a run to `{strategy_dir}/results/{timestamp}-{shortsha}/` and return that path."""
+    """Write a run to `{strategy_dir}/results/{trading_date}-{shortsha}/` and return that path."""
+    trading_date = metadata.get("date")
+    if not trading_date:
+        raise ValueError("persist() requires metadata['date'] (trading date)")
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     sha = _git_short_sha()
-    run_dir = strategy_dir / "results" / f"{ts}-{sha}"
-    run_dir.mkdir(parents=True, exist_ok=True)
+    run_dir = strategy_dir / "results" / f"{trading_date}-{sha}"
+    if run_dir.exists():
+        raise FileExistsError(
+            f"Refusing to overwrite existing run dir {run_dir}. "
+            f"A backtest for trading date {trading_date} at commit {sha} already "
+            f"exists. Remove it manually if you want to rerun."
+        )
+    run_dir.mkdir(parents=True)
 
     safe_metrics = {
         k: (None if isinstance(v, float) and math.isnan(v) else v)

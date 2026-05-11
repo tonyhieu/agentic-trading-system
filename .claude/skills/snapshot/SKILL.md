@@ -31,7 +31,7 @@ execution_algos/<algo-id>/
 └── results/
     ├── backtest-results.json                    # canonical aggregate — see §3
     ├── metadata.json                            # consolidated reproduction record (runs[])
-    └── <YYYY-MM-DDTHH-MM-SSZ>-<short-sha>/      # per-run dirs (auto-created by run_backtest())
+    └── <YYYYMMDD>-<short-sha>/                  # per-run dirs (one per trading date, auto-created by run_backtest())
         ├── metrics.json                          # committed: per-date metrics
         └── account.csv, orders.csv, fills.csv, positions.csv  # gitignored
 ```
@@ -81,8 +81,8 @@ record and adds the baseline comparison.
     "test_dates":  []
   },
   "run_dirs": [
-    "results/2026-04-29T14-12-00Z-abc1234/",
-    "results/2026-04-29T14-15-30Z-abc1234/"
+    "results/20260308-abc1234/",
+    "results/20260310-abc1234/"
   ]
 }
 ```
