@@ -33,6 +33,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.composite-filter",
         "get_execution_algorithm",
     ),
+    "composite-or": (
+        "execution_algos.composite-or",
+        "get_execution_algorithm",
+    ),
 }
 
 

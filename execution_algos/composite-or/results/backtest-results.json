@@ -1,0 +1,31 @@
+{
+  "algo_name": "composite-or",
+  "backtest_date": "2026-05-11T16:29:00Z",
+  "baseline": "simple",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 1679.50,
+    "sharpe_ratio": 127.96,
+    "max_drawdown_pct": -0.001950,
+    "win_rate": 0.510226,
+    "trade_count": 3667,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.1679,
+    "vs_baseline_pnl_pct": 5.85,
+    "vs_baseline_slippage_pct": 0.0
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "results/2026-05-11T16-26-40Z-0a1a174/",
+    "results/2026-05-11T16-27-47Z-0a1a174/",
+    "results/2026-05-11T16-28-33Z-0a1a174/"
+  ],
+  "aggregation_notes": "realized_pnl/trade_count/winners/losers/commissions summed; sharpe_ratio mean of per-date values; max_drawdown_pct minimum (most negative) across dates; win_rate computed as winners/trade_count from summed counts; mean_slippage/max_abs_slippage: both zero across all runs (fill model reports zero slippage); total_return_pct from summed pnl / 1000000 starting_balance without compounding"
+}

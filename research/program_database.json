@@ -154,5 +154,27 @@
         "total": 53470
       }
     }
+  },
+  {
+    "id": "composite-or",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Composite spread+momentum OR-logic conditional skip: skip open orders when EITHER current spread > 1.5x rolling-60-window median spread OR recent mid-price adverse momentum > 0.25 (one tick). Builds on composite-filter (CLOSE at +4.29%) by switching AND to OR logic to increase skip rate from ~1% to ~34%, catching more below-average oracle signals. Reduces-only orders always execute. Momentum threshold=0.25 prevents the degenerate 100% skip rate that occurs with threshold=0.0 in an OR configuration. exec_id must be MY_GENERIC_ALGO to match strategy routing.",
+    "algorithm_path": "execution_algos/composite-or/",
+    "scores": {
+      "sharpe": 127.96,
+      "realized_pnl": 1679.50,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 5.85,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 3667,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over all 3 train dates (20260308, 20260309, 20260310): composite-or $1679.50/3667 trades vs simple $1586.75/5522 trades; delta_pnl=+5.85%, above the +5.0% gate. Win rate improved +2.71pp (51.02% vs 48.32%). Max drawdown improved (-0.0020 vs -0.0043 for simple). Skip rate ~33.6% (1855 of 5522 opening orders skipped). Per-date deltas: +12.81% (20260308, 108 skips), +7.12% (20260309, 953 skips), +2.25% (20260310, 794 skips). 20260310 weakest — high skip rate may over-filter on that date. Slippage: both 0.0 (fill model limitation, noted in research/NOTES.md). Two bugs found during development: (1) momentum_threshold=0.0 with OR caused 100% skip rate; fixed to 0.25. (2) exec_id='COMPOSITE_OR' caused 0 fills; fixed to 'MY_GENERIC_ALGO'. Suggested next: raise spread_mult to 1.7-2.0 to reduce over-filtering on weaker dates, or test per-session skip-rate calibration.",
+    "timestamp": "2026-05-11T16:30:00Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
