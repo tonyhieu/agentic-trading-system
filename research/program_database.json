@@ -180,5 +180,29 @@
         "total": 10395163
       }
     }
+  },
+  {
+    "id": "streak-spread-tight",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Tighter spread threshold (1.1x vs 1.3x in streak-spread-skip) on consecutive-loss streak + spread conditioned skip. The full 12-date train window has many high-volume days with win rates 32-38% (vs 47-49% on the 3 dates used to calibrate streak-spread-skip). A tighter spread threshold fires more often, skipping more adverse signals on low-win-rate, high-volume days. ONE targeted change vs streak-spread-skip: spread_multiplier 1.3 -> 1.1.",
+    "algorithm_path": "execution_algos/streak-spread-tight/",
+    "scores": {
+      "sharpe": 2.76,
+      "realized_pnl": 4772.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 140.52,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 106428,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, 12 trading days): streak-spread-tight $4772.0/106428 trades vs simple $1984.0/132536 trades; delta_pnl=+140.52%, well above +5.0% gate. Win rate: 37.1% vs 35.6% (+1.5pp). Max drawdown: -1.41% vs -3.77% (improved). Skip rate: 19.7% (26,108 fewer trades). Improvement consistent across ALL 12 dates including previously loss-making days (20260312: +$378, 20260313: +$440, 20260316: +$394 vs baseline). Baseline run dirs pre-existed on disk from prior run; compared via cached metrics (same oracle seed=42, deterministic). Slippage: both 0.0 (zero fill-cost model, see research/NOTES.md). SNAPSHOT NOTE: branch policy for this invocation prohibits push (cleanup_strategies observation run -- no iter branch, no snapshot push per operator pre-briefing). Suggested next: (1) tune multiplier near 1.0x-1.15x to find optimum; (2) add volume filter on high-activity ticks; (3) AND composite (streak AND spread) with 1.1x.",
+    "timestamp": "2026-05-11T22:40:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
