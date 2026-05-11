@@ -66,7 +66,7 @@ The user prompt may be:
    Include the `meta` block as placeholders: `"meta": {"duration_seconds":
    null, "tokens_used": null}`. A `SubagentStop` hook backfills both fields
    from the transcript after you stop — do **not** try to compute them
-   yourself. 
+   yourself.
 6. **On PASS**: snapshot per the `snapshot` skill. On CLOSE or FAIL: do not snapshot.
 7. **Commit on a fresh iteration branch** (one branch per invocation, so the
    base branch stays clean):
