@@ -96,6 +96,13 @@ Map the report into your snapshot's `results/backtest-results.json`
 `performance_oos` block — do **not** overwrite the train-window
 `performance` numbers. Both must remain auditable separately.
 
+Also set `oos_retrieved_at` on the matching `research/program_database.json`
+entry (find it by `id == <algo-id>`) to the current UTC timestamp
+(`datetime.now(timezone.utc).isoformat()` form). This is one of the two
+edit exceptions to the append-only rule (the other being the `meta`
+backfill — see OBJECTIVE.md §9). Commit both edits together on a new
+commit on the current branch.
+
 ## 6. Monitor a run in flight
 
 ```bash

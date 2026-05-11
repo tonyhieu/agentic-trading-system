@@ -143,8 +143,12 @@ on the same `(strategy_name, date, symbol)`. The gate requires:
 - `mean_slippage` does not regress by more than `pass_gate.max_slippage_regression_pct`
 
 Algorithms within `pass_gate.close_margin_pct` of either condition count as
-CLOSE — an informational status. A future iteration may try a related
-approach, but there's no formal retry counter.
+CLOSE — an informational status. Concretely: with `min_pnl_improvement_pct=5`
+and `close_margin_pct=2`, `vs_baseline_pnl_pct ∈ [3, 5)` is CLOSE; `<3` is
+FAIL; `≥5` is PASS. (The margin is one-sided — slipping below the gate by
+up to the margin is CLOSE; exceeding the gate is always PASS, not "CLOSE
+on the high side".) A future iteration may try a related approach, but
+there's no formal retry counter.
 
 ---
 
@@ -375,6 +379,8 @@ File: `research/program_database.json` — JSON array, append-only.
              "trade_count": 134, "passed": true},
   "notes": "Strong on high-vol; degrades when book is thin.",
   "timestamp": "2026-04-15T14:32:00Z",
+  "strategy_kwargs_hash": "sha256:7f3e…",
+  "oos_retrieved_at": null,
   "meta": {
     "duration_seconds": null,
     "tokens_used": null
@@ -382,10 +388,26 @@ File: `research/program_database.json` — JSON array, append-only.
 }
 ```
 
+**Required fields on new entries** (in addition to the originals above):
+
+- `strategy_kwargs_hash` — `"sha256:" + sha256(json.dumps(cfg["strategy"]["kwargs"], sort_keys=True))[:12]`. Records which strategy regime produced the entry so that entries from different `sigma`/`horizon` configs are not silently compared. Compute it once at the start of the iteration from the live config.
+- `oos_retrieved_at` — ISO8601 UTC timestamp set by the `evaluate` skill when the Lambda OOS report is merged into `backtest-results.json`. `null` until then; always `null` at iteration-exit time; populated in a follow-up invocation (treated like the `meta` backfill — a single-field edit on an already-appended entry is allowed under the append-only rule).
+
+(There is intentionally no `snapshot_pushed_at` field — the existence of
+`refs/heads/snapshots/<algo-id>` on origin is the durable, externally-verifiable
+"snapshot pushed" signal, which `status: pass` entries pair with implicitly.)
+
+Older entries that pre-date these fields are not backfilled (the append-only
+rule still holds). A future agent reading the database should tolerate
+their absence as `null`.
+
 **Rules**:
-- Always **append**, never delete or rewrite. The one exception is the
-  `meta` block on the most-recent entry, which is backfilled by a
-  `SubagentStop` hook (see *Execution metadata* below).
+- Always **append**, never delete or rewrite. Two narrowly-scoped
+  exceptions: (a) the `meta` block on the most-recent entry, backfilled
+  by a `SubagentStop` hook (see *Execution metadata* below); and (b) the
+  `oos_retrieved_at` field on any prior entry, set by the `evaluate`
+  skill in a follow-up invocation. Both are single-field edits to known
+  fields — no other rewrites are permitted.
 - Every attempt (pass/close/fail) gets an entry — failed entries prevent re-exploring dead ends.
 - `status` ∈ {`pass`, `close`, `fail`}, set from the **train** gate. The OOS
   result from the Lambda is recorded separately in

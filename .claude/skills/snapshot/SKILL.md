@@ -120,6 +120,13 @@ git checkout -b snapshots/<algo-id>
 git push origin snapshots/<algo-id>
 ```
 
+The existence of `refs/heads/snapshots/<algo-id>` on origin is the durable
+"snapshot pushed" signal; the program-database entry's `status: pass` plus
+that ref together answer "did we snapshot?" Leave `oos_retrieved_at` as
+`null` in the appended program-database entry — the `evaluate` skill sets
+it in a follow-up invocation, treating it exactly like the SubagentStop
+`meta` backfill (single-field edit on an already-appended entry).
+
 If you arrive at this skill on a branch where the iteration commit has
 *not* yet been made (e.g., manual snapshotting), stage and commit first:
 
