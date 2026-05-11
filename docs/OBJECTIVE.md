@@ -143,8 +143,12 @@ on the same `(strategy_name, date, symbol)`. The gate requires:
 - `mean_slippage` does not regress by more than `pass_gate.max_slippage_regression_pct`
 
 Algorithms within `pass_gate.close_margin_pct` of either condition count as
-CLOSE — an informational status. A future iteration may try a related
-approach, but there's no formal retry counter.
+CLOSE — an informational status. Concretely: with `min_pnl_improvement_pct=5`
+and `close_margin_pct=2`, `vs_baseline_pnl_pct ∈ [3, 5)` is CLOSE; `<3` is
+FAIL; `≥5` is PASS. (The margin is one-sided — slipping below the gate by
+up to the margin is CLOSE; exceeding the gate is always PASS, not "CLOSE
+on the high side".) A future iteration may try a related approach, but
+there's no formal retry counter.
 
 ---
 
@@ -213,7 +217,7 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    expectation given the hypothesis. For aggregation rules (sum / mean /
    min / weighted) see snapshot/SKILL.md §3; for the underlying per-date
    metrics if you need to drill down, see the
-   results/<timestamp>-<sha>/metrics.json files referenced in run_dirs.
+   results/<YYYYMMDD>-<sha>/metrics.json files referenced in run_dirs.
 
    Append backtest observations to execution_algos/<algo-id>/NOTES.md (§10).
 
@@ -291,8 +295,8 @@ gate at all, status=FAIL/CLOSE per §5 step 7.
 See the **`snapshot` skill** for the full procedure. Quick version:
 
 1. Confirm the latest run dir exists at
-   `execution_algos/<algo-id>/results/<timestamp>-<sha>/` (created by
-   `run_backtest()`).
+   `execution_algos/<algo-id>/results/<YYYYMMDD>-<sha>/` (created by
+   `run_backtest()`, one folder per trading date in the train window).
 2. Ensure `execution_algos/<algo-id>/NOTES.md` has all sections filled in (§10).
 3. From inside the project (Docker is fine):
    ```bash
@@ -375,6 +379,8 @@ File: `research/program_database.json` — JSON array, append-only.
              "trade_count": 134, "passed": true},
   "notes": "Strong on high-vol; degrades when book is thin.",
   "timestamp": "2026-04-15T14:32:00Z",
+  "strategy_kwargs_hash": "sha256:7f3e…",
+  "oos_retrieved_at": null,
   "meta": {
     "duration_seconds": null,
     "tokens_used": null

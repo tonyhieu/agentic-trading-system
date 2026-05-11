@@ -28,7 +28,7 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
     "signal-consensus": (
         "execution_algos.signal-consensus",
         "get_execution_algorithm",
-    )
+    ),
 }
 
 

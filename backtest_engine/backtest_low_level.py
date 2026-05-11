@@ -9,12 +9,13 @@ from nautilus_trader.model import TraderId
 from nautilus_trader.model import Venue
 from nautilus_trader.model.currencies import USD
 from nautilus_trader.model.data import CustomData
+from nautilus_trader.model.data import QuoteTick
 from nautilus_trader.model.enums import AccountType
 from nautilus_trader.model.enums import OmsType
 from nautilus_trader.model.identifiers import ClientId
 
 from backtest_engine.arrival_price import attach_implementation_shortfall
-from backtest_engine.data_loader import DATASET_NAME, DATASET_VERSION, load_dbn_partition
+from backtest_engine.data_loader import load_dbn_partition
 from backtest_engine.results import Reports, compute_metrics, persist
 from execution_algos import create_execution_algorithm
 from strategies import create_strategy
@@ -30,6 +31,21 @@ STARTING_BALANCE_USD = 1_000_000.0
 EXECUTION_DIRS: dict[str, str] = {
     "simple": "simple_execution_strategy",
 }
+
+
+def _unrealized_pnl(positions, ticks, instrument) -> float:
+    """Mark-to-mid PnL of positions still open at EOD. 0.0 if all flat."""
+    open_pos = positions[positions["side"].astype(str).str.upper() != "FLAT"]
+    if open_pos.empty:
+        return 0.0
+    last_q = next((t for t in reversed(ticks) if isinstance(t, QuoteTick)), None)
+    if last_q is None:
+        return 0.0
+    mid = (last_q.bid_price.as_double() + last_q.ask_price.as_double()) / 2.0
+    direction = open_pos["entry"].map({"BUY": 1.0, "SELL": -1.0}).fillna(0.0)
+    qty = open_pos["quantity"].astype(float)
+    open_px = open_pos["avg_px_open"].astype(float)
+    return float(((mid - open_px) * direction * qty * float(instrument.multiplier)).sum())
 
 
 def run_backtest(
@@ -110,25 +126,15 @@ def run_backtest(
         positions=engine.trader.generate_positions_report(),
     )
 
-    metrics = {**compute_metrics(reports, starting_balance=STARTING_BALANCE_USD), **is_metrics}
-    metadata = {
-        "strategy_name": strategy_name,
-        "strategy_kwargs": strategy_options,
-        "execution_algorithm_name": execution_algorithm_name,
-        "execution_algorithm_kwargs": execution_options,
-        "date": date,
-        "symbol": symbol,
-        "venue": str(glbx),
-        "dataset_name": DATASET_NAME,
-        "dataset_version": DATASET_VERSION,
+    metrics = {
+        **compute_metrics(reports, starting_balance=STARTING_BALANCE_USD),
+        **is_metrics,
+        "unrealized_pnl": _unrealized_pnl(reports.positions, ticks, instrument),
     }
-    if oracle_options is not None:
-        metadata["oracle_preprocessing"] = oracle_options
 
     execution_dir_name = EXECUTION_DIRS.get(execution_algorithm_name, execution_algorithm_name)
     run_dir = persist(
         strategy_dir=REPO_ROOT / "execution_algos" / execution_dir_name,
-        metadata=metadata,
         metrics=metrics,
         reports=reports,
     )

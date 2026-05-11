@@ -43,6 +43,7 @@ data-cache/
 Thumbs.db
 
 # Large data files
+*.csv
 *.csv.gz
 *.parquet
 *.hdf5
