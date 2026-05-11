@@ -138,6 +138,11 @@ look up a specific field — most iterations only need `realized_pnl`,
 
 ## 6. Comparing to the baseline
 
+For the standard paired train backtest, use the runner in §7 — it
+handles the loop, subprocess isolation, and aggregation. This section
+documents the underlying primitive (computing deltas from one date pair)
+in case you need it for one-off debugging.
+
 `research/config.yaml → pass_gate.baseline` names the execution algorithm to
 beat (default `simple`). Run both on the same `(date, symbol)` with the
 same configured `strategy` block, then read both `metrics.json` files:
@@ -164,30 +169,24 @@ Compare against the gate in `config.yaml → pass_gate`.
 
 ## 7. Multi-date evaluation (train window only)
 
-`run_backtest()` runs one date per call. The agent backtests over the
-**train** window only — the test window is held out for the Lambda
-evaluator (see the `evaluate` skill). Loop:
+Use the centralized runner:
 
-```python
-train_dates = [d.replace("-", "") for d in pd.date_range(*cfg["data_window"]["train"], freq="B").strftime("%Y-%m-%d")]
-shared = dict(
-    strategy_name=cfg["strategy"]["name"],
-    strategy_kwargs=cfg["strategy"]["kwargs"],
-    symbol="MESM6",
-)
-for date in train_dates:
-    run_backtest(**shared, execution_algorithm_name="my-algo", date=date)
-    run_backtest(**shared, execution_algorithm_name=cfg["pass_gate"]["baseline"], date=date)
-```
+    python scripts/run_research_backtest.py --algo <algo-id>
 
-Each call appends a fresh run dir under `results/`. Aggregating metrics
-(mean Sharpe, sum P&L, win-rate weighted by trades) across per-date
-`metrics.json` files is the agent's responsibility. Do **not** add test
-dates to this loop — the OOS evaluation runs on Lambda after snapshot.
+It reads `cfg["data_window"]["train"]`, pairs your algo with the baseline
+(`cfg["pass_gate"]["baseline"]`) on each train date in fresh subprocesses,
+and aggregates per `snapshot/SKILL.md §3` into
+`execution_algos/<algo-id>/results/backtest-results.json`.
 
-Do not pre-run the algorithm before the paired loop. `run_backtest()`
-raises immediately on registration errors, so a smoke pass is redundant
-and pollutes `results/`.
+Useful flags: `--baseline-only` (refresh the baseline only),
+`--dates 20260308,20260309` (override the config train dates for
+debugging), `--dry-run` (print the plan and exit). Run with `--help` for
+the full list.
+
+Do **not** pass test dates to the runner — the OOS evaluation runs on
+Lambda after snapshot. For one-off debugging where you want a single
+`run_backtest()` call without going through the paired loop, use the §1
+entry point directly.
 
 ## 8. Footnote: raw data access
 
