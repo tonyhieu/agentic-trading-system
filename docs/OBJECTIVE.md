@@ -189,7 +189,17 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
 5. BACKTEST (train window only)
    Run:
 
-       python scripts/run_research_backtest.py --algo <algo-id>
+       python scripts/run_research_backtest.py --algo <algo-id> --use-cached-baseline
+
+   `--use-cached-baseline` skips the deterministic baseline subprocess and
+   reads its existing per-date metrics.json files from disk
+   (execution_algos/<baseline_dir>/results/<date>/metrics.json), cutting
+   per-iteration compute by ~50%. If you have changed
+   config.yaml → strategy.kwargs since the cache was last computed,
+   refresh first with `python scripts/run_research_backtest.py
+   --baseline-only` and then rerun the line above. Do NOT hand-roll a
+   per-algo runner script — that workaround pattern has been eliminated;
+   use this flag instead.
 
    This reads config.yaml → data_window.train and pairs your algo with the
    baseline (cfg["pass_gate"]["baseline"]) on each train date in fresh
