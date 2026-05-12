@@ -193,8 +193,15 @@ def persist(
     date: str,
     metrics: dict[str, Any],
     reports: Reports,
+    skip_attribution: dict[str, Any] | None = None,
+    skips: pd.DataFrame | None = None,
 ) -> Path:
-    """Write a run to `{strategy_dir}/results/{date}/` and return that path."""
+    """Write a run to `{strategy_dir}/results/{date}/` and return that path.
+
+    When ``skip_attribution`` is supplied the per-date summary is written
+    to ``skipped_attribution.json`` (committed) and the per-skip detail
+    to ``skips.csv`` (gitignored, like the other raw report CSVs).
+    """
     if not date:
         raise ValueError("persist() requires a trading date")
     run_dir = strategy_dir / "results" / date
@@ -216,5 +223,12 @@ def persist(
     reports.orders.to_csv(run_dir / "orders.csv", index=False)
     reports.fills.to_csv(run_dir / "fills.csv", index=False)
     reports.positions.to_csv(run_dir / "positions.csv", index=False)
+
+    if skip_attribution is not None:
+        (run_dir / "skipped_attribution.json").write_text(
+            json.dumps({"date": date, **skip_attribution}, indent=2, default=str)
+        )
+    if skips is not None and not skips.empty:
+        skips.to_csv(run_dir / "skips.csv", index=False)
 
     return run_dir

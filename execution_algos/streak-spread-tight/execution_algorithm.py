@@ -77,7 +77,7 @@ class StreakSpreadTightAlgorithm(ExecAlgorithm):
     No order quantity is ever modified. Quantity invariant always preserved.
     """
 
-    def __init__(self, config: StreakSpreadTightConfig) -> None:
+    def __init__(self, config: StreakSpreadTightConfig, skip_recorder=None) -> None:
         super().__init__(config=config)
         self._spread_multiplier: float = config.spread_multiplier
         self._spread_window: int = config.spread_window
@@ -99,6 +99,10 @@ class StreakSpreadTightAlgorithm(ExecAlgorithm):
 
         # Subscription tracking
         self._subscribed: set[str] = set()
+
+        # Per-run skip recorder (issue #66). May be None when the
+        # algorithm is constructed outside the research harness.
+        self._skip_recorder = skip_recorder
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -276,6 +280,7 @@ class StreakSpreadTightAlgorithm(ExecAlgorithm):
                 f"SKIP order {order.client_order_id} "
                 f"(trigger={trigger_label}) — adverse regime."
             )
+            self._record_skip(order, quote, trigger_label)
             self._position_flat = True
             # Do NOT call submit_order — quantity invariant preserved
         else:
@@ -298,6 +303,33 @@ class StreakSpreadTightAlgorithm(ExecAlgorithm):
         self._position_flat = False
         self.submit_order(order)
 
+    def _record_skip(self, order, quote, trigger: str) -> None:
+        """Log a skip event to the per-run SkipRecorder (issue #66).
+
+        Captures top-of-book at decision time so the post-run attribution
+        can simulate the counterfactual fill. Silently no-ops when no
+        recorder is attached (e.g. tests instantiating the algorithm
+        directly) or when the cached quote is missing.
+        """
+        if self._skip_recorder is None or quote is None:
+            return
+        try:
+            bid = float(str(quote.bid_price))
+            ask = float(str(quote.ask_price))
+            ts_event = int(getattr(quote, "ts_event", 0)) or int(order.ts_init)
+            self._skip_recorder.record(
+                ts_event=ts_event,
+                instrument_id=order.instrument_id,
+                parent_order_id=order.client_order_id,
+                side="BUY" if order.side == OrderSide.BUY else "SELL",
+                quantity=float(str(order.quantity)),
+                bid=bid,
+                ask=ask,
+                trigger=trigger,
+            )
+        except Exception as exc:  # noqa: BLE001 — attribution must never break the run
+            self.log.warning(f"skip-recorder failed: {exc}")
+
 
 def get_execution_algorithm(
     exec_id: str = "MY_GENERIC_ALGO",
@@ -305,6 +337,7 @@ def get_execution_algorithm(
     spread_window: int = 60,
     min_spread_window: int = 10,
     streak_lookback: int = 2,
+    skip_recorder=None,
 ) -> StreakSpreadTightAlgorithm:
     """Instantiate and return the StreakSpreadTightAlgorithm.
 
@@ -321,6 +354,11 @@ def get_execution_algorithm(
         Minimum samples before spread logic activates. Default 10.
     streak_lookback : int
         Number of consecutive losses to trigger streak skip. Default 2.
+    skip_recorder : SkipRecorder | None
+        Optional per-run buffer that records each skip decision for
+        counterfactual P&L attribution (issue #66). Injected by the
+        research harness; absent when the algorithm is wired up
+        manually.
     """
     config = StreakSpreadTightConfig(
         exec_algorithm_id=ExecAlgorithmId(exec_id),
@@ -329,4 +367,4 @@ def get_execution_algorithm(
         min_spread_window=min_spread_window,
         streak_lookback=streak_lookback,
     )
-    return StreakSpreadTightAlgorithm(config=config)
+    return StreakSpreadTightAlgorithm(config=config, skip_recorder=skip_recorder)

@@ -31,9 +31,14 @@ class SimpleExecutionAlgorithm(ExecAlgorithm):
         self.submit_order(order)
 
 
-def get_execution_algorithm(exec_id: str = "MY_GENERIC_ALGO"):
+def get_execution_algorithm(exec_id: str = "MY_GENERIC_ALGO", skip_recorder=None):
     """
     Instantiate and return the custom execution algorithm.
+
+    ``skip_recorder`` is accepted for interface uniformity with skip-aware
+    algorithms (issue #66). The simple algorithm never skips, so the
+    recorder stays empty.
     """
+    del skip_recorder
     config = SimpleExecutionAlgorithmConfig(exec_algorithm_id=ExecAlgorithmId(exec_id))
     return SimpleExecutionAlgorithm(config=config)

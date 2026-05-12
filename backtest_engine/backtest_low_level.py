@@ -17,6 +17,11 @@ from nautilus_trader.model.identifiers import ClientId
 from backtest_engine.arrival_price import attach_implementation_shortfall
 from backtest_engine.data_loader import load_dbn_partition
 from backtest_engine.results import Reports, compute_metrics, persist
+from backtest_engine.skip_attribution import (
+    DEFAULT_HORIZON_SECONDS,
+    SkipRecorder,
+    attach_skip_attribution,
+)
 from execution_algos import create_execution_algorithm
 from strategies import create_strategy
 from strategies.databento_oracle_strategy import OracleSignal, build_oracle_signals
@@ -105,6 +110,12 @@ def run_backtest(
     if execution_algorithm_name == "simple":
         execution_options.setdefault("exec_id", "MY_GENERIC_ALGO")
 
+    # Every algorithm gets a SkipRecorder, even ones that never skip — the
+    # baseline run will simply produce an empty skipped_attribution.json,
+    # which keeps the per-run artifact set uniform across algorithms.
+    skip_recorder = SkipRecorder()
+    execution_options.setdefault("skip_recorder", skip_recorder)
+
     strategy = create_strategy(strategy_name, **strategy_options)
     engine.add_strategy(strategy=strategy)
 
@@ -126,10 +137,26 @@ def run_backtest(
         positions=engine.trader.generate_positions_report(),
     )
 
+    # The skip-attribution counterfactual measures P&L over the strategy's
+    # natural signal lifetime. For the oracle strategy that's
+    # `horizon_seconds` from strategy_kwargs; everything else falls back
+    # to the module default (currently matches the oracle default).
+    skip_horizon = float(
+        (oracle_options or {}).get("horizon_seconds", DEFAULT_HORIZON_SECONDS)
+    )
+    skips_df, skip_summary = attach_skip_attribution(
+        skip_recorder,
+        ticks,
+        horizon_seconds=skip_horizon,
+        multiplier=float(instrument.multiplier),
+    )
+
     metrics = {
         **compute_metrics(reports, starting_balance=STARTING_BALANCE_USD),
         **is_metrics,
         "unrealized_pnl": _unrealized_pnl(reports.positions, ticks, instrument),
+        "skipped_count": skip_summary["skipped_count"],
+        "skip_precision": skip_summary["precision"],
     }
 
     execution_dir_name = EXECUTION_DIRS.get(execution_algorithm_name, execution_algorithm_name)
@@ -138,6 +165,8 @@ def run_backtest(
         date=date,
         metrics=metrics,
         reports=reports,
+        skip_attribution=skip_summary,
+        skips=skips_df,
     )
     print(f"Run artifact: {run_dir}")
 

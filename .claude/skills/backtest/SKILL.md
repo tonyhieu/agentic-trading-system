@@ -120,11 +120,52 @@ execution_algos/<algo-id>/results/
 ├── metadata.json                               # committed — reproduction record (runs[]); written by write_metadata()
 └── <YYYYMMDD>/                                 # per-run dir (one per trading date, auto-created by run_backtest() → persist())
     ├── metrics.json                             # committed — summary stats; see metrics-schema.md
+    ├── skipped_attribution.json                 # committed — per-skip counterfactual P&L summary (issue #66)
     ├── account.csv                              # gitignored — equity curve
     ├── orders.csv                               # gitignored — order log (with commissions, slippage)
     ├── fills.csv                                # gitignored — fill log
-    └── positions.csv                            # gitignored — position log (entry, realized_pnl, etc.)
+    ├── positions.csv                            # gitignored — position log (entry, realized_pnl, etc.)
+    └── skips.csv                                # gitignored — per-skip detail (only when the algo skipped anything)
 ```
+
+### Skip attribution (`skipped_attribution.json`)
+
+When an execution algorithm declines to submit an OPEN order, the
+harness records the would-be counterfactual fill at top-of-book and
+looks the mid up at `ts_event + horizon_seconds` (default 30s, matching
+the oracle strategy's signal lifetime). The resulting per-skip would-be
+P&L is bucketed into `negative` / `near_zero` / `positive`:
+
+```json
+{
+  "date": "2026-03-08",
+  "skipped_count": 12430,
+  "attributed_count": 12100,
+  "would_be_pnl_distribution": {"negative": 4100, "near_zero": 5200, "positive": 2800},
+  "would_be_pnl_total": -1830.5,
+  "precision": 0.339,
+  "recall": null,
+  "horizon_seconds": 30.0
+}
+```
+
+`precision = negative_count / attributed_count` answers the
+researcher's central question: is the filter precisely rejecting
+losers, or just removing volume? A high-precision filter (≫ 0.5)
+discriminates; a flat distribution (≈ 1/3 in each bucket) just trims
+volume. Algorithms that never skip emit an empty record (counts all
+zero) — the baseline run keeps the artifact set uniform.
+
+Wire-up for new skip-aware algorithms:
+1. Add `skip_recorder=None` to the `get_execution_algorithm` signature
+   and pass it through to the algo constructor.
+2. At every skip site call
+   `self._skip_recorder.record(ts_event=..., instrument_id=..., parent_order_id=..., side=..., quantity=..., bid=..., ask=..., trigger=...)`.
+
+The harness instantiates one `SkipRecorder` per `run_backtest()` call
+and injects it via `execution_algorithm_kwargs`. Algorithms that never
+skip can ignore the kwarg (see `simple_execution_strategy` for the
+no-op pattern).
 
 Committed files: `backtest-results.json`, `metadata.json`, and each
 `<run>/metrics.json`. Everything else is gitignored.
