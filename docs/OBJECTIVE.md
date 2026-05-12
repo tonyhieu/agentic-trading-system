@@ -46,7 +46,7 @@ until a passing algorithm is found or the iteration budget in
 3. IMPLEMENT execution_algos/<algo-id>/execution_algorithm.py + register in factory
 4. BACKTEST your algo + baseline over **train** dates with `python scripts/run_research_backtest.py --algo <algo-id>`. Test is held out for Lambda.
 5. COMPARE backtest-results.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
-6. APPEND entry to research/program_database.json + git commit on a fresh `iter/<algo-id>-<timestamp>` branch (the SubagentStop hook backfills `meta` and pushes the branch to `origin`)
+6. APPEND entry to research/program_database.json + row to research/overview.csv + git commit on a fresh `iter/<algo-id>-<timestamp>` branch (the SubagentStop hook backfills `meta` and pushes the branch to `origin`)
 7. On PASS: git push origin snapshots/<algo-id> — this triggers the Lambda evaluator on test
 8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (the `evaluate` skill)
 ```
@@ -238,10 +238,24 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    FAIL  — does not meet gate                     → log reason
 
 8. LOG to research/program_database.json (every attempt — pass, close, or fail)
-   Append the entry, then commit it together with the algorithm code on a
-   fresh per-iteration branch (so the base branch stays clean):
+   Append the entry. Also append one row to research/overview.csv —
+   a flat, scannable view of every attempt with these columns
+   (read values from execution_algos/<algo-id>/results/backtest-results.json):
+
+     | CSV column                      | Source                                       |
+     |---------------------------------|----------------------------------------------|
+     | algo_name                       | top-level `algo_name`                        |
+     | status                          | this iteration's decision (pass/close/fail)  |
+     | total_pnl                       | `performance.realized_pnl`                   |
+     | sharpe_ratio                    | `performance.sharpe_ratio`                   |
+     | implementation_shortfall_bps    | `performance.is_weighted_bps`                |
+     | trade_count                     | `performance.trade_count`                    |
+     | win_rate                        | `performance.win_rate`                       |
+
+   Then commit both files together with the algorithm code on a fresh
+   per-iteration branch (so the base branch stays clean):
      git checkout -b iter/<algo-id>-$(date -u +%Y%m%dT%H%M%SZ)
-     git add execution_algos/<algo-id>/ research/program_database.json
+     git add execution_algos/<algo-id>/ research/program_database.json research/overview.csv
      git commit -m "<algo-id>: <status>, +X.X% pnl vs baseline"
    Stay on the iter branch when the invocation ends — the `SubagentStop`
    hook will land its metadata-backfill commit on the same branch and then
@@ -414,6 +428,10 @@ File: `research/program_database.json` — JSON array, append-only.
 - `baseline` records which gate baseline was used (for reproducibility when the config changes).
 - No structured lineage between entries — if an algorithm builds on a prior one, that relationship lives in the algorithm's `NOTES.md` Hypothesis prose, not here.
 - Write and `git add` together with the algorithm code in one commit (§5 step 8).
+- A flat sibling view lives at `research/overview.csv` — append one row per
+  attempt at the same time you append to the database (column mapping in §5
+  step 8). The CSV is a scannable derived view; `program_database.json`
+  remains the canonical record.
 
 **Execution metadata (`meta` block)**:
 
