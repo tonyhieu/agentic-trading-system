@@ -20,6 +20,7 @@ doing anything else.
   - `snapshot` — saving a passing execution algorithm to S3
   - `evaluate` — retrieving the Lambda evaluator's out-of-sample report after snapshotting
 - **Runtime state**: `research/`
+  - `CONTEXT_SNAPSHOT.md` — auto-regenerated boot summary (recent DB entries, live gate thresholds, recent NOTES.md, cross-window comparability flag). Read first; fall back to the full files only for detail.
   - `program_database.json` — append-only log of every attempt (read on entry, write on exit)
   - `NOTES.md` — assumption alerts for the human operator (§8)
 - **Algorithm code**: `execution_algos/<algo-id>/` — kebab-case IDs

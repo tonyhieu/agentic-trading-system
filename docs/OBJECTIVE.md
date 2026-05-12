@@ -41,7 +41,9 @@ until a passing algorithm is found or the iteration budget in
 ## 1.1 Action sequence (TL;DR — full details in §§3–9)
 
 ```
-1. READ  research/program_database.json + docs/literature/ for context
+1. READ  research/CONTEXT_SNAPSHOT.md (boot summary) + docs/literature/ for context.
+   Fall back to research/program_database.json, research/NOTES.md, or
+   research/config.yaml only when you need a specific entry's detail.
 2. HYPOTHESIZE → write Hypothesis section in NOTES.md before any code
 3. IMPLEMENT execution_algos/<algo-id>/execution_algorithm.py + register in factory
 4. BACKTEST your algo + baseline over **train** dates with `python scripts/run_research_backtest.py --algo <algo-id>`. Test is held out for Lambda.
@@ -158,9 +160,21 @@ Each invocation of the researcher = **one pass** of this loop. The agent does
 not loop internally. The human (or a future orchestrator) is the loop driver.
 
 ```
-1. READ research/program_database.json
-   What has been tried? What scored well? What failed and why?
-   Check loop caps in config.yaml — refuse if exceeded:
+1. READ research/CONTEXT_SNAPSHOT.md (boot summary)
+   Auto-regenerated on every SubagentStop. Contains: live gate thresholds
+   from config.yaml, the most recent 3 program-DB entries summarized, the
+   most recent 3 NOTES.md entries, current branch/commit, and a cross-window
+   comparability flag if the newest entry was scored on different train_dates
+   than the most-recent prior PASS.
+
+   Fall back to the authoritative files only when you need detail not in
+   the snapshot:
+   - research/program_database.json for an older entry's full notes/scores
+   - research/NOTES.md for an older alert's full text
+   - research/config.yaml for fields the snapshot doesn't surface
+
+   Check loop caps (visible in the snapshot, or read from config.yaml) —
+   refuse if exceeded:
      - max_iterations across all entries
      - stop_after_consecutive_failures (last N FAILs)
 
@@ -374,6 +388,7 @@ File: `research/program_database.json` — JSON array, append-only.
   "baseline": "simple",
   "hypothesis": "Slow during high-vol reduces adverse selection.",
   "algorithm_path": "execution_algos/twap-volatility-aware/",
+  "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
   "scores": {"sharpe": 1.42, "realized_pnl": 3200.50, "mean_slippage": 0.0012,
              "vs_baseline_pnl_pct": 14.2, "vs_baseline_slippage_pct": -3.1,
              "trade_count": 134, "passed": true},
@@ -402,6 +417,7 @@ File: `research/program_database.json` — JSON array, append-only.
   visible in `backtest-results.json`. Future agents reading the database
   must also read the algorithm's `backtest-results.json` for the full picture.
 - `baseline` records which gate baseline was used (for reproducibility when the config changes).
+- `train_dates` is the **list of ISO dates actually backtested** for this entry (one element per date partition the runner produced metrics for). It is a queryable record of the train window the entry was scored on, so future agents can detect when two entries' scores are not directly comparable (e.g., 3-date vs 12-date windows). Write the dates explicitly — do not abbreviate as a range, and do not rely on `data_window.train` in `config.yaml`, which is the configured window, not necessarily the dates a particular run touched.
 - No structured lineage between entries — if an algorithm builds on a prior one, that relationship lives in the algorithm's `NOTES.md` Hypothesis prose, not here.
 - Write and `git add` together with the algorithm code in one commit (§5 step 8).
 

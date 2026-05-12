@@ -5,6 +5,7 @@
     "baseline": "simple",
     "hypothesis": "Participation-cap-aware sizing: skip orders when floor(0.05 * top_book_qty) == 0, submit 1-lot when cap == 1, spawn a 2-lot child market order when cap >= 2 to double position size on thick-book ticks. Reduce-only orders match the actual open-position quantity to keep close-tracking consistent.",
     "algorithm_path": "execution_algos/cap-boost/",
+    "train_dates": ["2026-03-09"],
     "scores": {
       "sharpe": 46.03,
       "realized_pnl": 42.71,
@@ -23,6 +24,7 @@
     "baseline": "simple",
     "hypothesis": "Participation-cap-compliant deferred execution: when an open order arrives and floor(0.05 * top_book_qty) == 0, queue it and retry on each subsequent quote tick for up to max_defer_ticks (default 3). Submit when the book thickens or unconditionally at expiry. Reduce-only orders submit immediately to preserve intraday_flat. Quantity invariant preserved (no size inflation) \u2014 pitched as a cap-compliant alternative to cap-boost without its quantity violation.",
     "algorithm_path": "execution_algos/twap-defer/",
+    "train_dates": ["2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": 316.32,
       "realized_pnl": 4345.5,
@@ -41,6 +43,7 @@
     "baseline": "simple",
     "hypothesis": "Order-book imbalance conditioned skip: at submission time compute imbalance = (bid_size - ask_size) / (bid_size + ask_size). For a BUY, skip if imbalance > 0.5 (bid-heavy, buying pressure consuming the ask \u2014 adverse entry). For a SELL, skip if imbalance < -0.5 (ask-heavy, adverse). Reduce-only (close) orders submit immediately. No deferral \u2014 pure conditional skip at decision time, preserving quantity invariant. Draws from Almgren/Chriss (2000) \u00a74 (value of drift/directional information) and Diverse Approaches 2026 (order-book imbalance as key execution state feature).",
     "algorithm_path": "execution_algos/imbalance-skip/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": 293.07,
       "realized_pnl": 5730.75,
@@ -59,6 +62,7 @@
     "baseline": "simple",
     "hypothesis": "Mid-price momentum conditioned skip: at submission time compare the current mid-price to the mid-price at the previous order decision. For a BUY, skip if mid rose >= 1 tick (0.25 pts) since the last signal decision (price already ran \u2014 adverse entry). For a SELL, skip if mid fell >= 1 tick. Reduce-only orders always submit. Pure skip, no deferral. Builds on imbalance-skip (prior iteration) using a different signal: inter-signal price momentum rather than static book depth imbalance.",
     "algorithm_path": "execution_algos/momentum-skip/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": 293.58,
       "realized_pnl": 5732.5,
@@ -77,6 +81,7 @@
     "baseline": "simple",
     "hypothesis": "Oracle signal consensus filter: track the direction (BUY/SELL) of the last N=5 parent orders. Execute the current order only when at least min_agreement_frac=0.6 (3-of-5) of the recent window match the current direction. When the oracle oscillates (low-quality / noisy period), the consensus threshold blocks execution, selectively skipping low-conviction signals. Reduce-only orders always execute. Builds on momentum-skip suggestion to track oracle's own directional consistency rather than external microstructure signals.",
     "algorithm_path": "execution_algos/signal-consensus/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": null,
       "realized_pnl": 5707.5,
@@ -105,6 +110,7 @@
     "baseline": "simple",
     "hypothesis": "Bid-ask spread conditioned skip: at order submission, compute current spread from top-of-book quote. Track a rolling window of 60 recent spread values. Skip open (non-reduce-only) orders when spread > 2.0 \u00d7 median(recent_spreads). Reduce-only orders always execute. Wide spreads signal high uncertainty regimes where the oracle's noisy 30s forecast is less reliable. This is distinct from prior imbalance-skip (which used bid/ask depth ratio) \u2014 spread width captures a different dimension of market-maker uncertainty.",
     "algorithm_path": "execution_algos/spread-filter/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": 102.64,
       "realized_pnl": 1622.5,
@@ -133,6 +139,7 @@
     "baseline": "simple",
     "hypothesis": "Bid-ask spread conditioned skip with a tighter 1.3x threshold (vs 2.0x in spread-filter). Builds directly on spread-filter which achieved +2.25% with only 0.2% skip rate at 2.0x. By lowering to 1.3x, the filter fires on ~4.5% of trades (5x more), producing a proportionally larger P&L delta. Under sigma=5 (48% oracle win rate), elevated spread identifies adverse entry moments where oracle reliability is lower \u2014 the skip filter removes a subset of trades with below-average win rate, improving aggregate P&L per executed trade.",
     "algorithm_path": "execution_algos/spread-filter-tight/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": 117.23,
       "realized_pnl": 1818.5,
@@ -157,6 +164,7 @@
     "baseline": "simple",
     "hypothesis": "Consecutive-loss streak + tight-spread conditioned skip: skip the open leg of an oracle signal when EITHER (a) last 2 consecutive closed positions both had negative estimated PnL (streak signal), OR (b) current spread > 1.3x rolling 60-tick median (spread signal, same as spread-filter-tight). Builds on spread-filter-tight (PASS, +14.61%). One targeted change: adds streak condition as a second OR skip trigger. The streak captures serial correlation in adverse oracle regimes not detected by spread alone.",
     "algorithm_path": "execution_algos/streak-spread-skip/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10"],
     "scores": {
       "sharpe": 128.06,
       "realized_pnl": 1901.75,
@@ -187,6 +195,7 @@
     "baseline": "simple",
     "hypothesis": "Tighter spread threshold (1.1x vs 1.3x in streak-spread-skip) on consecutive-loss streak + spread conditioned skip. The full 12-date train window has many high-volume days with win rates 32-38% (vs 47-49% on the 3 dates used to calibrate streak-spread-skip). A tighter spread threshold fires more often, skipping more adverse signals on low-win-rate, high-volume days. ONE targeted change vs streak-spread-skip: spread_multiplier 1.3 -> 1.1.",
     "algorithm_path": "execution_algos/streak-spread-tight/",
+    "train_dates": ["2026-03-08", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20"],
     "scores": {
       "sharpe": 2.76,
       "realized_pnl": 4772.0,

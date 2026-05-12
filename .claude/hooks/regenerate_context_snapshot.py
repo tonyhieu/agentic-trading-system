@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+"""SubagentStop hook: regenerate `research/CONTEXT_SNAPSHOT.md` from the current
+state of `research/program_database.json`, `research/config.yaml`, and
+`research/NOTES.md`.
+
+The snapshot is a ~150-line summary that the next research-agent invocation
+reads first to orient itself, instead of re-reading ~1000 lines of static
+context across four files. The full files remain authoritative; the snapshot
+is derived and rewritten on every SubagentStop.
+
+Best-effort: any failure (missing file, malformed YAML/JSON, no git) is
+silently swallowed — the worst case is a stale snapshot, which falls back
+to the agent reading the full files.
+
+Cross-window comparison flag: if the most-recent program-DB entry's
+`train_dates` differs from the most-recent prior PASS's `train_dates`, the
+snapshot prints a warning line so the next agent (and human readers) see
+that the headline magnitude is not directly comparable to prior PASSes.
+"""
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+try:
+    import yaml  # type: ignore
+except ImportError:
+    yaml = None  # type: ignore
+
+
+SNAPSHOT_FILENAME = "CONTEXT_SNAPSHOT.md"
+N_RECENT_ENTRIES = 3
+N_RECENT_NOTES = 3
+
+
+def _load_db(path: Path) -> list[dict[str, Any]]:
+    try:
+        data = json.loads(path.read_text())
+        return data if isinstance(data, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def _load_config(path: Path) -> dict[str, Any]:
+    if yaml is None:
+        return {}
+    try:
+        return yaml.safe_load(path.read_text()) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def _parse_notes(path: Path, n: int) -> list[str]:
+    """Return the last `n` NOTES.md entries as raw markdown blocks
+    (heading + body until the next `---` separator or next `##` heading)."""
+    try:
+        text = path.read_text()
+    except OSError:
+        return []
+
+    blocks = re.split(r"^---\s*$", text, flags=re.MULTILINE)
+    entries: list[str] = []
+    for block in blocks:
+        stripped = block.strip()
+        if stripped.startswith("## "):
+            entries.append(stripped)
+    return entries[-n:]
+
+
+def _git(cwd: str, *args: str) -> str | None:
+    try:
+        out = subprocess.run(
+            ["git", "-C", cwd, *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return out.stdout.strip()
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
+        return None
+
+
+def _summarize_entry(entry: dict[str, Any]) -> str:
+    eid = entry.get("id", "?")
+    status = entry.get("status", "?").upper()
+    scores = entry.get("scores") or {}
+    pnl_pct = scores.get("vs_baseline_pnl_pct")
+    trades = scores.get("trade_count")
+    train_dates = entry.get("train_dates") or []
+    n_dates = len(train_dates)
+    date_range = (
+        f"{train_dates[0]}…{train_dates[-1]} ({n_dates}d)"
+        if train_dates
+        else "no train_dates field"
+    )
+    hypothesis = entry.get("hypothesis", "") or ""
+    first_sentence = re.split(r"(?<=[.!?])\s+", hypothesis, maxsplit=1)[0]
+    if len(first_sentence) > 240:
+        first_sentence = first_sentence[:237] + "..."
+    pnl_str = f"{pnl_pct:+.2f}%" if isinstance(pnl_pct, (int, float)) else "n/a"
+    return (
+        f"- **{eid}** — {status}, pnl {pnl_str} vs baseline, {trades} trades, train={date_range}\n"
+        f"  - {first_sentence}"
+    )
+
+
+def _train_dates_flag(db: list[dict[str, Any]]) -> str | None:
+    """If the newest entry's `train_dates` differs from the most recent prior
+    PASS's `train_dates`, return a one-line warning. Otherwise None."""
+    if len(db) < 2:
+        return None
+    newest = db[-1]
+    newest_dates = newest.get("train_dates")
+    if not newest_dates:
+        return None
+    for prior in reversed(db[:-1]):
+        if prior.get("status") != "pass":
+            continue
+        prior_dates = prior.get("train_dates")
+        if not prior_dates:
+            continue
+        if list(prior_dates) != list(newest_dates):
+            return (
+                f"⚠ Cross-window flag: latest entry `{newest.get('id')}` ran on "
+                f"{len(newest_dates)} date(s) ({newest_dates[0]}…{newest_dates[-1]}); "
+                f"most recent prior PASS `{prior.get('id')}` ran on "
+                f"{len(prior_dates)} date(s) ({prior_dates[0]}…{prior_dates[-1]}). "
+                f"PnL deltas are not directly comparable."
+            )
+        return None
+    return None
+
+
+def _render(
+    db: list[dict[str, Any]],
+    cfg: dict[str, Any],
+    notes: list[str],
+    branch: str | None,
+    commit: str | None,
+) -> str:
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+    lines: list[str] = []
+    lines.append("# Research Context Snapshot")
+    lines.append("")
+    lines.append(
+        "Auto-generated by `.claude/hooks/regenerate_context_snapshot.py` on every "
+        "SubagentStop. **Read this first** instead of the full OBJECTIVE.md / "
+        "program_database.json / NOTES.md — they are the source of truth, but this "
+        "file is the bootable summary. Fall back to the full files only when you "
+        "need a specific entry's detail."
+    )
+    lines.append("")
+    lines.append(f"- Generated: {now}")
+    if branch:
+        lines.append(f"- Branch: `{branch}`")
+    if commit:
+        lines.append(f"- Commit: `{commit}`")
+    lines.append(f"- Program-DB entries: {len(db)}")
+    lines.append("")
+
+    flag = _train_dates_flag(db)
+    if flag:
+        lines.append("## ⚠ Comparability flag")
+        lines.append("")
+        lines.append(flag)
+        lines.append("")
+
+    lines.append("## Live gate thresholds (from `research/config.yaml`)")
+    lines.append("")
+    pass_gate = cfg.get("pass_gate") or {}
+    refinement = (cfg.get("refinement") or {}).get("targets") or {}
+    data_window = cfg.get("data_window") or {}
+    strategy = cfg.get("strategy") or {}
+    sk = strategy.get("kwargs") or {}
+    loop = cfg.get("loop") or {}
+    lines.append(f"- baseline: `{pass_gate.get('baseline')}`")
+    lines.append(
+        f"- pass_gate: min_pnl_improvement_pct={pass_gate.get('min_pnl_improvement_pct')}, "
+        f"max_slippage_regression_pct={pass_gate.get('max_slippage_regression_pct')}, "
+        f"close_margin_pct={pass_gate.get('close_margin_pct')}"
+    )
+    lines.append(
+        f"- refinement.targets: min_sharpe_delta={refinement.get('min_sharpe_delta')}, "
+        f"min_pnl_delta_pct={refinement.get('min_pnl_delta_pct')}, "
+        f"max_slippage_delta_pct={refinement.get('max_slippage_delta_pct')}, "
+        f"min_winrate_delta_pp={refinement.get('min_winrate_delta_pp')}, "
+        f"min_mdd_delta_pp={refinement.get('min_mdd_delta_pp')}"
+    )
+    lines.append(
+        f"- data_window: train={data_window.get('train')}, test={data_window.get('test')}, "
+        f"max_days_per_iteration={data_window.get('max_days_per_iteration')}"
+    )
+    lines.append(
+        f"- strategy: name=`{strategy.get('name')}`, sigma={sk.get('sigma')}, "
+        f"horizon_seconds={sk.get('horizon_seconds')}, seed={sk.get('seed')}, "
+        f"signal_interval_seconds={sk.get('signal_interval_seconds')}"
+    )
+    lines.append(
+        f"- loop: max_iterations={loop.get('max_iterations')}, "
+        f"stop_after_consecutive_failures={loop.get('stop_after_consecutive_failures')}"
+    )
+    lines.append("")
+
+    lines.append(f"## Most recent {N_RECENT_ENTRIES} program-DB entries")
+    lines.append("")
+    recent = db[-N_RECENT_ENTRIES:]
+    if not recent:
+        lines.append("_(database is empty)_")
+    for entry in recent:
+        lines.append(_summarize_entry(entry))
+    lines.append("")
+
+    lines.append(f"## Most recent {N_RECENT_NOTES} `research/NOTES.md` entries")
+    lines.append("")
+    if not notes:
+        lines.append("_(NOTES.md has no `## …` entries)_")
+    else:
+        for block in notes:
+            lines.append(block)
+            lines.append("")
+
+    lines.append("---")
+    lines.append("")
+    lines.append(
+        "_Authoritative sources: `docs/OBJECTIVE.md` (procedure), "
+        "`research/config.yaml` (values), `research/program_database.json` (history), "
+        "`research/NOTES.md` (alerts). This snapshot is regenerated automatically; "
+        "do not hand-edit._"
+    )
+    return "\n".join(lines) + "\n"
+
+
+def main() -> None:
+    try:
+        payload = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return
+
+    cwd = payload.get("cwd")
+    if not cwd:
+        return
+
+    research = Path(cwd) / "research"
+    db_path = research / "program_database.json"
+    cfg_path = research / "config.yaml"
+    notes_path = research / "NOTES.md"
+    out_path = research / SNAPSHOT_FILENAME
+
+    if not db_path.exists():
+        return
+
+    db = _load_db(db_path)
+    cfg = _load_config(cfg_path)
+    notes = _parse_notes(notes_path, N_RECENT_NOTES)
+    branch = _git(cwd, "rev-parse", "--abbrev-ref", "HEAD")
+    commit = _git(cwd, "rev-parse", "--short", "HEAD")
+
+    rendered = _render(db, cfg, notes, branch, commit)
+
+    try:
+        out_path.write_text(rendered)
+    except OSError:
+        return
+
+
+if __name__ == "__main__":
+    main()

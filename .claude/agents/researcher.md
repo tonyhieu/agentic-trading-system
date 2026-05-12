@@ -52,7 +52,11 @@ The user prompt may be:
 
 ## Procedure
 
-1. **Read state**: `research/config.yaml` and `research/program_database.json`.
+1. **Read state**: `research/CONTEXT_SNAPSHOT.md` first (auto-regenerated
+   boot summary — live gate thresholds, last 3 program-DB entries, last 3
+   `NOTES.md` entries, cross-window comparability flag). Fall back to
+   `research/config.yaml`, `research/program_database.json`, or
+   `research/NOTES.md` only for detail the snapshot does not surface.
 2. **Check loop caps** (refuse with a clear message if exceeded):
    - `loop.max_iterations` — total entries in the program DB
    - `loop.stop_after_consecutive_failures` — last N entries
