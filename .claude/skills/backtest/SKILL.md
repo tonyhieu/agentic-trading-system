@@ -206,7 +206,10 @@ It reads `cfg["data_window"]["train"]`, pairs your algo with the baseline
 and aggregates per `snapshot/SKILL.md §3` into
 `execution_algos/<algo-id>/results/backtest-results.json`.
 
-Useful flags: `--baseline-only` (refresh the baseline only),
+Useful flags: `--use-cached-baseline` (skip the deterministic baseline
+subprocess and read its cached metrics.json from disk; ~50% faster per
+iteration — use this by default unless you've changed strategy.kwargs),
+`--baseline-only` (refresh the baseline cache),
 `--dates 20260308,20260309` (override the config train dates for
 debugging), `--dry-run` (print the plan and exit). Run with `--help` for
 the full list.
