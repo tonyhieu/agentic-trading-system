@@ -1,6 +1,6 @@
 """Capture, compute, and persist a single backtest run as a comparable artifact.
 
-A run lands at `{strategy_dir}/results/{timestamp}-{shortsha}/` containing:
+A run lands at `{strategy_dir}/results/{trading_date}/` containing:
 - metrics.json:  summary stats for cross-run comparison (committed)
 - account.csv, orders.csv, fills.csv, positions.csv: raw Nautilus reports (gitignored)
 
@@ -13,9 +13,7 @@ from __future__ import annotations
 import ast
 import json
 import math
-import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -32,17 +30,6 @@ class Reports:
     orders: pd.DataFrame
     fills: pd.DataFrame
     positions: pd.DataFrame
-
-
-def _git_short_sha() -> str:
-    try:
-        out = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, check=True,
-        )
-        return out.stdout.strip()
-    except Exception:
-        return "nogit"
 
 
 def _coerce(v: Any) -> Any:
@@ -203,21 +190,19 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
 
 def persist(
     strategy_dir: Path,
+    date: str,
     metrics: dict[str, Any],
     reports: Reports,
 ) -> Path:
-    """Write a run to `{strategy_dir}/results/{trading_date}-{shortsha}/` and return that path."""
-    trading_date = metadata.get("date")
-    if not trading_date:
-        raise ValueError("persist() requires metadata['date'] (trading date)")
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
-    sha = _git_short_sha()
-    run_dir = strategy_dir / "results" / f"{trading_date}-{sha}"
+    """Write a run to `{strategy_dir}/results/{date}/` and return that path."""
+    if not date:
+        raise ValueError("persist() requires a trading date")
+    run_dir = strategy_dir / "results" / date
     if run_dir.exists():
         raise FileExistsError(
             f"Refusing to overwrite existing run dir {run_dir}. "
-            f"A backtest for trading date {trading_date} at commit {sha} already "
-            f"exists. Remove it manually if you want to rerun."
+            f"A backtest for trading date {date} already exists. "
+            f"Remove it manually if you want to rerun."
         )
     run_dir.mkdir(parents=True)
 

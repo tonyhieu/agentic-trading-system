@@ -189,7 +189,17 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
 5. BACKTEST (train window only)
    Run:
 
-       python scripts/run_research_backtest.py --algo <algo-id>
+       python scripts/run_research_backtest.py --algo <algo-id> --use-cached-baseline
+
+   `--use-cached-baseline` skips the deterministic baseline subprocess and
+   reads its existing per-date metrics.json files from disk
+   (execution_algos/<baseline_dir>/results/<date>/metrics.json), cutting
+   per-iteration compute by ~50%. If you have changed
+   config.yaml → strategy.kwargs since the cache was last computed,
+   refresh first with `python scripts/run_research_backtest.py
+   --baseline-only` and then rerun the line above. Do NOT hand-roll a
+   per-algo runner script — that workaround pattern has been eliminated;
+   use this flag instead.
 
    This reads config.yaml → data_window.train and pairs your algo with the
    baseline (cfg["pass_gate"]["baseline"]) on each train date in fresh
@@ -217,7 +227,7 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    expectation given the hypothesis. For aggregation rules (sum / mean /
    min / weighted) see snapshot/SKILL.md §3; for the underlying per-date
    metrics if you need to drill down, see the
-   results/<YYYYMMDD>-<sha>/metrics.json files referenced in run_dirs.
+   results/<YYYYMMDD>/metrics.json files referenced in run_dirs.
 
    Append backtest observations to execution_algos/<algo-id>/NOTES.md (§10).
 
@@ -295,7 +305,7 @@ gate at all, status=FAIL/CLOSE per §5 step 7.
 See the **`snapshot` skill** for the full procedure. Quick version:
 
 1. Confirm the latest run dir exists at
-   `execution_algos/<algo-id>/results/<YYYYMMDD>-<sha>/` (created by
+   `execution_algos/<algo-id>/results/<YYYYMMDD>/` (created by
    `run_backtest()`, one folder per trading date in the train window).
 2. Ensure `execution_algos/<algo-id>/NOTES.md` has all sections filled in (§10).
 3. From inside the project (Docker is fine):

@@ -118,7 +118,7 @@ Full results layout for an algorithm:
 execution_algos/<algo-id>/results/
 ├── backtest-results.json                       # committed — aggregate; written by scripts/run_research_backtest.py
 ├── metadata.json                               # committed — reproduction record (runs[]); written by write_metadata()
-└── <YYYYMMDD>-<short-sha>/                     # per-run dir (one per trading date, auto-created by run_backtest() → persist())
+└── <YYYYMMDD>/                                 # per-run dir (one per trading date, auto-created by run_backtest() → persist())
     ├── metrics.json                             # committed — summary stats; see metrics-schema.md
     ├── account.csv                              # gitignored — equity curve
     ├── orders.csv                               # gitignored — order log (with commissions, slippage)
@@ -134,10 +134,10 @@ Committed files: `backtest-results.json`, `metadata.json`, and each
 (`scripts/run_research_backtest.py`) then writes the two top-level files:
 `backtest-results.json` aggregates per-date metrics across the train window,
 and `metadata.json` reconstructs the reproduction record from `cfg` plus
-each per-run dir's `<YYYYMMDD>-<short-sha>` name. There is no per-run
-metadata sidecar — the dir name itself (trading date + commit short SHA)
-is the per-run identity. Rerunning the same trading date at the same
-commit raises `FileExistsError` — remove the old directory first.
+each per-run dir's `<YYYYMMDD>` name. There is no per-run metadata sidecar
+— the dir name itself (trading date) is the per-run identity. Rerunning
+the same trading date raises `FileExistsError` — remove the old directory
+first.
 
 The top-level `metadata.json` is the canonical reproduction record for the
 algorithm.
@@ -206,7 +206,13 @@ It reads `cfg["data_window"]["train"]`, pairs your algo with the baseline
 and aggregates per `snapshot/SKILL.md §3` into
 `execution_algos/<algo-id>/results/backtest-results.json`.
 
-Useful flags: `--baseline-only` (refresh the baseline only),
+Useful flags: `--use-cached-baseline` (skip the deterministic baseline
+subprocess and read its cached metrics.json from disk; ~50% faster per
+iteration — use this by default unless you've changed strategy.kwargs),
+`--baseline-only` (rebuild the baseline cache for the selected dates, but
+it does **not** overwrite an existing `results/<YYYYMMDD>/` directory; to
+refresh a cached baseline for a date you've already run, manually delete
+that date's baseline results directory first, then rerun),
 `--dates 20260308,20260309` (override the config train dates for
 debugging), `--dry-run` (print the plan and exit). Run with `--help` for
 the full list.

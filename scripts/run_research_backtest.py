@@ -110,6 +110,14 @@ def parse_args() -> argparse.Namespace:
         help="Run only the baseline (refreshes its result dirs). Skip the algo.",
     )
     p.add_argument(
+        "--use-cached-baseline", action="store_true",
+        help="Skip the baseline subprocess; read existing "
+             "<baseline>/results/<date>/metrics.json from disk instead. "
+             "Missing cache entries surface as failures, same UX as today "
+             "when a baseline subprocess fails on a date with no DBN data. "
+             "Run --baseline-only first to populate or refresh the cache.",
+    )
+    p.add_argument(
         "--dry-run", action="store_true",
         help="Print the (date, algo) backtest plan and exit without running.",
     )
@@ -150,6 +158,28 @@ def algo_results_dir(algo_name: str) -> Path:
     """
     dir_name = EXECUTION_DIRS.get(algo_name, algo_name)
     return REPO_ROOT / "execution_algos" / dir_name / "results"
+
+
+def load_cached_baseline_metrics(baseline_name: str, date: str) -> dict:
+    """Read pre-computed baseline metrics for one date from disk.
+
+    Returns the same dict shape as `run_one()` (includes `_run_dir` and
+    `_date`). Raises FileNotFoundError if the metrics.json is absent — the
+    caller treats that like a subprocess failure and drops the date from
+    the comparable set.
+    """
+    run_dir = algo_results_dir(baseline_name) / date
+    metrics_file = run_dir / "metrics.json"
+    if not metrics_file.exists():
+        raise FileNotFoundError(
+            f"--use-cached-baseline: no metrics.json at "
+            f"{metrics_file.relative_to(REPO_ROOT)} "
+            f"(run `--baseline-only` to populate)"
+        )
+    metrics = json.loads(metrics_file.read_text())
+    metrics["_run_dir"] = str(run_dir.relative_to(REPO_ROOT))
+    metrics["_date"] = date
+    return metrics
 
 
 def newest_run_dir_excluding(results_dir: Path, exclude: set[Path]) -> Path | None:
@@ -417,20 +447,11 @@ def write_metadata(
 ) -> Path:
     """Write the consolidated `<algo>/results/metadata.json` reproduction file.
 
-    Constructed directly from `cfg`, the algorithm name, and the per-run dir
-    paths (which encode `<timestamp>-<short-sha>` in their names). No per-run
-    metadata sidecar is read or needed — the parent has everything required
-    to fully describe the reproduction.
+    Constructed directly from `cfg`, the algorithm name, and the per-run trading
+    dates. No per-run metadata sidecar is read or needed — the parent has
+    everything required to fully describe the reproduction.
     """
-    runs: list[dict] = []
-    for m in per_date_metrics:
-        run_dir_name = Path(m["_run_dir"]).name  # "<ts>-<sha>"
-        ts, sha = run_dir_name.rsplit("-", 1)
-        runs.append({
-            "date":          m["_date"],
-            "timestamp_utc": ts,
-            "git_sha_short": sha,
-        })
+    runs = [{"date": m["_date"]} for m in per_date_metrics]
 
     payload = {
         "strategy_name":             cfg["strategy"]["name"],
@@ -604,20 +625,38 @@ def main() -> int:
               f"Use --baseline-only to refresh just the baseline.", file=sys.stderr)
         return 2
 
+    if args.use_cached_baseline and args.baseline_only:
+        print("ERROR: --use-cached-baseline and --baseline-only are mutually "
+              "exclusive (one reads the cache, the other writes it).",
+              file=sys.stderr)
+        return 2
+
     # ----- plan -----
-    print(f"Plan: {len(dates) * (1 if args.baseline_only else 2)} backtest(s)")
+    if args.baseline_only:
+        planned = len(dates)
+    elif args.use_cached_baseline:
+        planned = len(dates)  # only the algo runs as a subprocess
+    else:
+        planned = len(dates) * 2
+    print(f"Plan: {planned} backtest(s)")
     print(f"  symbol  : {args.symbol}")
     print(f"  strategy: {cfg['strategy']['name']}")
     if not args.baseline_only:
         print(f"  algo    : {args.algo}")
-    print(f"  baseline: {baseline}")
+    baseline_mode = "cached" if args.use_cached_baseline else "subprocess"
+    print(f"  baseline: {baseline} ({baseline_mode})")
     print(f"  dates   : {', '.join(dates)}")
     if args.dry_run:
         print()
         for date in dates:
             if not args.baseline_only:
                 print(f"  - run_backtest(execution_algorithm={args.algo}, date={date})")
-            print(f"  - run_backtest(execution_algorithm={baseline}, date={date})")
+            if args.use_cached_baseline:
+                cached_path = algo_results_dir(baseline) / date / "metrics.json"
+                print(f"  - read cached baseline metrics: "
+                      f"{cached_path.relative_to(REPO_ROOT)}")
+            else:
+                print(f"  - run_backtest(execution_algorithm={baseline}, date={date})")
         print()
         print("(dry-run: no backtests executed)")
         return 0
@@ -642,18 +681,29 @@ def main() -> int:
                 print(f"    FAIL {exc}", file=sys.stderr)
                 failures.append((args.algo, date, str(exc)))
 
-        print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
-        try:
-            m = run_one(
-                algo_name=baseline, date=date,
-                symbol=args.symbol, config_path=args.config,
-            )
-            base_metrics[date] = m
-            print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                  f"sharpe={m['sharpe_ratio']:.2f}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"    FAIL {exc}", file=sys.stderr)
-            failures.append((baseline, date, str(exc)))
+        if args.use_cached_baseline:
+            print(f"\n>>> cached baseline({baseline}, {date}) ...", flush=True)
+            try:
+                m = load_cached_baseline_metrics(baseline, date)
+                base_metrics[date] = m
+                print(f"    CACHE trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                      f"sharpe={m['sharpe_ratio']:.2f}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"    FAIL {exc}", file=sys.stderr)
+                failures.append((baseline, date, str(exc)))
+        else:
+            print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
+            try:
+                m = run_one(
+                    algo_name=baseline, date=date,
+                    symbol=args.symbol, config_path=args.config,
+                )
+                base_metrics[date] = m
+                print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                      f"sharpe={m['sharpe_ratio']:.2f}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"    FAIL {exc}", file=sys.stderr)
+                failures.append((baseline, date, str(exc)))
 
     # ----- report failures -----
     if failures:
@@ -667,7 +717,31 @@ def main() -> int:
 
     # ----- baseline-only branch -----
     if args.baseline_only:
-        base_agg = aggregate(list(base_metrics.values()))
+        base_dates = sorted(base_metrics)
+        base_agg = aggregate([base_metrics[d] for d in base_dates])
+
+        # Write the same aggregate files as a normal --algo run, using the
+        # baseline as its own comparator. vs_baseline_* deltas come out as 0.
+        out_path = write_backtest_results(
+            algo_name=baseline,
+            baseline_name=baseline,
+            cfg=cfg,
+            symbol=args.symbol,
+            algo_agg=base_agg,
+            base_agg=base_agg,
+            train_dates=base_dates,
+            run_dirs=[base_metrics[d]["_run_dir"] for d in base_dates],
+        )
+        print(f"\nWrote: {out_path.relative_to(REPO_ROOT)}")
+
+        meta_path = write_metadata(
+            algo_name=baseline,
+            cfg=cfg,
+            symbol=args.symbol,
+            per_date_metrics=[base_metrics[d] for d in base_dates],
+        )
+        print(f"Wrote: {meta_path.relative_to(REPO_ROOT)}")
+
         print_summary(algo_name=None, baseline_name=baseline,
                       algo_agg=None, base_agg=base_agg, cfg=cfg)
         return 0 if not failures else 1

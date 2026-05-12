@@ -135,6 +135,7 @@ def run_backtest(
     execution_dir_name = EXECUTION_DIRS.get(execution_algorithm_name, execution_algorithm_name)
     run_dir = persist(
         strategy_dir=REPO_ROOT / "execution_algos" / execution_dir_name,
+        date=date,
         metrics=metrics,
         reports=reports,
     )

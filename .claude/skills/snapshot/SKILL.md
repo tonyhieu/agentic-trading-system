@@ -31,7 +31,7 @@ execution_algos/<algo-id>/
 └── results/
     ├── backtest-results.json                    # canonical aggregate — see §3
     ├── metadata.json                            # consolidated reproduction record (runs[])
-    └── <YYYYMMDD>-<short-sha>/                  # per-run dirs (one per trading date, auto-created by run_backtest())
+    └── <YYYYMMDD>/                              # per-run dirs (one per trading date, auto-created by run_backtest())
         ├── metrics.json                          # committed: per-date metrics
         └── account.csv, orders.csv, fills.csv, positions.csv  # gitignored
 ```
@@ -81,8 +81,8 @@ record and adds the baseline comparison.
     "test_dates":  []
   },
   "run_dirs": [
-    "results/20260308-abc1234/",
-    "results/20260310-abc1234/"
+    "results/20260308/",
+    "results/20260310/"
   ]
 }
 ```
@@ -188,7 +188,7 @@ If the branch push fails or the workflow is disabled:
 aws s3 ls "s3://$S3_BUCKET_NAME/execution_algos/<algo-id>/" --recursive
 ```
 
-Look for a `<timestamp>-<commit>/metadata.json` entry. If missing, check the
+Look for a `<YYYYMMDD>/metrics.json` entry. If missing, check the
 GitHub Actions run logs.
 
 ## 7. Retention
