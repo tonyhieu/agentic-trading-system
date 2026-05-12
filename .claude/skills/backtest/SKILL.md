@@ -209,7 +209,10 @@ and aggregates per `snapshot/SKILL.md §3` into
 Useful flags: `--use-cached-baseline` (skip the deterministic baseline
 subprocess and read its cached metrics.json from disk; ~50% faster per
 iteration — use this by default unless you've changed strategy.kwargs),
-`--baseline-only` (refresh the baseline cache),
+`--baseline-only` (rebuild the baseline cache for the selected dates, but
+it does **not** overwrite an existing `results/<YYYYMMDD>/` directory; to
+refresh a cached baseline for a date you've already run, manually delete
+that date's baseline results directory first, then rerun),
 `--dates 20260308,20260309` (override the config train dates for
 debugging), `--dry-run` (print the plan and exit). Run with `--help` for
 the full list.
