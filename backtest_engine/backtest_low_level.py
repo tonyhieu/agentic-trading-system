@@ -3,6 +3,7 @@ from pathlib import Path
 
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
+from nautilus_trader.common.config import LoggingConfig
 from nautilus_trader.model import DataType
 from nautilus_trader.model import Money
 from nautilus_trader.model import TraderId
@@ -59,7 +60,10 @@ def run_backtest(
     """Run the low-level backtest, persist a comparable run artifact, and return the engine."""
     instrument, ticks = load_dbn_partition(date, symbol)
 
-    config = BacktestEngineConfig(trader_id=TraderId("BACKTESTER-001"))
+    config = BacktestEngineConfig(
+        trader_id=TraderId("BACKTESTER-001"),
+        logging=LoggingConfig(log_level="WARNING"),
+    )
     engine = BacktestEngine(config=config)
 
     glbx = Venue("GLBX")
