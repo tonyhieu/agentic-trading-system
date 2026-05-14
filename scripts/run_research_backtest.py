@@ -69,10 +69,14 @@ from backtest_engine.backtest_low_level import (  # noqa: E402
 DEFAULT_CONFIG = REPO_ROOT / "research" / "config.yaml"
 DEFAULT_SYMBOL = "MESM6"
 
-# Per-backtest timeout for subprocess isolation. A 1-day backtest should
-# complete in well under 60s; this is a sanity ceiling, not a normal-case
-# limit. If you regularly bump this, something else is wrong.
-SUBPROCESS_TIMEOUT_SEC = 600
+# Per-backtest timeout for subprocess isolation. A full MES trading day is
+# ~12-13M MBP-1 ticks, and `engine.run()` through Nautilus dominates at ~90%
+# of wall time — ~9 min for 2026-03-16, more for the largest partitions
+# (2026-03-19 is ~20% bigger). The first backtest on a date also pays a
+# one-time ~40s partition-filter step (see backtest_engine/dbn_filter.py).
+# 30 min leaves margin for the biggest day while still catching a real hang.
+# The two Sunday partitions in the train window are tiny and finish in seconds.
+SUBPROCESS_TIMEOUT_SEC = 1800
 
 # Magic prefix on the child's stdout line carrying the result payload.
 # Anything goes after this prefix as long as it's a single line of JSON.
