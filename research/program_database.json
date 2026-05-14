@@ -28,5 +28,29 @@
         "total": 2758349
       }
     }
+  },
+  {
+    "id": "streak-spread-and",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Consecutive-loss streak AND spread-elevated conditioned skip: skip the open leg of an oracle signal only when BOTH (a) the last 2 consecutive closed positions had negative estimated PnL (streak signal) AND (b) current spread > 1.1x rolling 60-tick median (spread signal). One targeted change from streak-spread-tight: OR condition replaced with AND. All other parameters identical: spread_multiplier=1.1, spread_window=60, min_spread_window=10, streak_lookback=2. Hypothesis: the AND condition targets only the most adversarial regime (loss streak + elevated spread simultaneously) and reduces false-positive skips.",
+    "algorithm_path": "execution_algos/streak-spread-and/",
+    "scores": {
+      "sharpe": 1.57,
+      "realized_pnl": 3007.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 51.56,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 128810,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, 12 trading days): streak-spread-and $3007.0/128810 trades vs simple $1984.0/132536 trades; delta_pnl=+51.56%, above +5.0% gate. Win rate: 35.96% (weighted avg). Max drawdown: -2.68%. Skip rate: ~2.8% (3,726 fewer trades than baseline). AND condition fires much less often than OR (streak-spread-tight reduced trades by 19.7%; AND reduces by only 2.8%). Despite PASS, substantially underperforms streak-spread-tight ($3007 vs $4772, +51.56% vs +140.52%). Conclusion: individual OR signals (spread-alone, streak-alone) each have independent filtering power that AND discards. OR is the better architecture. Future iterations: tighten OR thresholds (spread_multiplier -> 1.05x, streak_lookback -> 3) or explore continuous score combining both signals.",
+    "timestamp": "2026-05-14T23:05:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
