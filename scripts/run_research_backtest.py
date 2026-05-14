@@ -72,7 +72,16 @@ DEFAULT_SYMBOL = "MESM6"
 # Per-backtest timeout for subprocess isolation. A 1-day backtest should
 # complete in well under 60s; this is a sanity ceiling, not a normal-case
 # limit. If you regularly bump this, something else is wrong.
-SUBPROCESS_TIMEOUT_SEC = 600
+#
+# Lowered from 600s to 180s as part of issue #61. The original 600s
+# existed primarily to absorb the memory-pressure tail when a Nautilus
+# engine pushed past available RAM and the OS started thrashing — a
+# wedged subprocess could stall for many minutes before either crashing
+# or finishing. With the RLIMIT_AS memory cap also added under #61, the
+# memory-pressure failure mode now raises MemoryError in seconds, so
+# the tail no longer exists and 180s gives ample headroom over the
+# ~27s observed for the simple baseline on the busiest cached day.
+SUBPROCESS_TIMEOUT_SEC = 180
 
 # Magic prefix on the child's stdout line carrying the result payload.
 # Anything goes after this prefix as long as it's a single line of JSON.
