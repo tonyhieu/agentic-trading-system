@@ -28,8 +28,7 @@
         "total": 2758349
       }
     }
-  }
-  ,
+  },
   {
     "id": "ob-imbalance-gate",
     "status": "pass",
@@ -50,8 +49,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 1501.8,
+      "tokens_used": {
+        "input": 16,
+        "output": 30283,
+        "cache_creation": 36755,
+        "cache_read": 113950,
+        "total": 181004
+      }
     }
   }
 ]
