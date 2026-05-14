@@ -29,4 +29,29 @@
       }
     }
   }
+  ,
+  {
+    "id": "ob-imbalance-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Order-book imbalance gating: condition the open leg of each oracle signal on top-of-book bid/ask size imbalance I = (q_bid - q_ask)/(q_bid + q_ask). For BUY orders, execute only when I >= +threshold; for SELL orders, only when I <= -threshold. Skip adversely-imbalanced opens; reduce-only orders always execute. The Lipton et al. (2013) empirical finding that book imbalance predicts the direction of the next mid-price tick motivates this: aligning entry direction with book imbalance reduces adverse selection in the open leg.",
+    "algorithm_path": "execution_algos/ob-imbalance-gate/",
+    "scores": {
+      "sharpe": 2.7961,
+      "realized_pnl": 4846.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 144.29,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 106990,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 no data): ob-imbalance-gate $4846.75/106990 trades vs simple $1984.0/132536 trades; delta_pnl=+144.29%, well above +5.0% gate. Win rate: 37.74% vs 35.57% (+2.17pp). Max drawdown: -2.21% vs -3.77% (improved). Skip rate: ~19.3% (25,546 fewer trades). Beat baseline on ALL 12 dates including turning losing days positive. Config: sigma=5, seed=42, horizon=30s, imbalance_threshold=0.0. Slippage: both 0.0 (zero fill-cost model, see research/NOTES.md). Sharpe improvement: +2.80 vs 0.91 for simple (+207.7%).",
+    "timestamp": "2026-05-14T22:58:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
+  }
 ]

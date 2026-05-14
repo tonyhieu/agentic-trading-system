@@ -13,6 +13,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.streak-spread-tight",
         "get_execution_algorithm",
     ),
+    "ob-imbalance-gate": (
+        "execution_algos.ob-imbalance-gate",
+        "get_execution_algorithm",
+    ),
 }
 
 
