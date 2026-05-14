@@ -1,0 +1,48 @@
+{
+  "algo_name": "imbalance-spread-skip",
+  "backtest_date": "2026-05-14T23:20:55Z",
+  "baseline": "simple",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 3317.75,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 2.868569787825951,
+    "max_drawdown_pct": -0.010549725707131615,
+    "win_rate": 0.40252339098383894,
+    "trade_count": 35270,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.331775,
+    "is_weighted_bps": 0.07413895247233669,
+    "is_total_price": 3537.5,
+    "vs_baseline_pnl_pct": 164.46791550418493,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -2.1780299015338724
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/imbalance-spread-skip/results/20260308",
+    "execution_algos/imbalance-spread-skip/results/20260309",
+    "execution_algos/imbalance-spread-skip/results/20260310",
+    "execution_algos/imbalance-spread-skip/results/20260311",
+    "execution_algos/imbalance-spread-skip/results/20260312",
+    "execution_algos/imbalance-spread-skip/results/20260313",
+    "execution_algos/imbalance-spread-skip/results/20260315",
+    "execution_algos/imbalance-spread-skip/results/20260316"
+  ]
+}

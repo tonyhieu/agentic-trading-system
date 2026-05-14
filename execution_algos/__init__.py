@@ -17,6 +17,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.streak-spread-and",
         "get_execution_algorithm",
     ),
+    "imbalance-spread-skip": (
+        "execution_algos.imbalance-spread-skip",
+        "get_execution_algorithm",
+    ),
 }
 
 

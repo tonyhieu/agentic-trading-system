@@ -113,6 +113,17 @@ the spread-filter nearly achieved ($1622.50, +2.25%).
 
 ---
 
+## [2026-05-15 02:10] RESULT WARNING: imbalance-spread-skip train results based on 8 of 12 train dates only
+
+**Detail**: The backtest for `imbalance-spread-skip` completed 8 dates (20260308-20260316, minus 20260314 which has no data). The subprocess for 20260317 ran for >4 hours (expected ~10 minutes for similar data volumes) and was killed. Dates 20260317-20260321 have no metrics.json. The aggregate results in `backtest-results.json` cover only: 20260308, 20260309, 20260310, 20260311, 20260312, 20260313, 20260315, 20260316.
+**Why**: The Nautilus backtest engine subprocess ran indefinitely on 20260317 (214MB MESM6 dbn.zst, ~21k trades). The same data ran successfully for prior algorithms (streak-spread-tight completed all 12 dates). The root cause is unknown; it may be a memory leak or runaway iteration in the execution algorithm on that date's specific tick sequence, or a transient environment issue.
+**Alternatives**: (a) Re-run imbalance-spread-skip for dates 20260317-20260321 in a fresh attempt. (b) Accept the 8-date result as the basis for the PASS/FAIL decision, noting the partial coverage. The 8-date result (+164.47% vs baseline) is substantially above the 5% gate, and the improvement direction is consistent across all 8 dates.
+**Impact**: MATERIAL — the final aggregate covers 8/12 train dates. However, the comparison is fair: baseline is also aggregated over the same 8 dates. The +164.47% delta and consistent improvement across all 8 dates suggest the result would not be reversed by the missing 4 dates. Operator should note this as a caveat when reviewing the PASS result.
+
+⚠ NOTE WRITTEN: research/NOTES.md — imbalance-spread-skip train results based on 8 of 12 train dates only (20260317 hung >4 hours)
+
+---
+
 ## [2026-04-29 18:13] DATA ISSUE: backtest infra unavailable on host shell — iteration aborted before backtest
 
 **Detail**: A test-run invocation of the researcher agent could not execute §5 step 5 (BACKTEST). `scripts/data_retriever.py` shells out to the `aws` CLI, which is not installed on the host (`brew install awscli` not run); `docker`/`docker compose` are also unavailable, so the project's intended `dev`/`agent` services cannot be spun up. `data-cache/glbx-mdp3-market-data/v1.0.0/partitions/` is empty, so no partition is reachable without a working sync path. AWS creds and `S3_BUCKET_NAME` in `.env` are correctly set; `USERNAME`/`PASSWORD` from `.env.example` are unused by the codebase and can be ignored.

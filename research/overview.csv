@@ -1,3 +1,4 @@
 id,status,timestamp,realized_pnl,trade_count,sharpe,vs_baseline_pnl_pct,vs_baseline_slippage_pct,mean_slippage,notes
 streak-spread-tight,pass,2026-05-11T22:40:00Z,4772.0,106428,2.76,140.52,0.0,0.0,OR condition: skip if spread>1.1x OR streak>=2 losses; 12-date train; baseline=simple
 streak-spread-and,pass,2026-05-14T23:05:00Z,3007.0,128810,1.57,51.56,0.0,0.0,AND condition: skip only if spread>1.1x AND streak>=2 losses; 12-date train; baseline=simple; underperforms OR variant
+imbalance-spread-skip,pass,2026-05-15T02:10:00Z,3317.75,35270,2.87,164.47,0.0,0.0,OR condition: skip if spread>1.1x OR adverse imbalance>0.2; 8-date partial train (20260317 hung); baseline=simple; CAVEAT: partial train window

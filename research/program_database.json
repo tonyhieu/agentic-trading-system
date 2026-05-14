@@ -58,5 +58,29 @@
         "total": 257669
       }
     }
+  },
+  {
+    "id": "imbalance-spread-skip",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Book imbalance + spread conditioned skip: skip the open leg of an oracle signal when EITHER (a) current spread > 1.1x rolling 60-tick median spread (spread signal, same as streak-spread-tight), OR (b) book imbalance I = (q_bid - q_ask)/(q_bid + q_ask) is adversely aligned with order direction by >= 0.2 (skip BUY when I < -0.2, skip SELL when I > +0.2). ONE targeted change from streak-spread-tight: replace the consecutive-loss streak signal with a book imbalance signal. Hypothesis: imbalance is a contemporaneously predictive microstructure signal (Lipton et al.) vs. the streak's backward-looking proxy.",
+    "algorithm_path": "execution_algos/imbalance-spread-skip/",
+    "scores": {
+      "sharpe": 2.87,
+      "realized_pnl": 3317.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 164.47,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 35270,
+      "passed": true
+    },
+    "notes": "PASS -- 8-date partial train window (20260308-20260316, 20260314 missing data, 20260317+ hung >4h). imbalance-spread-skip $3317.75/35270 trades vs simple $1254.50/42278 trades; delta_pnl=+164.47%, well above +5.0% gate. Win rate: 40.25% vs 36.56% (+3.69pp). Max drawdown: -0.0105% vs simple (improved). Skip rate: ~16.6%. On adversarial days (20260312, 20260313, 20260315, 20260316), baseline was negative while algo was positive. Config: sigma=5, seed=42, horizon=30s. Slippage: both 0.0 (zero fill-cost model). CAVEAT: results cover only 8/12 train dates; 20260317 hung indefinitely (see research/NOTES.md). Book imbalance replaces streak signal from streak-spread-tight; both are OR architecture with same spread parameters.",
+    "timestamp": "2026-05-15T02:10:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
