@@ -48,6 +48,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import resource
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -78,9 +79,52 @@ DEFAULT_SYMBOL = "MESM6"
 # The two Sunday partitions in the train window are tiny and finish in seconds.
 SUBPROCESS_TIMEOUT_SEC = 1800
 
+# Per-backtest virtual-memory ceiling for the --internal-single-run child.
+# Nautilus holds all order/fill/position objects in engine.trader caches
+# until reports are generated at end; a busy day on a non-skip algo can
+# push RSS past 10 GB (~9.5 GB measured for the simple baseline on
+# 20260312). On a 16 GB / 0 swap host that's right at the OOM edge, and
+# the allocator stalls under pressure make the subprocess timeout look
+# like a hang. With this cap, the child raises MemoryError quickly
+# instead of thrashing the OS — turns the failure mode from "wedge for
+# minutes" into "fail in seconds." Override with RESEARCH_MEM_CAP_GB=0
+# to disable. Enforced via RLIMIT_AS — works on Linux (the agent-loop
+# host); macOS treats it as advisory and the setrlimit call may return
+# EINVAL, in which case we log a warning and continue uncapped.
+MEMORY_CAP_GB_DEFAULT = 12
+
 # Magic prefix on the child's stdout line carrying the result payload.
 # Anything goes after this prefix as long as it's a single line of JSON.
 METRICS_MARKER = "__METRICS_JSON__"
+
+
+def _apply_memory_cap() -> None:
+    """Set RLIMIT_AS for the current process to bound peak memory.
+
+    No-op when RESEARCH_MEM_CAP_GB=0 or when the platform refuses the
+    setrlimit call (e.g. unprivileged WSL). Failures are non-fatal — we
+    log a warning to stderr and continue; the original failure mode
+    (OS-level memory pressure) is no worse than not having the cap.
+    """
+    try:
+        cap_gb = float(os.environ.get("RESEARCH_MEM_CAP_GB", MEMORY_CAP_GB_DEFAULT))
+    except ValueError:
+        print(
+            f"WARN: RESEARCH_MEM_CAP_GB={os.environ.get('RESEARCH_MEM_CAP_GB')!r} "
+            f"is not a number; ignoring",
+            file=sys.stderr,
+        )
+        return
+    if cap_gb <= 0:
+        return
+    cap_bytes = int(cap_gb * 1024 * 1024 * 1024)
+    try:
+        resource.setrlimit(resource.RLIMIT_AS, (cap_bytes, cap_bytes))
+    except (ValueError, OSError) as exc:
+        print(
+            f"WARN: could not apply RLIMIT_AS={cap_gb} GB ({exc}); continuing without cap",
+            file=sys.stderr,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -565,6 +609,8 @@ def _do_internal_single_run(args: argparse.Namespace) -> int:
     On failure we exit non-zero; parent surfaces stderr tail. Do not print
     anything else to stdout after the marker line.
     """
+    _apply_memory_cap()
+
     if not args.algo:
         print("ERROR: --internal-single-run requires --algo", file=sys.stderr)
         return 2
