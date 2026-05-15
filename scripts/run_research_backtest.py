@@ -51,6 +51,7 @@ import os
 import resource
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -725,7 +726,28 @@ def main() -> int:
     base_metrics: dict[str, dict] = {}
     failures: list[tuple[str, str, str]] = []  # (algo_name, date, error)
 
+    # Iteration wall-clock budget (issue #61). Guards against the per-date
+    # cascade where a wedged algorithm + 600s subprocess timeout could burn
+    # ~2 hours of wall-clock before the iteration completed. 0 / missing
+    # disables. Checked at the *start* of each date — the in-flight
+    # subprocess (if any) is allowed to finish so we don't lose work that
+    # was about to land.
+    budget_sec = float(cfg.get("loop", {}).get("iteration_timeout_seconds", 0) or 0)
+    loop_start = time.monotonic()
+    budget_exceeded = False
+
     for date in dates:
+        if budget_sec > 0 and (time.monotonic() - loop_start) > budget_sec:
+            remaining = [d for d in dates[dates.index(date):]]
+            print(
+                f"\n⚠ ITERATION BUDGET EXCEEDED ({budget_sec:.0f}s). "
+                f"Skipping {len(remaining)} remaining date(s): "
+                f"{', '.join(remaining)}",
+                file=sys.stderr,
+            )
+            budget_exceeded = True
+            break
+
         if not args.baseline_only:
             print(f"\n>>> run_backtest({args.algo}, {date}) ...", flush=True)
             try:
@@ -803,7 +825,7 @@ def main() -> int:
 
         print_summary(algo_name=None, baseline_name=baseline,
                       algo_agg=None, base_agg=base_agg, cfg=cfg)
-        return 0 if not failures else 1
+        return 0 if not failures and not budget_exceeded else 1
 
     if not algo_metrics:
         print("\nERROR: no successful algo runs — cannot aggregate.", file=sys.stderr)
@@ -846,7 +868,7 @@ def main() -> int:
     print_summary(algo_name=args.algo, baseline_name=baseline,
                   algo_agg=algo_agg, base_agg=base_agg, cfg=cfg)
 
-    return 0 if not failures else 1
+    return 0 if not failures and not budget_exceeded else 1
 
 
 if __name__ == "__main__":
