@@ -273,13 +273,13 @@
     "id": "position-tier-gate",
     "status": "pass",
     "baseline": "simple",
-    "hypothesis": "Position-tier gating: cap concurrent open exposure by skipping new open-leg executions when the current portfolio net position size (absolute value) is at or above a threshold. Reduce-only/position-closing orders always execute. The conditioning variable is current portfolio state — none of the 9 prior algorithms condition on portfolio state. With the oracle strategy's 1-contract trade size, the effective cap is 1: skip all new open legs while any position is in-flight. The oracle fires CLOSE+OPEN at the same timestamp; with cap=1, the cache shows the old position (not yet cleared) when the OPEN's on_order() fires, causing the concurrent open to be skipped. This enforced serialization reduces churn on high-noise days.",
+    "hypothesis": "Position-tier gating: cap concurrent open exposure by skipping new open-leg executions when the current portfolio net position size (absolute value) is at or above a threshold. Reduce-only/position-closing orders always execute. The conditioning variable is current portfolio state \u2014 none of the 9 prior algorithms condition on portfolio state. With the oracle strategy's 1-contract trade size, the effective cap is 1: skip all new open legs while any position is in-flight. The oracle fires CLOSE+OPEN at the same timestamp; with cap=1, the cache shows the old position (not yet cleared) when the OPEN's on_order() fires, causing the concurrent open to be skipped. This enforced serialization reduces churn on high-noise days.",
     "algorithm_path": "execution_algos/position-tier-gate/",
     "scores": {
       "sharpe": 3.7852,
       "realized_pnl": 6049.25,
       "mean_slippage": 0.0,
-      "vs_baseline_pnl_pct": 204.90,
+      "vs_baseline_pnl_pct": 204.9,
       "vs_baseline_slippage_pct": 0.0,
       "trade_count": 87544,
       "passed": true
@@ -289,8 +289,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 41044.5,
+      "tokens_used": {
+        "input": 221,
+        "output": 212002,
+        "cache_creation": 788675,
+        "cache_read": 7307770,
+        "total": 8308668
+      }
     }
   }
 ]
