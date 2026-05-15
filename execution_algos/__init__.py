@@ -29,6 +29,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.passive-aggressive-ladder",
         "get_execution_algorithm",
     ),
+    "depth-participation-sizer": (
+        "execution_algos.depth-participation-sizer",
+        "get_execution_algorithm",
+    ),
 }
 
 
