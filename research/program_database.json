@@ -219,7 +219,7 @@
       "sharpe": 1.6294,
       "realized_pnl": 3059.25,
       "mean_slippage": 0.0,
-      "vs_baseline_pnl_pct": 54.20,
+      "vs_baseline_pnl_pct": 54.2,
       "vs_baseline_slippage_pct": 0.0,
       "trade_count": 103947,
       "passed": true
@@ -229,8 +229,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 37042.9,
+      "tokens_used": {
+        "input": 169,
+        "output": 175131,
+        "cache_creation": 736896,
+        "cache_read": 4666062,
+        "total": 5578258
+      }
     }
   }
 ]
