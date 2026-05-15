@@ -25,6 +25,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.microprice-divergence-gate",
         "get_execution_algorithm",
     ),
+    "passive-aggressive-ladder": (
+        "execution_algos.passive-aggressive-ladder",
+        "get_execution_algorithm",
+    ),
 }
 
 

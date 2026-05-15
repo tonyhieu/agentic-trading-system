@@ -118,5 +118,29 @@
         "total": 2887545
       }
     }
+  },
+  {
+    "id": "passive-aggressive-ladder",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Passive-then-aggressive order laddering: for each open-leg oracle entry, first post a passive LIMIT order at same-side top-of-book (BUY at bid, SELL at ask) with a 5-tick timeout. If passive fills, capture the spread. If timeout fires, cancel and submit the original primary MarketOrder aggressively. Reduce-only orders always execute aggressively. Hypothesis: capturing spread on passive fills improves realized P&L vs always crossing, even after accounting for timeout-driven fallbacks at worse prices.",
+    "algorithm_path": "execution_algos/passive-aggressive-ladder/",
+    "scores": {
+      "sharpe": -1.0533,
+      "realized_pnl": -1430.32,
+      "mean_slippage": -0.00025,
+      "vs_baseline_pnl_pct": -172.09,
+      "vs_baseline_slippage_pct": null,
+      "trade_count": 132510,
+      "passed": false
+    },
+    "notes": "FAIL -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): passive-aggressive-ladder realized_pnl=-$1430.32 vs simple $1984.00; vs_baseline_pnl_pct=-172.09%, far below +5.0% gate. Sharpe=-1.053 vs 0.909 for simple. Trade count 132510 (similar to 132536 baseline). Root cause: adverse selection on passive fills -- passive BUY LIMIT at bid fills when market moves AGAINST the BUY signal (oracle adverse outcomes), while aggressive fallbacks after 5-tick timeout fire after price has already moved in the oracle direction (IS +$0.82/fallback vs +$0.14 baseline). Net: IS_total=$10,120 vs baseline $6,693 (+51.3 bps). Engine correctly models passive fills (fill_limit_inside_spread()=False). Mechanism is valid in theory but fails for directional oracle signals.",
+    "timestamp": "2026-05-15T04:30:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

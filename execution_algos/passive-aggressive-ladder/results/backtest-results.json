@@ -1,0 +1,56 @@
+{
+  "algo_name": "passive-aggressive-ladder",
+  "backtest_date": "2026-05-15T04:11:44Z",
+  "baseline": "simple",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": -1430.3199999999997,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": -1.0532930208545064,
+    "max_drawdown_pct": -0.09950455222951962,
+    "win_rate": 0.3333559731341031,
+    "trade_count": 132510,
+    "mean_slippage": -0.0002508727433552443,
+    "max_abs_slippage": 33.25,
+    "total_commissions": 0.0,
+    "total_return_pct": -0.14303199999999996,
+    "is_weighted_bps": 0.05673288400521326,
+    "is_total_price": 10119.915000000008,
+    "vs_baseline_pnl_pct": -172.09274193548384,
+    "vs_baseline_slippage_pct": Infinity,
+    "vs_baseline_is_bps": 51.325312627426264
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/passive-aggressive-ladder/results/20260308",
+    "execution_algos/passive-aggressive-ladder/results/20260309",
+    "execution_algos/passive-aggressive-ladder/results/20260310",
+    "execution_algos/passive-aggressive-ladder/results/20260311",
+    "execution_algos/passive-aggressive-ladder/results/20260312",
+    "execution_algos/passive-aggressive-ladder/results/20260313",
+    "execution_algos/passive-aggressive-ladder/results/20260315",
+    "execution_algos/passive-aggressive-ladder/results/20260316",
+    "execution_algos/passive-aggressive-ladder/results/20260317",
+    "execution_algos/passive-aggressive-ladder/results/20260318",
+    "execution_algos/passive-aggressive-ladder/results/20260319",
+    "execution_algos/passive-aggressive-ladder/results/20260320"
+  ]
+}

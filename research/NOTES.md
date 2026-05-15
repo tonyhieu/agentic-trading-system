@@ -145,3 +145,15 @@ variance is higher than a true fractional sizer. With ~130k trades in the train 
 the law of large numbers should stabilize aggregate metrics.
 
 ⚠ NOTE WRITTEN: research/NOTES.md — vol-regime-sizer uses probabilistic submission due to 1-contract parent orders
+
+## [2026-05-15 04:30] RESULT WARNING: passive-aggressive-ladder — adverse selection on passive fills with oracle signals
+
+**Detail**: The passive-then-aggressive laddering algorithm (passive-aggressive-ladder) posted passive BUY LIMIT orders at bid_px and SELL LIMIT orders at ask_px for open-leg entries, with a 5-tick timeout before escalating to aggressive market orders. The algorithm produced realized_pnl = -$1430.32 vs baseline $1984.00 (-172.1% vs baseline).
+
+**Why**: Passive fills are subject to adverse selection when the underlying signal is directionally informed. A passive BUY LIMIT at bid fills only when the ask drops to or below the bid — i.e., when the market moves AGAINST the BUY signal. Oracle signals with 30s horizon and sigma=5 noise have material directional alpha, which means passive fills occur preferentially on losing trades (adverse oracle outcomes). Additionally, the 5-tick timeout delay causes aggressive fallbacks to fire after the oracle-predicted price move has already begun, resulting in IS = +$0.82 per fallback vs +$0.14 for the simple baseline. Net: algorithm is decisively worse than baseline.
+
+**Alternatives**: Passive execution works in market-making contexts where the signal has NO directional bias. For directional signals with alpha, passive entry is expected to underperform aggressive entry because fills confirm adverse selection.
+
+**Impact**: FAIL — the passive-aggressive-ladder approach is not suitable for the oracle strategy as configured (sigma=5, 30s horizon, 1s signal cadence). Future iterations using passive entry should either (1) apply it only to close/reduce-only legs, (2) add a signal-quality filter to avoid posting passive on high-confidence signals, or (3) pair with a very short timeout (1-2 ticks) to minimize fallback delay while still attempting some passive fill capture.
+
+⚠ NOTE WRITTEN: research/NOTES.md — passive-aggressive-ladder adverse selection on oracle signals
