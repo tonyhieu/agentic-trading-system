@@ -208,5 +208,29 @@
         "total": 5035411
       }
     }
+  },
+  {
+    "id": "aggressor-flow-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Aggressor-flow gating: maintain a 10-second rolling window of signed net aggressor flow from trade prints (BUYER-aggressor volume minus SELLER-aggressor volume). Skip the open leg of a BUY signal when net flow <= -2.0 contracts (sell-dominated) and skip a SELL signal when net flow >= +2.0 contracts (buy-dominated). Reduce-only orders always execute. This conditions on realized marketable order flow -- trades that have already crossed the spread -- which is materially different from resting-book imbalance (ob-imbalance-gate, microprice-divergence-gate) which conditions on unaggressed limit orders. The hypothesis is that recent aggressor flow has stronger short-term directional predictive power because it reflects committed, revealed directional intent.",
+    "algorithm_path": "execution_algos/aggressor-flow-gate/",
+    "scores": {
+      "sharpe": 1.6294,
+      "realized_pnl": 3059.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 54.20,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 103947,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): aggressor-flow-gate $3059.25/103947 trades vs simple $1984.00/132536 trades; delta_pnl=+54.20%, well above +5.0% gate. Win rate: 36.2% vs 35.6% (+0.6pp). Max drawdown: -0.0236% vs -0.0377% (improved). Skip rate: 21.6% (28,589 fewer trades). Beat baseline on 10/12 dates (20260308 slight underperform $135.50 vs $140.50; 20260311 near tie $395.50 vs $394.75). Config: sigma=5, seed=42, horizon=30s, window_seconds=10.0, flow_threshold=2.0. Slippage: both 0.0 (zero fill-cost model). Sharpe: 1.63 vs 0.91 (+79.3%). IS_weighted_bps: 0.0457 vs 0.0375 (+21.9% worse IS -- inherent tension in flow-based gating). Data source: TradeTick objects with AggressorSide flag from glbx-mdp3-market-data include_trades=True.",
+    "timestamp": "2026-05-15T09:00:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
