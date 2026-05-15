@@ -3,3 +3,4 @@ simple,baseline,1984.0,0.9086,0.0375,132536,0.3557
 streak-spread-tight,pass,4772.0,2.7607,0.0327,106428,0.3715
 ob-imbalance-gate,pass,4846.75,2.7961,0.0513,106990,0.3774
 vol-regime-sizer,pass,2618.25,1.2985,0.0360,124002,0.3592
+microprice-divergence-gate,pass,4846.25,2.7958,0.0513,106990,0.3774

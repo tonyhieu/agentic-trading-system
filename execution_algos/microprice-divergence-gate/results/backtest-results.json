@@ -1,0 +1,56 @@
+{
+  "algo_name": "microprice-divergence-gate",
+  "backtest_date": "2026-05-15T03:29:56Z",
+  "baseline": "simple",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 4846.25,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 2.7957901088160617,
+    "max_drawdown_pct": -0.022149883713110507,
+    "win_rate": 0.37742779699037293,
+    "trade_count": 106990,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.484625,
+    "is_weighted_bps": 0.05130654294049398,
+    "is_total_price": 7494.25,
+    "vs_baseline_pnl_pct": 144.26663306451613,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 36.85147135459004
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/microprice-divergence-gate/results/20260308",
+    "execution_algos/microprice-divergence-gate/results/20260309",
+    "execution_algos/microprice-divergence-gate/results/20260310",
+    "execution_algos/microprice-divergence-gate/results/20260311",
+    "execution_algos/microprice-divergence-gate/results/20260312",
+    "execution_algos/microprice-divergence-gate/results/20260313",
+    "execution_algos/microprice-divergence-gate/results/20260315",
+    "execution_algos/microprice-divergence-gate/results/20260316",
+    "execution_algos/microprice-divergence-gate/results/20260317",
+    "execution_algos/microprice-divergence-gate/results/20260318",
+    "execution_algos/microprice-divergence-gate/results/20260319",
+    "execution_algos/microprice-divergence-gate/results/20260320"
+  ]
+}

@@ -88,5 +88,29 @@
         "total": 1250410
       }
     }
+  },
+  {
+    "id": "microprice-divergence-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Microprice-vs-mid divergence gating: condition the open leg of each oracle signal on the signed divergence of the size-weighted microprice from the mid price. microprice = (bid_px * ask_sz + ask_px * bid_sz) / (bid_sz + ask_sz); delta = microprice - mid. When delta > +deadband (upward book pressure): favor BUY, skip SELL. When delta < -deadband (downward book pressure): favor SELL, skip BUY. When |delta| <= deadband: execute unconditionally. Reduce-only orders always execute. The microprice is a dollar-weighted pressure signal (Stoikov 2018) richer than raw quantity imbalance — it encodes both the direction and the fractional size asymmetry through the spread.",
+    "algorithm_path": "execution_algos/microprice-divergence-gate/",
+    "scores": {
+      "sharpe": 2.7958,
+      "realized_pnl": 4846.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 144.27,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 106990,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): microprice-divergence-gate $4846.25/106990 trades vs simple $1984.00/132536 trades; delta_pnl=+144.27%, well above +5.0% gate. Win rate: 37.74% vs 35.57% (+2.17pp). Max drawdown: -0.022% vs -0.038% (improved). Skip rate: ~19.3% (25,546 fewer trades). Consistent improvement across ALL 12 dates. Config: sigma=5, seed=42, horizon=30s, microprice_deadband=0.0. Slippage: both 0.0 (zero fill-cost model). Sharpe: 2.80 vs 0.91 (+207.7%). Note: at deadband=0.0 the algorithm is functionally equivalent to ob-imbalance-gate (threshold=0.0) -- both skip when bid_size != ask_size and direction opposes pressure. Differentiation requires a nonzero deadband.",
+    "timestamp": "2026-05-15T03:30:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

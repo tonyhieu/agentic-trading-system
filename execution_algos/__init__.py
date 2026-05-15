@@ -21,6 +21,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vol-regime-sizer",
         "get_execution_algorithm",
     ),
+    "microprice-divergence-gate": (
+        "execution_algos.microprice-divergence-gate",
+        "get_execution_algorithm",
+    ),
 }
 
 
