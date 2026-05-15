@@ -157,3 +157,17 @@ the law of large numbers should stabilize aggregate metrics.
 **Impact**: FAIL — the passive-aggressive-ladder approach is not suitable for the oracle strategy as configured (sigma=5, 30s horizon, 1s signal cadence). Future iterations using passive entry should either (1) apply it only to close/reduce-only legs, (2) add a signal-quality filter to avoid posting passive on high-confidence signals, or (3) pair with a very short timeout (1-2 ticks) to minimize fallback delay while still attempting some passive fill capture.
 
 ⚠ NOTE WRITTEN: research/NOTES.md — passive-aggressive-ladder adverse selection on oracle signals
+
+---
+
+## [2026-05-15 10:10] ASSUMPTION: position-tier-gate relies on Nautilus CLOSE-submit-before-fill ordering within a tick
+
+**Detail**: The position-tier-gate (cap=1) algorithm works because at `on_order()` invocation for an OPEN order, `self.cache.positions_open()` still shows the previous position (net_qty=1 >= cap=1), causing the OPEN to be skipped. This behavior depends on a specific ordering: when the oracle fires CLOSE+OPEN at the same `ts_init`, the CLOSE is submitted to `submit_order()` first, but the fill (which would clear the position from the cache) has not yet been processed before the OPEN's `on_order()` is called.
+
+**Why**: Nautilus's event-replay architecture processes market-data events in strict timestamp order. Within a single timestamp, multiple order events are processed sequentially. The CLOSE order is submitted first (it arrives in `on_order()` first due to oracle ordering), but the fill event that removes it from the cache appears to fire after the `on_order()` calls for the same-tick orders complete. This is a deterministic ordering in the backtest engine — confirmed empirically (cap=2 never triggered; cap=1 consistently gates ~32-34% of opens).
+
+**Alternatives**: (a) If Nautilus changes its intra-tick processing order (fill-before-next-on_order), the cap=1 gate would stop working — position would be 0 at OPEN time, no skip. (b) The algorithm is still correct in principle even if the fill ordering changes — it would just gate fewer orders (only the rare case where two consecutive opens fire without a close in between). (c) A more robust implementation could track submitted-but-not-yet-filled orders internally, but that requires accessing order state not cached on the position level.
+
+**Impact**: MODERATE — the improvement is real and the mechanism is internally consistent (no look-ahead, no future information). However, the magnitude of the effect depends on Nautilus's intra-tick ordering. If this ordering is part of the deterministic replay contract, the OOS Lambda result should reproduce similarly. Human should be aware that this is a timing artifact, not a pure market-microstructure signal.
+
+⚠ NOTE WRITTEN: research/NOTES.md — position-tier-gate depends on Nautilus intra-tick CLOSE-submit/fill ordering

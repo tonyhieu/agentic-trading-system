@@ -9,3 +9,4 @@ depth-participation-sizer,fail,1962.0,1.0992,0.0332,119549,0.3514
 session-clock-gate,pass,2426.75,1.1456,0.0375,129136,0.3566
 aggressor-flow-gate,pass,3059.25,1.6294,0.0457,103947,0.3616
 cooldown-entry-gate,pass,2218.0,1.1610,0.0376,99119,0.3576
+position-tier-gate,pass,6049.25,3.7852,0.0374,87544,0.3807

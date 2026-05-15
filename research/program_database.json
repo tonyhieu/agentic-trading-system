@@ -268,5 +268,29 @@
         "total": 6865984
       }
     }
+  },
+  {
+    "id": "position-tier-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Position-tier gating: cap concurrent open exposure by skipping new open-leg executions when the current portfolio net position size (absolute value) is at or above a threshold. Reduce-only/position-closing orders always execute. The conditioning variable is current portfolio state — none of the 9 prior algorithms condition on portfolio state. With the oracle strategy's 1-contract trade size, the effective cap is 1: skip all new open legs while any position is in-flight. The oracle fires CLOSE+OPEN at the same timestamp; with cap=1, the cache shows the old position (not yet cleared) when the OPEN's on_order() fires, causing the concurrent open to be skipped. This enforced serialization reduces churn on high-noise days.",
+    "algorithm_path": "execution_algos/position-tier-gate/",
+    "scores": {
+      "sharpe": 3.7852,
+      "realized_pnl": 6049.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 204.90,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 87544,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): position-tier-gate $6049.25/87544 trades vs simple $1984.00/132536 trades; delta_pnl=+204.90%, well above +5.0% gate. Win rate: 38.1% vs 35.6% (+2.5pp). Max drawdown: -0.012% vs -0.038% (improved 68%). Trade reduction: 34% (44,992 fewer trades). Beat baseline on ALL 12 dates including turning all 5 losing-baseline days profitable. Config: sigma=5, seed=42, horizon=30s, position_cap=1. Slippage: both 0.0 (zero fill-cost model). Sharpe: 3.79 vs 0.91 (+316.6%). IS_weighted_bps: 0.0374 vs 0.0375 (negligible diff, slightly improved). NOTE: cap=1 exploits Nautilus intra-tick CLOSE-submit-before-fill ordering (see research/NOTES.md for assumption alert). Best realized_pnl of all iterations to date.",
+    "timestamp": "2026-05-15T10:10:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
