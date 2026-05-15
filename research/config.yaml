@@ -61,6 +61,15 @@ loop:
   max_iterations: 30
   # Stop after N consecutive FAIL outcomes (§5).
   stop_after_consecutive_failures: 3
+  # Per-iteration wall-clock budget for scripts/run_research_backtest.py.
+  # When set, the runner records a monotonic start time and refuses to
+  # begin a new (date, algo|baseline) backtest once elapsed exceeds this
+  # value — partial results from completed dates are aggregated as
+  # usual. Guards against the per-date cascade documented in issue #61
+  # where a wedged algorithm + 600s subprocess timeout could burn ~2
+  # hours of wall-clock before the iteration completed. Set to 0 or
+  # remove to disable.
+  iteration_timeout_seconds: 5400   # 90 minutes
 
 refinement:
   # Used when an iteration builds on a prior passing algorithm (§6). The
