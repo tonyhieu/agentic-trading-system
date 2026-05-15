@@ -184,14 +184,23 @@ def load_config(path: Path) -> dict:
 
 
 def train_dates_from_config(cfg: dict) -> list[str]:
-    """Calendar-day YYYYMMDD list, both endpoints inclusive.
+    """Calendar-day YYYYMMDD list, both endpoints inclusive, weekends-aware.
 
-    Uses freq='D' not freq='B'. GLBX FX futures trade Sunday evening through
-    Friday US time, so Sunday partitions exist in the dataset. Missing dates
-    surface downstream as a run_backtest() failure, which we catch and skip.
+    GLBX FX futures trade Sunday evening through Friday US time, so:
+      - Saturday partitions don't exist → drop (dropping here saves a
+        wasted S3 sync attempt + a guaranteed failure entry in the
+        runner's per-date loop, which used to cost ~600s per Saturday
+        on cascade-fail).
+      - Sunday partitions DO exist (the evening session) → keep.
+    Other non-trading dates (US holidays) are not filtered here; they
+    still surface downstream as a run_backtest() failure, which we
+    catch and skip.
     """
     start, end = cfg["data_window"]["train"]
-    return pd.date_range(start, end, freq="D").strftime("%Y%m%d").tolist()
+    days = pd.date_range(start, end, freq="D")
+    # pandas dayofweek: Mon=0..Sun=6. Drop Saturday only.
+    days = days[days.dayofweek != 5]
+    return days.strftime("%Y%m%d").tolist()
 
 
 # ---------------------------------------------------------------------------
