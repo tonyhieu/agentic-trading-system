@@ -49,6 +49,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.position-tier-gate",
         "get_execution_algorithm",
     ),
+    "volume-pace-gate": (
+        "execution_algos.volume-pace-gate",
+        "get_execution_algorithm",
+    ),
 }
 
 

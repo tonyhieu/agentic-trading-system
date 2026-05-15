@@ -298,5 +298,29 @@
         "total": 8308668
       }
     }
+  },
+  {
+    "id": "volume-pace-gate",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Volume-time pacing for entry gating: maintain a running counter of total contracts traded (from TradeTick stream) since the most recent executed open-leg order. Skip a new open-leg order if fewer than V=50 contracts have traded since the last open execution; once V contracts observed, next open executes and counter resets. Reduce-only orders always execute and do NOT reset the counter. Conditioning variable is event-clock progress (realized traded volume) -- fundamentally different from cooldown-entry-gate's wall-clock cooldown. Hypothesis: signals firing during low-activity intervals face thinner liquidity and carry less information; pacing entry to activity should improve PnL per trade.",
+    "algorithm_path": "execution_algos/volume-pace-gate/",
+    "scores": {
+      "sharpe": 1.6901,
+      "realized_pnl": 1878.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": -5.3,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 65839,
+      "passed": false
+    },
+    "notes": "FAIL -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): volume-pace-gate $1878.75/65839 trades vs simple $1984.00/132536 trades; delta_pnl=-5.30%, below +5.0% gate and below close margin +3%. Sharpe: 1.69 vs 0.91 (+86%). Win rate: 36.83% vs 35.57% (+1.26pp). Max drawdown: -0.015% vs -0.038% (improved 60%). Trade reduction: 50.3% (66,697 fewer trades). Root cause: V=50 threshold calibrated to session-average volume (~21 contracts/s) is too restrictive on low-volume/early-session dates (20260308-20260311), gating 85-88% of entries and causing total P&L to lag baseline despite higher per-trade quality. Config: sigma=5, seed=42, horizon=30s, volume_threshold=50 contracts.",
+    "timestamp": "2026-05-15T19:56:25Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
