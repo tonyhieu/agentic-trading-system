@@ -88,5 +88,35 @@
         "total": 577209
       }
     }
+  },
+  {
+    "id": "streak-spread-imbalance",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Triple-signal OR conditioned skip: skip the open leg of an oracle signal when ANY of three conditions holds: (a) current spread > 1.1x rolling 60-tick median spread, OR (b) both last 2 consecutive closed positions had negative estimated PnL (streak), OR (c) book imbalance I = (q_bid - q_ask)/(q_bid + q_ask) is adversely aligned with order direction by >= 0.2. ONE targeted change from streak-spread-tight: add book imbalance as a third OR signal. Hypothesis: imbalance is a contemporaneously predictive microstructure signal uncorrelated with spread/streak; adding it as a third filter catches additional adverse moments that slip through both existing signals.",
+    "algorithm_path": "execution_algos/streak-spread-imbalance/",
+    "scores": {
+      "sharpe": 3.5,
+      "realized_pnl": 5841.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 194.44,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 98914,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, 12 trading days): streak-spread-imbalance $5841.75/98914 trades vs simple $1984.0/132536 trades; delta_pnl=+194.44%, well above +5.0% gate. Win rate: 38.0% vs 35.6% (+2.4pp). Max drawdown: -0.81% vs -3.77% (improved). Skip rate: ~25.4% (33,622 fewer trades). Compared to streak-spread-tight (best prior PASS): +22.4% P&L improvement ($5841.75 vs $4772.0), Sharpe +0.74 (3.50 vs 2.76), MaxDD improved (-0.81% vs -1.41%). Adding book imbalance as third OR signal captured additional adverse moments. Config: sigma=5, seed=42, horizon=30s, imbalance_threshold=0.2, spread_multiplier=1.1, streak_lookback=2. Slippage: both 0.0 (zero fill-cost model).",
+    "timestamp": "2026-05-15T03:30:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 8195.9,
+      "tokens_used": {
+        "input": 60,
+        "output": 22939,
+        "cache_creation": 49169,
+        "cache_read": 787751,
+        "total": 859919
+      }
+    }
   }
 ]
