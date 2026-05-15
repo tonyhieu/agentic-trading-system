@@ -93,7 +93,7 @@
     "id": "microprice-divergence-gate",
     "status": "pass",
     "baseline": "simple",
-    "hypothesis": "Microprice-vs-mid divergence gating: condition the open leg of each oracle signal on the signed divergence of the size-weighted microprice from the mid price. microprice = (bid_px * ask_sz + ask_px * bid_sz) / (bid_sz + ask_sz); delta = microprice - mid. When delta > +deadband (upward book pressure): favor BUY, skip SELL. When delta < -deadband (downward book pressure): favor SELL, skip BUY. When |delta| <= deadband: execute unconditionally. Reduce-only orders always execute. The microprice is a dollar-weighted pressure signal (Stoikov 2018) richer than raw quantity imbalance — it encodes both the direction and the fractional size asymmetry through the spread.",
+    "hypothesis": "Microprice-vs-mid divergence gating: condition the open leg of each oracle signal on the signed divergence of the size-weighted microprice from the mid price. microprice = (bid_px * ask_sz + ask_px * bid_sz) / (bid_sz + ask_sz); delta = microprice - mid. When delta > +deadband (upward book pressure): favor BUY, skip SELL. When delta < -deadband (downward book pressure): favor SELL, skip BUY. When |delta| <= deadband: execute unconditionally. Reduce-only orders always execute. The microprice is a dollar-weighted pressure signal (Stoikov 2018) richer than raw quantity imbalance \u2014 it encodes both the direction and the fractional size asymmetry through the spread.",
     "algorithm_path": "execution_algos/microprice-divergence-gate/",
     "scores": {
       "sharpe": 2.7958,
@@ -109,8 +109,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 17485.9,
+      "tokens_used": {
+        "input": 105,
+        "output": 105537,
+        "cache_creation": 387620,
+        "cache_read": 2394283,
+        "total": 2887545
+      }
     }
   }
 ]
