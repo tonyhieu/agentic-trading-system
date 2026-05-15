@@ -17,6 +17,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ob-imbalance-gate",
         "get_execution_algorithm",
     ),
+    "vol-regime-sizer": (
+        "execution_algos.vol-regime-sizer",
+        "get_execution_algorithm",
+    ),
 }
 
 

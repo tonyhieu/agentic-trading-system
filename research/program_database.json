@@ -58,5 +58,29 @@
         "total": 181004
       }
     }
+  },
+  {
+    "id": "vol-regime-sizer",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Volatility-regime trade-size scaling: estimate short-term realized mid-price volatility from recent quote ticks using two EWMs (fast halflife=20 ticks, slow halflife=120 ticks). Map the vol regime to a submission probability p = max(min_prob, exp(-sensitivity * max(0, vol_ratio - 1))) where vol_ratio = fast_vol / slow_vol. With 1-contract parent orders, continuous sizing is realized as probabilistic submission: p varies smoothly with vol, concentrating participation in calm regimes. Reduce-only orders always execute. Unlike binary gating algorithms (streak-spread-tight, ob-imbalance-gate), this uses a continuous, vol-magnitude-sensitive probability that decays smoothly with excess volatility.",
+    "algorithm_path": "execution_algos/vol-regime-sizer/",
+    "scores": {
+      "sharpe": 1.2985,
+      "realized_pnl": 2618.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 31.97,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 124002,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): vol-regime-sizer $2618.25/124002 trades vs simple $1984.00/132536 trades; delta_pnl=+31.97%, well above +5.0% gate. Win rate: 35.92% vs 35.57% (+0.35pp). Max drawdown: -0.030% vs -0.038% (improved). Trade reduction: ~6.4% (8,534 fewer trades). Improvement consistent across ALL 12 dates -- beats or matches baseline every date, including turning losing days into smaller losses. Config: sigma=5, seed=42, horizon=30s, fast_halflife=20, slow_halflife=120, sensitivity=2.0, min_prob=0.05. Slippage: both 0.0 (zero fill-cost model). Sharpe: 1.30 vs 0.91 (+42.9%). Note: algo PASS but Sharpe (1.30) is lower than prior passing algos (streak-spread-tight 2.76, ob-imbalance-gate 2.80) -- vol-regime sizer has less concentrated skipping, higher residual variance.",
+    "timestamp": "2026-05-15T02:40:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

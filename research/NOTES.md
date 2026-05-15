@@ -119,3 +119,29 @@ the spread-filter nearly achieved ($1622.50, +2.25%).
 **Why**: Operator ran the agent on the bare host instead of inside `docker compose run dev`. The repo's tooling assumes the Docker context where `awscli` is baked in.
 **Alternatives**: (a) `brew install awscli` and re-run on host; (b) install Docker and use `docker compose run --rm dev`; (c) pre-seed `data-cache/` from another machine for an offline iteration.
 **Impact**: No program_database.json entry was written (no attempt was actually executed). No algorithm code was created. The iteration budget was not consumed. Operator decision required before the next invocation.
+
+---
+
+## [2026-05-14 12:00] ASSUMPTION: vol-regime-sizer uses probabilistic submission due to 1-contract parent orders
+
+**Detail**: The oracle strategy (`trade_size=1`) generates parent orders of exactly
+1 contract. True fractional sizing (e.g., send 0.3 contracts when scale=0.3) is not
+representable — the minimum sendable unit is 1 contract. The `vol-regime-sizer`
+algorithm therefore realizes the continuous sizing hypothesis as **probabilistic
+submission**: p_submit = max(min_prob, exp(-sensitivity * max(0, vol_ratio - 1))). In
+expectation over many orders, this is equivalent to fractional sizing. The deterministic
+draw uses SHA-256(client_order_id) so results are reproducible given the same oracle seed.
+**Why**: Oracle strategy always sends quantity=1 per signal; confirmed by inspecting
+`execution_algos/ob-imbalance-gate/results/20260308/orders.csv` — all 699 orders have
+quantity=1. Nautilus `spawn_market` / quantity modification could in theory send a partial
+order, but the parent is already at the minimum representable qty.
+**Alternatives**: (a) Change `trade_size` to a larger value (e.g., 10) to allow true
+fractional sizing — requires human authorization to change config.yaml. (b) Accept
+probabilistic submission as the continuous analog (current implementation). (c) Treat
+as a binary gate with a vol threshold (rejected — that's what ob-imbalance-gate does).
+**Impact**: The algorithm is logically sound — probabilistic submission at probability
+p is equivalent to fractional sizing at fraction p in expectation. However, per-trade
+variance is higher than a true fractional sizer. With ~130k trades in the train window,
+the law of large numbers should stabilize aggregate metrics.
+
+⚠ NOTE WRITTEN: research/NOTES.md — vol-regime-sizer uses probabilistic submission due to 1-contract parent orders
