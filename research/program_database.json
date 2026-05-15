@@ -319,8 +319,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 76514.5,
+      "tokens_used": {
+        "input": 243,
+        "output": 225649,
+        "cache_creation": 1217392,
+        "cache_read": 7852366,
+        "total": 9295650
+      }
     }
   }
 ]
