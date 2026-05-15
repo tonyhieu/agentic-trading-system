@@ -6,3 +6,4 @@ vol-regime-sizer,pass,2618.25,1.2985,0.0360,124002,0.3592
 microprice-divergence-gate,pass,4846.25,2.7958,0.0513,106990,0.3774
 passive-aggressive-ladder,fail,-1430.32,-1.0533,0.0567,132510,0.3334
 depth-participation-sizer,fail,1962.0,1.0992,0.0332,119549,0.3514
+session-clock-gate,pass,2426.75,1.1456,0.0375,129136,0.3566

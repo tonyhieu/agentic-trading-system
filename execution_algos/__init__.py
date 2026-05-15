@@ -33,6 +33,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.depth-participation-sizer",
         "get_execution_algorithm",
     ),
+    "session-clock-gate": (
+        "execution_algos.session-clock-gate",
+        "get_execution_algorithm",
+    ),
 }
 
 

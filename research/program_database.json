@@ -178,5 +178,29 @@
         "total": 4521145
       }
     }
+  },
+  {
+    "id": "session-clock-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Time-of-day / session-phase temporal filter: condition the open leg of each oracle signal on the intraday wall-clock time. Skip entries during structurally low-quality session windows — open turbulence (08:30-09:00 CT), midday lull (11:45-12:15 CT), and pre-close ramp (15:00-15:15 CT). Execute normally during stable mid-session. Reduce-only orders always execute. The only information used is order.ts_init (UNIX ns, UTC), converted to CT with a fixed offset — no microstructure signal, no book data, no P&L history. Purely temporal and orthogonal to all prior algorithms.",
+    "algorithm_path": "execution_algos/session-clock-gate/",
+    "scores": {
+      "sharpe": 1.1456,
+      "realized_pnl": 2426.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 22.32,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 129136,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): session-clock-gate $2426.75/129136 trades vs simple $1984.00/132536 trades; delta_pnl=+22.32%, well above +5.0% gate. Win rate: 35.66% vs 35.57% (+0.09pp). Max drawdown: -0.036% vs -0.038% (improved). Skip rate: ~2.6% (3,400 fewer trades). Beat or matched baseline on ALL 12 dates -- never hurt. Config: sigma=5, seed=42, horizon=30s, utc_offset=-5 (CDT), skip windows: open 08:30-09:00 CT, midday 11:45-12:15 CT, pre-close 15:00-15:15 CT. Slippage: both 0.0 (zero fill-cost model). Sharpe: 1.15 vs 0.91 (+26.1%). Note: Sharpe (1.15) is lower than top passing algos (streak-spread-tight 2.76, ob-imbalance-gate 2.80) -- temporal filter has smaller skip rate (2.6% vs 19-20%) and thus less concentrated benefit.",
+    "timestamp": "2026-05-15T08:30:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
