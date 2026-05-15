@@ -246,7 +246,7 @@
     "hypothesis": "Cooldown-after-trade gating: after any executed open-leg order, impose a 3-second cooldown during which all subsequent open-leg orders are skipped. Reduce-only orders always execute. The hypothesis is that at 1-second oracle signal cadence, closely-spaced entries within the cooldown window are adversely selected (correlated with the same momentum event as the first entry) and their net expected P&L is negative. Pivot: originally intended to implement signal-strength-conditioned sizing, but inspection of the runtime interface confirmed the oracle strategy does NOT pass forecast magnitude through exec_algorithm_params or tags. Pivoted to cooldown gating, which is purely time-based and orthogonal to all eight prior algorithms.",
     "algorithm_path": "execution_algos/cooldown-entry-gate/",
     "scores": {
-      "sharpe": 1.1610,
+      "sharpe": 1.161,
       "realized_pnl": 2218.0,
       "mean_slippage": 0.0,
       "vs_baseline_pnl_pct": 11.79,
@@ -259,8 +259,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 38856.9,
+      "tokens_used": {
+        "input": 190,
+        "output": 192186,
+        "cache_creation": 761806,
+        "cache_read": 5911802,
+        "total": 6865984
+      }
     }
   }
 ]
