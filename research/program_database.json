@@ -183,7 +183,7 @@
     "id": "session-clock-gate",
     "status": "pass",
     "baseline": "simple",
-    "hypothesis": "Time-of-day / session-phase temporal filter: condition the open leg of each oracle signal on the intraday wall-clock time. Skip entries during structurally low-quality session windows — open turbulence (08:30-09:00 CT), midday lull (11:45-12:15 CT), and pre-close ramp (15:00-15:15 CT). Execute normally during stable mid-session. Reduce-only orders always execute. The only information used is order.ts_init (UNIX ns, UTC), converted to CT with a fixed offset — no microstructure signal, no book data, no P&L history. Purely temporal and orthogonal to all prior algorithms.",
+    "hypothesis": "Time-of-day / session-phase temporal filter: condition the open leg of each oracle signal on the intraday wall-clock time. Skip entries during structurally low-quality session windows \u2014 open turbulence (08:30-09:00 CT), midday lull (11:45-12:15 CT), and pre-close ramp (15:00-15:15 CT). Execute normally during stable mid-session. Reduce-only orders always execute. The only information used is order.ts_init (UNIX ns, UTC), converted to CT with a fixed offset \u2014 no microstructure signal, no book data, no P&L history. Purely temporal and orthogonal to all prior algorithms.",
     "algorithm_path": "execution_algos/session-clock-gate/",
     "scores": {
       "sharpe": 1.1456,
@@ -199,8 +199,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 35537.5,
+      "tokens_used": {
+        "input": 154,
+        "output": 165237,
+        "cache_creation": 721571,
+        "cache_read": 4148449,
+        "total": 5035411
+      }
     }
   }
 ]
