@@ -153,7 +153,7 @@
     "id": "depth-participation-sizer",
     "status": "fail",
     "baseline": "simple",
-    "hypothesis": "Adaptive participation sizing vs top-of-book depth: scale open-leg order submission probability as a continuous function of the current same-side top-of-book quantity at the moment the signal fires — p = clip(min_prob, 1.0, (q_same_side / depth_scale)^alpha). For BUY orders, q_same_side = ask_size (counterparty supply); for SELL orders, q_same_side = bid_size (counterparty demand). When the book is deep on the relevant side (q >= depth_scale), p=1.0 — full participation. When thin, p drops proportionally. Reduce-only orders always execute. Conditioning axis is absolute same-side depth magnitude, distinct from all prior algorithms (imbalance ratio, vol regime, microprice deviation, loss streak).",
+    "hypothesis": "Adaptive participation sizing vs top-of-book depth: scale open-leg order submission probability as a continuous function of the current same-side top-of-book quantity at the moment the signal fires \u2014 p = clip(min_prob, 1.0, (q_same_side / depth_scale)^alpha). For BUY orders, q_same_side = ask_size (counterparty supply); for SELL orders, q_same_side = bid_size (counterparty demand). When the book is deep on the relevant side (q >= depth_scale), p=1.0 \u2014 full participation. When thin, p drops proportionally. Reduce-only orders always execute. Conditioning axis is absolute same-side depth magnitude, distinct from all prior algorithms (imbalance ratio, vol regime, microprice deviation, loss streak).",
     "algorithm_path": "execution_algos/depth-participation-sizer/",
     "scores": {
       "sharpe": 1.0992,
@@ -169,8 +169,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 33398.8,
+      "tokens_used": {
+        "input": 149,
+        "output": 140978,
+        "cache_creation": 702235,
+        "cache_read": 3677783,
+        "total": 4521145
+      }
     }
   }
 ]
