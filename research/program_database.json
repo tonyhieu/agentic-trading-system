@@ -238,5 +238,29 @@
         "total": 5578258
       }
     }
+  },
+  {
+    "id": "cooldown-entry-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Cooldown-after-trade gating: after any executed open-leg order, impose a 3-second cooldown during which all subsequent open-leg orders are skipped. Reduce-only orders always execute. The hypothesis is that at 1-second oracle signal cadence, closely-spaced entries within the cooldown window are adversely selected (correlated with the same momentum event as the first entry) and their net expected P&L is negative. Pivot: originally intended to implement signal-strength-conditioned sizing, but inspection of the runtime interface confirmed the oracle strategy does NOT pass forecast magnitude through exec_algorithm_params or tags. Pivoted to cooldown gating, which is purely time-based and orthogonal to all eight prior algorithms.",
+    "algorithm_path": "execution_algos/cooldown-entry-gate/",
+    "scores": {
+      "sharpe": 1.1610,
+      "realized_pnl": 2218.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 11.79,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99119,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, excluding 20260314 and 20260321 -- no data): cooldown-entry-gate $2218.00/99119 trades vs simple $1984.00/132536 trades; delta_pnl=+11.79%, above +5.0% gate. Win rate: 35.76% vs 35.57% (+0.19pp). Max drawdown: -0.030% vs -0.038% (improved). Trade reduction: 25.3% (33,417 fewer trades). Beat baseline on 8/12 dates. Slippage: both 0.0 (zero fill-cost model). Sharpe: 1.16 vs 0.91 (+27.7%). Config: cooldown_seconds=3.0. IS_weighted_bps: 0.0376 vs 0.0375 (negligible diff). Signal-strength pivot: runtime interface confirmed no forecast magnitude field on orders.",
+    "timestamp": "2026-05-15T09:30:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

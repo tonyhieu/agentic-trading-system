@@ -41,6 +41,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.aggressor-flow-gate",
         "get_execution_algorithm",
     ),
+    "cooldown-entry-gate": (
+        "execution_algos.cooldown-entry-gate",
+        "get_execution_algorithm",
+    ),
 }
 
 
