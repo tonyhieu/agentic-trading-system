@@ -92,7 +92,7 @@ def _sum_money_list(value: Any) -> float:
     return _parse_money(value)
 
 
-def _sharpe_ratio(account: pd.DataFrame) -> float | None:
+def _sharpe_ratio_intraday(account: pd.DataFrame) -> float | None:
     """Daily Sharpe from the equity curve, resampled to 1-minute bars.
 
     Scale: per-minute returns are scaled by sqrt(RTH_MINUTES_PER_DAY) so the
@@ -175,7 +175,7 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
         "total_return_pct": total_return_pct,
         "realized_pnl": realized_pnl,
         "max_drawdown_pct": _max_drawdown_pct(reports.account),
-        "sharpe_ratio": _sharpe_ratio(reports.account),
+        "sharpe_ratio_intraday": _sharpe_ratio_intraday(reports.account),
         "trade_count": trades,
         "winners": winners,
         "losers": losers,

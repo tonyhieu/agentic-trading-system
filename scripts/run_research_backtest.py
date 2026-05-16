@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import resource
 import subprocess
@@ -419,10 +420,25 @@ def aggregate(per_date: list[dict]) -> dict:
 
     summed_unrealized = _sum(per_date, "unrealized_pnl", 0.0)
 
+    daily_returns = [
+        (m.get("realized_pnl", 0.0) + m.get("unrealized_pnl", 0.0)) / STARTING_BALANCE_USD
+        for m in per_date
+    ]
+    if len(daily_returns) > 1:
+        # Cross-day annualized Sharpe: mean(daily_returns) / std(daily_returns) * sqrt(252)
+        ret_series = pd.Series(daily_returns)
+        mean_ret = ret_series.mean()
+        std_ret = ret_series.std(ddof=1)
+        agg_sharpe = float(mean_ret / std_ret * math.sqrt(252)) if std_ret > 0 else 0.0
+    else:
+        # Cannot compute cross-day variance with N=1.
+        agg_sharpe = 0.0
+
     return {
         "realized_pnl":       summed_pnl,
         "unrealized_pnl": summed_unrealized,
-        "sharpe_ratio":       sum(m["sharpe_ratio"] for m in per_date) / len(per_date),
+        "sharpe_ratio":       agg_sharpe,
+        "sharpe_n_days":      len(per_date),
         "max_drawdown_pct":   min(m["max_drawdown_pct"] for m in per_date),
         "win_rate":           (summed_winners / summed_trades) if summed_trades else 0.0,
         "trade_count":        summed_trades,
@@ -464,7 +480,7 @@ def write_backtest_results(
     """Write <algo>/results/backtest-results.json per snapshot/SKILL.md section 3."""
     perf_keys = (
         "realized_pnl", "unrealized_pnl",
-        "sharpe_ratio", "max_drawdown_pct", "win_rate",
+        "sharpe_ratio", "sharpe_n_days", "max_drawdown_pct", "win_rate",
         "trade_count", "mean_slippage", "max_abs_slippage",
         "total_commissions", "total_return_pct",
         "is_weighted_bps", "is_total_price",
@@ -485,6 +501,7 @@ def write_backtest_results(
         "algo_name":     algo_name,
         "backtest_date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "baseline":      baseline_name,
+        "sharpe_metric_version": "v2",
         "strategy_used": cfg["strategy"]["name"],
         "symbol":        symbol,
         "performance":   performance,
@@ -785,8 +802,9 @@ def main() -> int:
                     symbol=args.symbol, config_path=args.config,
                 )
                 base_metrics[date] = m
+                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
                 print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={m['sharpe_ratio']:.2f}")
+                      f"sharpe={s_ratio:.2f}")
             except Exception as exc:  # noqa: BLE001
                 print(f"    FAIL {exc}", file=sys.stderr)
                 failures.append((baseline, date, str(exc)))
