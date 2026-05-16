@@ -25,7 +25,7 @@ strategy:
   # run_backtest() when absent.
   kwargs:
     horizon_seconds:        30.0   # forecast window for the oracle signal
-    sigma:                 100   # noise added to the forecast (0 = perfect oracle)
+    sigma:                 217.67 # noise added to the forecast (targets 1bps R^2)
     seed:                    42    # RNG seed (reproducibility when sigma > 0)
     signal_interval_seconds: 1.0   # cadence of generated signals
 
