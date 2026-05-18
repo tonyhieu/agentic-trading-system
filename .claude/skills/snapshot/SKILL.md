@@ -98,9 +98,12 @@ populate them — that is data leakage (see the `analysis` skill).
 
 Notes on individual fields:
 
-- `sharpe_ratio` is a **daily Sharpe** — per-minute returns scaled by
-  `sqrt(390)` (RTH minutes per day), so one trading day produces one
-  interpretable risk-adjusted number. Mean across train dates.
+- `sharpe_ratio` is a **cross-day annualized Sharpe** computed from
+  per-date P&L returns: `mean(daily_returns) / std(daily_returns) * sqrt(252)`.
+  This metric measures the risk-adjusted consistency of the algorithm's
+  day-to-day performance.
+- `sharpe_n_days` is the number of trading dates used in the Sharpe
+  calculation.
 - `is_weighted_bps` is the **canonical execution-algo objective**:
   qty-weighted mean implementation shortfall against arrival mid, in
   basis points. Sign: positive = adverse for the trader.

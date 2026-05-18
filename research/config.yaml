@@ -78,7 +78,7 @@ refinement:
   # regressing the others. There is no formal lineage tracking (no parent_id);
   # the relationship lives in the algorithm's NOTES.md hypothesis prose.
   targets:
-    min_sharpe_delta:       0.10   # absolute Sharpe improvement
+    min_sharpe_delta:       0.5    # absolute Sharpe improvement
     min_pnl_delta_pct:      2.0    # percentage points of realized P&L
     max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
     min_winrate_delta_pp:   2.0    # percentage points
