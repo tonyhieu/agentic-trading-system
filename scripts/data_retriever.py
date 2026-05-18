@@ -104,23 +104,51 @@ class DataRetriever:
             return {}
     
     def sync_partition(self, dataset_name: str, version: str, partition_path: str, verbose: bool = False):
-        """Download a partition by relative path."""
-        try:
-            dataset_cache = self.cache_dir / dataset_name / version / "partitions"
-            dataset_cache.mkdir(parents=True, exist_ok=True)
-            
-            s3_prefix = f"s3://{self.bucket_name}/datasets/{dataset_name}/{version}/partitions/{partition_path}"
-            local_dir = str(dataset_cache / partition_path)
-            
-            cmd = f"aws s3 sync {s3_prefix} {local_dir} --region {self.region}"
-            if not verbose:
-                cmd += " --no-progress"
-            
-            print(f"Syncing: {partition_path}")
-            self._run_aws(cmd)
-            print(f"✓ Synced: {partition_path}")
-        except RuntimeError as e:
-            print(f"Error syncing partition: {e}", file=sys.stderr)
+        """Download a partition by relative path.
+
+        Be resilient to different dataset layouts. Try the canonical
+        /partitions/<partition_path> location first, then fall back to
+        /oos/partitions/<partition_path> and /oos/<partition_path> if files
+        live under an out-of-sample prefix.
+        """
+        dataset_cache = self.cache_dir / dataset_name / version / "partitions"
+        dataset_cache.mkdir(parents=True, exist_ok=True)
+        local_dir = str(dataset_cache / partition_path)
+
+        candidates = [
+            f"s3://{self.bucket_name}/datasets/{dataset_name}/{version}/partitions/{partition_path}",
+            f"s3://{self.bucket_name}/datasets/{dataset_name}/{version}/oos/partitions/{partition_path}",
+            f"s3://{self.bucket_name}/datasets/{dataset_name}/{version}/oos/{partition_path}",
+        ]
+
+        last_err: Optional[Exception] = None
+        for s3_prefix in candidates:
+            try:
+                # Check whether the prefix contains any objects before syncing
+                try:
+                    self._run_aws(f"aws s3 ls {s3_prefix} --region {self.region}")
+                except RuntimeError:
+                    # No objects at this prefix; try next candidate
+                    continue
+
+                cmd = f"aws s3 sync {s3_prefix} {local_dir} --region {self.region}"
+                if not verbose:
+                    cmd += " --no-progress"
+
+                print(f"Syncing from: {s3_prefix}")
+                self._run_aws(cmd)
+                print(f"✓ Synced: {partition_path} (from {s3_prefix})")
+                return
+            except Exception as e:
+                last_err = e
+                # Try the next candidate
+                continue
+
+        # If we get here, none of the candidates produced files
+        if last_err is not None:
+            print(f"Error syncing partition (no matching S3 prefix found): {last_err}", file=sys.stderr)
+        else:
+            print(f"Error syncing partition: no objects found for partition {partition_path}", file=sys.stderr)
     
     def validate_checksums(self, dataset_name: str, version: str) -> bool:
         """Validate downloaded files against checksums."""
