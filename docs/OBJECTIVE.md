@@ -360,6 +360,9 @@ Two note files, different purposes:
 
 - **Raw numbers only.** Don't round Sharpe up or drawdown down.
 - **Always report trade_count.** A Sharpe of 2.0 on 8 trades is meaningless — say so.
+- **Small-N risk.** Annualized Sharpe computed from ~13 dates has high standard error
+  (~0.4 units). Never use Sharpe as a primary pass criterion; it is a secondary
+  discriminator for refinement only.
 - **Never cherry-pick dates.** Only the train/test split in `config.yaml → data_window`.
 - **Report degradation.** Train improves but test regresses = FAIL. Write it as FAIL.
 - **Don't speculate from too few trades.** Say "insufficient data" instead.

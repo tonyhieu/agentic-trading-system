@@ -48,10 +48,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import random
+import resource
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -74,11 +77,63 @@ DEFAULT_SYMBOL = "MESM6"
 # Per-backtest timeout for subprocess isolation. A 1-day backtest should
 # complete in well under 60s; this is a sanity ceiling, not a normal-case
 # limit. If you regularly bump this, something else is wrong.
-SUBPROCESS_TIMEOUT_SEC = 600
+#
+# Lowered from 600s to 180s as part of issue #61. The original 600s
+# existed primarily to absorb the memory-pressure tail when a Nautilus
+# engine pushed past available RAM and the OS started thrashing — a
+# wedged subprocess could stall for many minutes before either crashing
+# or finishing. With the RLIMIT_AS memory cap also added under #61, the
+# memory-pressure failure mode now raises MemoryError in seconds, so
+# the tail no longer exists and 180s gives ample headroom over the
+# ~27s observed for the simple baseline on the busiest cached day.
+SUBPROCESS_TIMEOUT_SEC = 180
+
+# Per-backtest virtual-memory ceiling for the --internal-single-run child.
+# Nautilus holds all order/fill/position objects in engine.trader caches
+# until reports are generated at end; a busy day on a non-skip algo can
+# push RSS past 10 GB (~9.5 GB measured for the simple baseline on
+# 20260312). On a 16 GB / 0 swap host that's right at the OOM edge, and
+# the allocator stalls under pressure make the subprocess timeout look
+# like a hang. With this cap, the child raises MemoryError quickly
+# instead of thrashing the OS — turns the failure mode from "wedge for
+# minutes" into "fail in seconds." Override with RESEARCH_MEM_CAP_GB=0
+# to disable. Enforced via RLIMIT_AS — works on Linux (the agent-loop
+# host); macOS treats it as advisory and the setrlimit call may return
+# EINVAL, in which case we log a warning and continue uncapped.
+MEMORY_CAP_GB_DEFAULT = 12
 
 # Magic prefix on the child's stdout line carrying the result payload.
 # Anything goes after this prefix as long as it's a single line of JSON.
 METRICS_MARKER = "__METRICS_JSON__"
+
+
+def _apply_memory_cap() -> None:
+    """Set RLIMIT_AS for the current process to bound peak memory.
+
+    No-op when RESEARCH_MEM_CAP_GB=0 or when the platform refuses the
+    setrlimit call (e.g. unprivileged WSL). Failures are non-fatal — we
+    log a warning to stderr and continue; the original failure mode
+    (OS-level memory pressure) is no worse than not having the cap.
+    """
+    try:
+        cap_gb = float(os.environ.get("RESEARCH_MEM_CAP_GB", MEMORY_CAP_GB_DEFAULT))
+    except ValueError:
+        print(
+            f"WARN: RESEARCH_MEM_CAP_GB={os.environ.get('RESEARCH_MEM_CAP_GB')!r} "
+            f"is not a number; ignoring",
+            file=sys.stderr,
+        )
+        return
+    if cap_gb <= 0:
+        return
+    cap_bytes = int(cap_gb * 1024 * 1024 * 1024)
+    try:
+        resource.setrlimit(resource.RLIMIT_AS, (cap_bytes, cap_bytes))
+    except (ValueError, OSError) as exc:
+        print(
+            f"WARN: could not apply RLIMIT_AS={cap_gb} GB ({exc}); continuing without cap",
+            file=sys.stderr,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -148,14 +203,23 @@ def load_config(path: Path) -> dict:
 
 
 def train_dates_from_config(cfg: dict) -> list[str]:
-    """Calendar-day YYYYMMDD list, both endpoints inclusive.
+    """Calendar-day YYYYMMDD list, both endpoints inclusive, weekends-aware.
 
-    Uses freq='D' not freq='B'. GLBX FX futures trade Sunday evening through
-    Friday US time, so Sunday partitions exist in the dataset. Missing dates
-    surface downstream as a run_backtest() failure, which we catch and skip.
+    GLBX FX futures trade Sunday evening through Friday US time, so:
+      - Saturday partitions don't exist → drop (dropping here saves a
+        wasted S3 sync attempt + a guaranteed failure entry in the
+        runner's per-date loop, which used to cost ~600s per Saturday
+        on cascade-fail).
+      - Sunday partitions DO exist (the evening session) → keep.
+    Other non-trading dates (US holidays) are not filtered here; they
+    still surface downstream as a run_backtest() failure, which we
+    catch and skip.
     """
     start, end = cfg["data_window"]["train"]
-    return pd.date_range(start, end, freq="D").strftime("%Y%m%d").tolist()
+    days = pd.date_range(start, end, freq="D")
+    # pandas dayofweek: Mon=0..Sun=6. Drop Saturday only.
+    days = days[days.dayofweek != 5]
+    return days.strftime("%Y%m%d").tolist()
 
 
 # ---------------------------------------------------------------------------
@@ -468,10 +532,25 @@ def aggregate(per_date: list[dict]) -> dict:
 
     summed_unrealized = _sum(per_date, "unrealized_pnl", 0.0)
 
+    daily_returns = [
+        (m.get("realized_pnl", 0.0) + m.get("unrealized_pnl", 0.0)) / STARTING_BALANCE_USD
+        for m in per_date
+    ]
+    if len(daily_returns) > 1:
+        # Cross-day annualized Sharpe: mean(daily_returns) / std(daily_returns) * sqrt(252)
+        ret_series = pd.Series(daily_returns)
+        mean_ret = ret_series.mean()
+        std_ret = ret_series.std(ddof=1)
+        agg_sharpe = float(mean_ret / std_ret * math.sqrt(252)) if std_ret > 0 else 0.0
+    else:
+        # Cannot compute cross-day variance with N=1.
+        agg_sharpe = 0.0
+
     return {
         "realized_pnl":       summed_pnl,
         "unrealized_pnl": summed_unrealized,
-        "sharpe_ratio":       sum(m["sharpe_ratio"] for m in per_date) / len(per_date),
+        "sharpe_ratio":       agg_sharpe,
+        "sharpe_n_days":      len(per_date),
         "max_drawdown_pct":   min(m["max_drawdown_pct"] for m in per_date),
         "win_rate":           (summed_winners / summed_trades) if summed_trades else 0.0,
         "trade_count":        summed_trades,
@@ -514,7 +593,7 @@ def write_backtest_results(
     """Write <algo>/results/backtest-results.json per snapshot/SKILL.md section 3."""
     perf_keys = (
         "realized_pnl", "unrealized_pnl",
-        "sharpe_ratio", "max_drawdown_pct", "win_rate",
+        "sharpe_ratio", "sharpe_n_days", "max_drawdown_pct", "win_rate",
         "trade_count", "mean_slippage", "max_abs_slippage",
         "total_commissions", "total_return_pct",
         "is_weighted_bps", "is_total_price",
@@ -535,6 +614,7 @@ def write_backtest_results(
         "algo_name":     algo_name,
         "backtest_date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "baseline":      baseline_name,
+        "sharpe_metric_version": "v2",
         "strategy_used": cfg["strategy"]["name"],
         "symbol":        symbol,
         "performance":   performance,
@@ -675,6 +755,8 @@ def _do_internal_single_run(args: argparse.Namespace) -> int:
     On failure we exit non-zero; parent surfaces stderr tail. Do not print
     anything else to stdout after the marker line.
     """
+    _apply_memory_cap()
+
     if not args.algo:
         print("ERROR: --internal-single-run requires --algo", file=sys.stderr)
         return 2
@@ -863,7 +945,28 @@ def main() -> int:
     base_metrics: dict[str, dict] = {}
     failures: list[tuple[str, str, str]] = []  # (algo_name, date, error)
 
+    # Iteration wall-clock budget (issue #61). Guards against the per-date
+    # cascade where a wedged algorithm + 600s subprocess timeout could burn
+    # ~2 hours of wall-clock before the iteration completed. 0 / missing
+    # disables. Checked at the *start* of each date — the in-flight
+    # subprocess (if any) is allowed to finish so we don't lose work that
+    # was about to land.
+    budget_sec = float(cfg.get("loop", {}).get("iteration_timeout_seconds", 0) or 0)
+    loop_start = time.monotonic()
+    budget_exceeded = False
+
     for date in dates:
+        if budget_sec > 0 and (time.monotonic() - loop_start) > budget_sec:
+            remaining = [d for d in dates[dates.index(date):]]
+            print(
+                f"\n⚠ ITERATION BUDGET EXCEEDED ({budget_sec:.0f}s). "
+                f"Skipping {len(remaining)} remaining date(s): "
+                f"{', '.join(remaining)}",
+                file=sys.stderr,
+            )
+            budget_exceeded = True
+            break
+
         if not args.baseline_only:
             print(f"\n>>> run_backtest({args.algo}, {date}) ...", flush=True)
             try:
@@ -896,8 +999,9 @@ def main() -> int:
                     symbol=args.symbol, config_path=args.config,
                 )
                 base_metrics[date] = m
+                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
                 print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={m['sharpe_ratio']:.2f}")
+                      f"sharpe={s_ratio:.2f}")
             except Exception as exc:  # noqa: BLE001
                 print(f"    FAIL {exc}", file=sys.stderr)
                 failures.append((baseline, date, str(exc)))
@@ -941,7 +1045,7 @@ def main() -> int:
 
         print_summary(algo_name=None, baseline_name=baseline,
                       algo_agg=None, base_agg=base_agg, cfg=cfg)
-        return 0 if not failures else 1
+        return 0 if not failures and not budget_exceeded else 1
 
     if not algo_metrics:
         print("\nERROR: no successful algo runs — cannot aggregate.", file=sys.stderr)
@@ -984,7 +1088,7 @@ def main() -> int:
     print_summary(algo_name=args.algo, baseline_name=baseline,
                   algo_agg=algo_agg, base_agg=base_agg, cfg=cfg)
 
-    return 0 if not failures else 1
+    return 0 if not failures and not budget_exceeded else 1
 
 
 if __name__ == "__main__":
