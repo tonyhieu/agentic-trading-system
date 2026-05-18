@@ -263,16 +263,11 @@ CMD ["index.lambda_handler"]
                     continue
                 raise
 
-        payload = {"execution_algorithm_name": "spread-filter-v2", "symbol": "MESM6"}
-        resp = lam.invoke(
-            FunctionName=function_name,
-            InvocationType="RequestResponse",
-            Payload=json.dumps(payload).encode(),
-        )
-        body = resp["Payload"].read().decode()
-        print("[INFO] Invoke response:")
-        print(body)
-        print(f"[SUCCESS] deployed {function_name} with image {image_uri}")
+        # Built and pushed image; do not auto-invoke the function.
+        # Prefer testing via the GitHub Actions workflow (snapshots/spread-filter-v2).
+        print(f"[SUCCESS] built and pushed image {image_uri}")
+        print("Skipping automatic invoke; run the 'snapshot-execution-algo.yml' workflow for spread-filter-v2 to test the evaluator.")
+        print(f"[INFO] Deployed {function_name} with image {image_uri}")
 
 
 if __name__ == "__main__":
