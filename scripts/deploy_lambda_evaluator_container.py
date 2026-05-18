@@ -155,6 +155,14 @@ def main() -> None:
             )
             + "\n"
         )
+        # Copy local scripts into the build context so the image can include them
+        import shutil
+        try:
+            shutil.copytree("scripts", tdp / "scripts")
+        except Exception:
+            # If scripts/ is absent or copy fails, continue; runtime will still try S3-based sync
+            pass
+
         (tdp / "Dockerfile").write_text(
             """FROM python:3.12-slim
 WORKDIR /var/task
