@@ -66,6 +66,29 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     instrument = _build_instrument(symbol)
 
     loader = DatabentoDataLoader()
+
+    # DEBUG diagnostics: list partition dir, stat file, and try a short read
+    import sys as _sys
+    try:
+        print(f"DEBUG: attempting to open DBN at {dbn_path}", file=_sys.stderr)
+        parent = dbn_path.parent
+        try:
+            listing = [(p.name, p.stat().st_size) for p in parent.iterdir()]
+            print("DEBUG: partition dir listing:", listing, file=_sys.stderr)
+        except Exception as _e:
+            print("DEBUG: could not list partition dir:", _e, file=_sys.stderr)
+
+        try:
+            with open(dbn_path, "rb") as _f:
+                head = _f.read(64)
+                print("DEBUG: dbn head bytes:", head[:16], file=_sys.stderr)
+        except Exception as _e:
+            print("ERROR: cannot read DBN file", _e, file=_sys.stderr)
+            raise
+    except Exception:
+        # re-raise to ensure the Lambda logs contain the failure details
+        raise
+
     all_data = loader.from_dbn_file(dbn_path, include_trades=True)
     ticks = [d for d in all_data if d.instrument_id == instrument.id]
     return instrument, ticks

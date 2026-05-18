@@ -16,7 +16,12 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Optional
 import hashlib
-from dotenv import load_dotenv
+import time
+try:
+    from dotenv import load_dotenv
+except Exception:
+    def load_dotenv(*a, **k):
+        return False
 
 load_dotenv()
 
@@ -104,23 +109,67 @@ class DataRetriever:
             return {}
     
     def sync_partition(self, dataset_name: str, version: str, partition_path: str, verbose: bool = False):
-        """Download a partition by relative path."""
-        try:
-            dataset_cache = self.cache_dir / dataset_name / version / "partitions"
-            dataset_cache.mkdir(parents=True, exist_ok=True)
-            
-            s3_prefix = f"s3://{self.bucket_name}/datasets/{dataset_name}/{version}/partitions/{partition_path}"
-            local_dir = str(dataset_cache / partition_path)
-            
-            cmd = f"aws s3 sync {s3_prefix} {local_dir} --region {self.region}"
-            if not verbose:
-                cmd += " --no-progress"
-            
-            print(f"Syncing: {partition_path}")
-            self._run_aws(cmd)
-            print(f"✓ Synced: {partition_path}")
-        except RuntimeError as e:
-            print(f"Error syncing partition: {e}", file=sys.stderr)
+        """Download a partition by relative path using boto3 (no aws cli required).
+
+        Try several common layout variants until objects are found and downloaded.
+        """
+        import boto3
+        s3 = boto3.client('s3', region_name=self.region)
+
+        dataset_cache = self.cache_dir / dataset_name / version / "partitions"
+        dataset_cache.mkdir(parents=True, exist_ok=True)
+        local_dir = Path(dataset_cache / partition_path)
+        local_dir.mkdir(parents=True, exist_ok=True)
+
+        # candidate prefixes (object prefix inside the bucket)
+        base = f"datasets/{dataset_name}/{version}"
+        candidates = [
+            f"{base}/partitions/{partition_path}",
+            f"{base}/oos/partitions/{partition_path}",
+            f"{base}/oos/{partition_path}",
+        ]
+
+        for prefix in candidates:
+            try:
+                paginator = s3.get_paginator('list_objects_v2')
+                pages = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
+                found = False
+                for page in pages:
+                    for obj in page.get('Contents', []) or []:
+                        key = obj['Key']
+                        # preserve subpath under prefix to avoid collisions
+                        rel_path = os.path.relpath(key, prefix)
+                        target = local_dir / rel_path
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        print(f"Downloading s3://{self.bucket_name}/{key} -> {target}")
+                        tmp_target = target.parent / (target.name + '.download')
+                        # retry download with exponential backoff
+                        success = False
+                        for attempt in range(3):
+                            try:
+                                s3.download_file(self.bucket_name, key, str(tmp_target))
+                                if tmp_target.stat().st_size == 0:
+                                    raise RuntimeError("Downloaded zero-length file")
+                                # atomic replace
+                                os.replace(str(tmp_target), str(target))
+                                success = True
+                                break
+                            except Exception as e:
+                                print(f"Warning: download failed for {key} (attempt {attempt+1}): {e}", file=sys.stderr)
+                                time.sleep(2 ** attempt)
+                                continue
+                        if not success:
+                            print(f"Warning: failed to download {key} after retries", file=sys.stderr)
+                            continue
+                        found = True
+                if found:
+                    print(f"✓ Synced: {partition_path} (from s3://{self.bucket_name}/{prefix})")
+                    return
+            except Exception as e:
+                print(f"Warning: error while checking prefix s3://{self.bucket_name}/{prefix}: {e}", file=sys.stderr)
+                continue
+
+        print(f"Error: no objects found for partition {partition_path} in any known prefix", file=sys.stderr)
     
     def validate_checksums(self, dataset_name: str, version: str) -> bool:
         """Validate downloaded files against checksums."""
