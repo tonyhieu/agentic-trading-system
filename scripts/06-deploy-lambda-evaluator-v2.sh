@@ -238,7 +238,20 @@ def clone_and_checkout_algorithm(algorithm_name):
             for item in os.listdir(subdir):
                 shutil.move(os.path.join(subdir, item), os.path.join(work_dir, item))
             os.rmdir(subdir)
-        
+
+        # If this runtime package includes an updated scripts/data_retriever.py,
+        # copy it into the cloned algorithm so backtest_engine will import the
+        # patched retriever implementation instead of the snapshot's version.
+        packaged_retriever = os.path.join(os.getcwd(), 'scripts', 'data_retriever.py')
+        target_scripts_dir = os.path.join(work_dir, 'scripts')
+        try:
+            if os.path.exists(packaged_retriever):
+                os.makedirs(target_scripts_dir, exist_ok=True)
+                shutil.copy(packaged_retriever, os.path.join(target_scripts_dir, 'data_retriever.py'))
+                log_print('✓ Copied packaged scripts/data_retriever.py into cloned algorithm')
+        except Exception:
+            log_print('⚠ Could not copy packaged data_retriever into cloned algorithm; continuing')
+
         log_print(f"✓ Downloaded algorithm from snapshots/{algorithm_name}")
         return work_dir
     
@@ -428,6 +441,8 @@ cp "${WORK_DIR}/index.py" "${PACKAGE_DIR}/index.py"
 cp -r "$(pwd)/backtest_engine" "${PACKAGE_DIR}/"
 cp -r "$(pwd)/execution_algos" "${PACKAGE_DIR}/"
 cp -r "$(pwd)/strategies" "${PACKAGE_DIR}/"
+# Include local scripts so index.py can copy patched retriever into cloned snapshots
+cp -r "$(pwd)/scripts" "${PACKAGE_DIR}/scripts" || true
 
 # Create requirements.txt for Lambda layer
 # Note: For actual Lambda deployment, dependencies would be built in Amazon Linux
