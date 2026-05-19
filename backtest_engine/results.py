@@ -1,26 +1,27 @@
 """Capture, compute, and persist a single backtest run as a comparable artifact.
 
-A run lands at `{strategy_dir}/results/{timestamp}-{shortsha}/` containing:
-- metadata.json: run config (strategy, params, exec algo, params, date, symbol, git sha, ts)
-- metrics.json:  summary stats for cross-run comparison
-- account.csv, orders.csv, fills.csv, positions.csv: raw Nautilus reports
+A run lands at `{strategy_dir}/results/{trading_date}/` containing:
+- metrics.json:  summary stats for cross-run comparison (committed)
+- account.csv, orders.csv, fills.csv, positions.csv: raw Nautilus reports (gitignored)
+
+The reproduction record lives at `{strategy_dir}/results/metadata.json` and is
+written by `scripts/run_research_backtest.py → write_metadata()` from cfg +
+the per-run dir names — no per-run sidecar file is needed.
 """
 from __future__ import annotations
 
 import ast
 import json
 import math
-import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-# Annualization basis for Sharpe: 1-min returns, 24h futures session, 252 trading days.
-MINUTES_PER_TRADING_YEAR = 252 * 24 * 60
+# Daily-Sharpe scaling: per-minute returns scaled to one trading day (RTH 9:30-16:00 ET).
+RTH_MINUTES_PER_DAY = 390
 
 
 @dataclass
@@ -29,17 +30,6 @@ class Reports:
     orders: pd.DataFrame
     fills: pd.DataFrame
     positions: pd.DataFrame
-
-
-def _git_short_sha() -> str:
-    try:
-        out = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, check=True,
-        )
-        return out.stdout.strip()
-    except Exception:
-        return "nogit"
 
 
 def _coerce(v: Any) -> Any:
@@ -102,8 +92,12 @@ def _sum_money_list(value: Any) -> float:
     return _parse_money(value)
 
 
-def _sharpe_ratio(account: pd.DataFrame) -> float | None:
-    """Annualized Sharpe from the equity curve, resampled to 1-minute bars.
+def _sharpe_ratio_intraday(account: pd.DataFrame) -> float | None:
+    """Daily Sharpe from the equity curve, resampled to 1-minute bars.
+
+    Scale: per-minute returns are scaled by sqrt(RTH_MINUTES_PER_DAY) so the
+    output is a per-trading-day risk-adjusted return. One day of intraday data
+    produces one comparable number; no cross-day or annualization assumptions.
 
     Note: Nautilus emits account rows only on account-changing events, so the
     forward-filled curve understates both mean and stdev of returns. The absolute
@@ -123,7 +117,7 @@ def _sharpe_ratio(account: pd.DataFrame) -> float | None:
     if returns.empty or stdev == 0 or math.isnan(stdev):
         return None
 
-    return float(returns.mean() / stdev * math.sqrt(MINUTES_PER_TRADING_YEAR))
+    return float(returns.mean() / stdev * math.sqrt(RTH_MINUTES_PER_DAY))
 
 
 def _execution_costs(orders: pd.DataFrame) -> dict[str, float | None]:
@@ -181,7 +175,7 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
         "total_return_pct": total_return_pct,
         "realized_pnl": realized_pnl,
         "max_drawdown_pct": _max_drawdown_pct(reports.account),
-        "sharpe_ratio": _sharpe_ratio(reports.account),
+        "sharpe_ratio_intraday": _sharpe_ratio_intraday(reports.account),
         "trade_count": trades,
         "winners": winners,
         "losers": losers,
@@ -196,22 +190,21 @@ def compute_metrics(reports: Reports, starting_balance: float) -> dict[str, Any]
 
 def persist(
     strategy_dir: Path,
-    metadata: dict[str, Any],
+    date: str,
     metrics: dict[str, Any],
     reports: Reports,
 ) -> Path:
-    """Write a run to `{strategy_dir}/results/{timestamp}-{shortsha}/` and return that path."""
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
-    sha = _git_short_sha()
-    run_dir = strategy_dir / "results" / f"{ts}-{sha}"
-    run_dir.mkdir(parents=True, exist_ok=True)
-
-    full_meta = {
-        "timestamp_utc": ts,
-        "git_sha_short": sha,
-        **_coerce(metadata),
-    }
-    (run_dir / "metadata.json").write_text(json.dumps(full_meta, indent=2, default=str))
+    """Write a run to `{strategy_dir}/results/{date}/` and return that path."""
+    if not date:
+        raise ValueError("persist() requires a trading date")
+    run_dir = strategy_dir / "results" / date
+    if run_dir.exists():
+        raise FileExistsError(
+            f"Refusing to overwrite existing run dir {run_dir}. "
+            f"A backtest for trading date {date} already exists. "
+            f"Remove it manually if you want to rerun."
+        )
+    run_dir.mkdir(parents=True)
 
     safe_metrics = {
         k: (None if isinstance(v, float) and math.isnan(v) else v)

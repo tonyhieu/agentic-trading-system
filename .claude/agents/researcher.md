@@ -120,6 +120,9 @@ The user prompt may be:
 - **Cherry-picked dates** — only use the train/test split in config.
 - **Inflating Sharpe with too few trades** — report `trade_count`, and if
   it is small (say <30) flag in the algorithm NOTES.md and a global note.
+  **NEVER** treat a high Sharpe ratio as a valid PASS criterion if the
+  `trade_count` is below 30; the new cross-day scale is particularly
+  sensitive to outlier dates.
 - **Compounding multiple changes** when building on a prior algorithm — one
   targeted change per refinement attempt (§6).
 - **Forgetting to register the algorithm** in `execution_algos/__init__.py

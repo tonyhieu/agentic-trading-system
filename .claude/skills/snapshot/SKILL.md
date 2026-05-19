@@ -29,12 +29,15 @@ execution_algos/<algo-id>/
 ├── NOTES.md                                     # agent reasoning (OBJECTIVE.md §10)
 ├── requirements.txt                             # optional, if non-default deps
 └── results/
-    ├── backtest-results.json                    # canonical summary — see §3 below
-    └── <YYYY-MM-DDTHH-MM-SSZ>-<short-sha>/      # per-run dirs (auto-created by run_backtest())
-        ├── metadata.json
-        ├── metrics.json
-        ├── account.csv, orders.csv, fills.csv, positions.csv
+    ├── backtest-results.json                    # canonical aggregate — see §3
+    ├── metadata.json                            # consolidated reproduction record (runs[])
+    └── <YYYYMMDD>/                              # per-run dirs (one per trading date, auto-created by run_backtest())
+        ├── metrics.json                          # committed: per-date metrics
+        └── account.csv, orders.csv, fills.csv, positions.csv  # gitignored
 ```
+
+Committed: `backtest-results.json`, `metadata.json`, and each
+`<run>/metrics.json`.
 
 `<algo-id>` is kebab-case and must match the directory name everywhere
 the algorithm is referenced (program database, snapshot branch, S3 key).
@@ -56,17 +59,21 @@ record and adds the baseline comparison.
   "strategy_used": "<value of cfg['strategy']['name']>",
   "symbol": "MESM6",
   "performance": {
-    "realized_pnl":            3200.50,
-    "sharpe_ratio":            1.42,
-    "max_drawdown_pct":       -6.2,
-    "win_rate":                0.58,
-    "trade_count":             134,
-    "mean_slippage":           0.0012,
-    "max_abs_slippage":        0.05,
-    "total_commissions":       87.40,
-    "total_return_pct":        15.3,
-    "vs_baseline_pnl_pct":     14.2,
-    "vs_baseline_slippage_pct": -3.1
+    "realized_pnl":             3200.50,
+    "unrealized_pnl":       0.0,
+    "sharpe_ratio":              1.42,
+    "max_drawdown_pct":         -6.2,
+    "win_rate":                  0.58,
+    "trade_count":               134,
+    "mean_slippage":             0.0012,
+    "max_abs_slippage":          0.05,
+    "total_commissions":         87.40,
+    "total_return_pct":          15.3,
+    "is_weighted_bps":           0.85,
+    "is_total_price":            42.10,
+    "vs_baseline_pnl_pct":       14.2,
+    "vs_baseline_slippage_pct": -3.1,
+    "vs_baseline_is_bps":       -12.4
   },
   "performance_oos": null,
   "period": {
@@ -74,8 +81,8 @@ record and adds the baseline comparison.
     "test_dates":  []
   },
   "run_dirs": [
-    "results/2026-04-29T14-12-00Z-abc1234/",
-    "results/2026-04-29T14-15-30Z-abc1234/"
+    "results/20260308/",
+    "results/20260310/"
   ]
 }
 ```
@@ -89,19 +96,46 @@ report (see the `evaluate` skill). Initialize `performance_oos` to
 later commit. Do not run `run_backtest()` on test dates locally to
 populate them — that is data leakage (see the `analysis` skill).
 
+Notes on individual fields:
+
+- `sharpe_ratio` is a **cross-day annualized Sharpe** computed from
+  per-date P&L returns: `mean(daily_returns) / std(daily_returns) * sqrt(252)`.
+  This metric measures the risk-adjusted consistency of the algorithm's
+  day-to-day performance.
+- `sharpe_n_days` is the number of trading dates used in the Sharpe
+  calculation.
+- `is_weighted_bps` is the **canonical execution-algo objective**:
+  qty-weighted mean implementation shortfall against arrival mid, in
+  basis points. Sign: positive = adverse for the trader.
+- `is_total_price` is the dollar-denominated total shortfall (sum across
+  orders/dates), complementing `is_weighted_bps`'s per-order view.
+- `unrealized_pnl` is a mark-to-mid valuation of positions still open
+  at session end (no synthetic fill, no slippage assumed). For an
+  intraday-flat strategy this should be `0.0`; a non-zero value means the
+  `execution_constraints.intraday_flat: true` contract was violated and
+  must be flagged in NOTES.md.
+- The headline "honest day's P&L" is `realized_pnl + unrealized_pnl`.
+  This sum drives `total_return_pct` and `vs_baseline_pnl_pct` — it is
+  **not** stored as its own field; consumers derive it inline.
+
 Aggregation rules (apply to your algorithm AND the baseline, then compute
 the `vs_baseline_*` deltas):
 
-- `realized_pnl`, `total_commissions`, `trade_count`, `winners`, `losers`,
-  `order_count`, `fill_count` — **sum** across run dirs
-- `sharpe_ratio` — **mean** of per-date Sharpe (or recompute from a stitched
-  equity curve if you want to be more rigorous; flag the choice in NOTES.md)
+- `realized_pnl`, `unrealized_pnl`, `total_commissions`, `trade_count`,
+  `winners`, `losers`, `order_count`, `fill_count`, `is_total_price` —
+  **sum** across run dirs
+- `sharpe_ratio` — **mean** of per-date daily Sharpe
 - `max_drawdown_pct` — **min** (most negative) across run dirs
 - `win_rate` — `winners / trade_count` from the summed counts
 - `mean_slippage`, `max_abs_slippage` — **trade-count-weighted mean** /
   **max** across run dirs
-- `total_return_pct` — recompute from summed `realized_pnl` and a single
-  `starting_balance` (no compounding across separate runs)
+- `is_weighted_bps` — **captured-order-count-weighted mean** across run
+  dirs (skip dates where IS is null because no quotes were available)
+- `total_return_pct` — recompute from
+  `(summed_realized + summed_unrealized) / starting_balance` (no
+  compounding across separate runs)
+- `vs_baseline_pnl_pct` — derived from `realized + unrealized` totals
+  on both sides (not from `realized_pnl` alone)
 
 Report raw numbers — see `OBJECTIVE.md §8` honesty rules.
 
@@ -119,6 +153,7 @@ git checkout -b snapshots/<algo-id>
 # Push — GitHub Actions auto-uploads to S3 on snapshots/* branches
 git push origin snapshots/<algo-id>
 ```
+
 
 If you arrive at this skill on a branch where the iteration commit has
 *not* yet been made (e.g., manual snapshotting), stage and commit first:
@@ -156,7 +191,7 @@ If the branch push fails or the workflow is disabled:
 aws s3 ls "s3://$S3_BUCKET_NAME/execution_algos/<algo-id>/" --recursive
 ```
 
-Look for a `<timestamp>-<commit>/metadata.json` entry. If missing, check the
+Look for a `<YYYYMMDD>/metrics.json` entry. If missing, check the
 GitHub Actions run logs.
 
 ## 7. Retention

@@ -112,21 +112,35 @@ def get_execution_algorithm(exec_id: str = "MY_GENERIC_ALGO"):
 
 ## 4. Run artifacts
 
-`run_backtest()` calls `persist()` (`backtest_engine/results.py`) which
-writes a per-run directory:
+Full results layout for an algorithm:
 
 ```
-execution_algos/<algo-id>/results/<YYYY-MM-DDTHH-MM-SSZ>-<short-sha>/
-├── metadata.json   # run config: strategy, params, exec algo, params, date, symbol, git sha, dataset
-├── metrics.json    # summary stats — see metrics-schema.md
-├── account.csv     # equity curve
-├── orders.csv      # order log (with commissions, slippage)
-├── fills.csv       # fill log
-└── positions.csv   # position log (entry, realized_pnl, etc.)
+execution_algos/<algo-id>/results/
+├── backtest-results.json                       # committed — aggregate; written by scripts/run_research_backtest.py
+├── metadata.json                               # committed — reproduction record (runs[]); written by write_metadata()
+└── <YYYYMMDD>/                                 # per-run dir (one per trading date, auto-created by run_backtest() → persist())
+    ├── metrics.json                             # committed — summary stats; see metrics-schema.md
+    ├── account.csv                              # gitignored — equity curve
+    ├── orders.csv                               # gitignored — order log (with commissions, slippage)
+    ├── fills.csv                                # gitignored — fill log
+    └── positions.csv                            # gitignored — position log (entry, realized_pnl, etc.)
 ```
 
-The most recent run is the canonical record for the algorithm. The
-`<timestamp>-<short-sha>` directory name makes runs comparable and unique.
+Committed files: `backtest-results.json`, `metadata.json`, and each
+`<run>/metrics.json`. Everything else is gitignored.
+
+`run_backtest()` → `persist()` writes one per-run directory per invocation
+(containing `metrics.json` + the CSV reports). The aggregator
+(`scripts/run_research_backtest.py`) then writes the two top-level files:
+`backtest-results.json` aggregates per-date metrics across the train window,
+and `metadata.json` reconstructs the reproduction record from `cfg` plus
+each per-run dir's `<YYYYMMDD>` name. There is no per-run metadata sidecar
+— the dir name itself (trading date) is the per-run identity. Rerunning
+the same trading date raises `FileExistsError` — remove the old directory
+first.
+
+The top-level `metadata.json` is the canonical reproduction record for the
+algorithm.
 
 ## 5. Metrics
 
@@ -138,34 +152,48 @@ look up a specific field — most iterations only need `realized_pnl`,
 
 ## 6. Comparing to the baseline
 
-For the standard paired train backtest, use the runner in §7 — it
-handles the loop, subprocess isolation, and aggregation. This section
-documents the underlying primitive (computing deltas from one date pair)
-in case you need it for one-off debugging.
-
-`research/config.yaml → pass_gate.baseline` names the execution algorithm to
-beat (default `simple`). Run both on the same `(date, symbol)` with the
-same configured `strategy` block, then read both `metrics.json` files:
+For the standard PASS/FAIL decision, **use the aggregator output** — the
+runner in §7 writes `backtest-results.json` with `performance.vs_baseline_*`
+fields already computed against the configured baseline:
 
 ```python
 import json
 from pathlib import Path
 
-def latest_metrics(algo_id: str) -> dict:
+perf = json.loads(
+    Path(f"execution_algos/{algo_id}/results/backtest-results.json").read_text()
+)["performance"]
+
+delta_pnl_pct  = perf["vs_baseline_pnl_pct"]       # realized + unrealized_pnl basis
+delta_slip_pct = perf["vs_baseline_slippage_pct"]
+delta_is_bps   = perf["vs_baseline_is_bps"]        # canonical execution objective
+```
+
+`vs_baseline_pnl_pct` is derived from `realized_pnl + unrealized_pnl` on
+both sides — not `realized_pnl` alone. For an `intraday_flat` strategy
+`unrealized_pnl` is 0 and the two are identical. Compare against the gate
+in `config.yaml → pass_gate`.
+
+**One-off single-date debugging** (only when you need per-date detail the
+aggregate doesn't expose):
+
+```python
+import json
+from pathlib import Path
+
+def latest_run_metrics(algo_id: str) -> dict:
     results_dir = Path(f"execution_algos/{algo_id}/results")
-    # Filter to dirs only — `backtest-results.json` lives in this folder too
-    # (written at snapshot time) and would otherwise sort last and crash.
+    # Filter to dirs — backtest-results.json and metadata.json also live here.
     runs = sorted(p for p in results_dir.iterdir() if p.is_dir())
     return json.loads((runs[-1] / "metrics.json").read_text())
 
-mine    = latest_metrics("my-algo")
-base    = latest_metrics("simple")
-
-delta_pnl_pct  = (mine["realized_pnl"] - base["realized_pnl"]) / abs(base["realized_pnl"]) * 100
-delta_slip_pct = (mine["mean_slippage"] - base["mean_slippage"]) / abs(base["mean_slippage"]) * 100
+m = latest_run_metrics("my-algo")
+day_total_pnl = m["realized_pnl"] + m["unrealized_pnl"]
 ```
 
-Compare against the gate in `config.yaml → pass_gate`.
+Do not use single-date numbers for verdicts — the train window is what
+counts. Single-date reads are for inspecting which date dragged the
+aggregate.
 
 ## 7. Multi-date evaluation (train window only)
 
@@ -178,7 +206,13 @@ It reads `cfg["data_window"]["train"]`, pairs your algo with the baseline
 and aggregates per `snapshot/SKILL.md §3` into
 `execution_algos/<algo-id>/results/backtest-results.json`.
 
-Useful flags: `--baseline-only` (refresh the baseline only),
+Useful flags: `--use-cached-baseline` (skip the deterministic baseline
+subprocess and read its cached metrics.json from disk; ~50% faster per
+iteration — use this by default unless you've changed strategy.kwargs),
+`--baseline-only` (rebuild the baseline cache for the selected dates, but
+it does **not** overwrite an existing `results/<YYYYMMDD>/` directory; to
+refresh a cached baseline for a date you've already run, manually delete
+that date's baseline results directory first, then rerun),
 `--dates 20260308,20260309` (override the config train dates for
 debugging), `--dry-run` (print the plan and exit). Run with `--help` for
 the full list.

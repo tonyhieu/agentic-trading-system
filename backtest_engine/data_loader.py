@@ -11,6 +11,7 @@ from nautilus_trader.model.instruments import FuturesContract, Instrument
 from nautilus_trader.model.objects import Price, Quantity
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from backtest_engine.dbn_filter import filter_dbn_partition
 from scripts.data_retriever import DataRetriever
 
 DATASET_NAME = "glbx-mdp3-market-data"
@@ -58,37 +59,25 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     retriever = DataRetriever(bucket, region, cache_dir)
     retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
 
-    dbn_path = (
+    partition_dir = (
         Path(cache_dir) / DATASET_NAME / DATASET_VERSION
-        / "partitions" / f"date={date}" / "data.dbn.zst"
+        / "partitions" / f"date={date}"
     )
+    full_path = partition_dir / "data.dbn.zst"
+
+    # The raw partitions are multi-instrument (~280 contracts/day); the largest
+    # are ~2.2 GB decompressed and OOM-kill the loader on this 15 GB host, since
+    # `from_dbn_file` decodes the whole file before any instrument filter runs.
+    # Filter to the requested symbol once, cache the small result, and decode
+    # that instead. See backtest_engine/dbn_filter.py.
+    symbol_path = partition_dir / f"data.{symbol}.dbn.zst"
+    if not symbol_path.exists():
+        filter_dbn_partition(full_path, symbol_path, symbol)
 
     instrument = _build_instrument(symbol)
 
     loader = DatabentoDataLoader()
-
-    # DEBUG diagnostics: list partition dir, stat file, and try a short read
-    import sys as _sys
-    try:
-        print(f"DEBUG: attempting to open DBN at {dbn_path}", file=_sys.stderr)
-        parent = dbn_path.parent
-        try:
-            listing = [(p.name, p.stat().st_size) for p in parent.iterdir()]
-            print("DEBUG: partition dir listing:", listing, file=_sys.stderr)
-        except Exception as _e:
-            print("DEBUG: could not list partition dir:", _e, file=_sys.stderr)
-
-        try:
-            with open(dbn_path, "rb") as _f:
-                head = _f.read(64)
-                print("DEBUG: dbn head bytes:", head[:16], file=_sys.stderr)
-        except Exception as _e:
-            print("ERROR: cannot read DBN file", _e, file=_sys.stderr)
-            raise
-    except Exception:
-        # re-raise to ensure the Lambda logs contain the failure details
-        raise
-
-    all_data = loader.from_dbn_file(dbn_path, include_trades=True)
+    all_data = loader.from_dbn_file(symbol_path, include_trades=True)
+    # `symbol_path` is single-instrument by construction; this is a safety net.
     ticks = [d for d in all_data if d.instrument_id == instrument.id]
     return instrument, ticks
