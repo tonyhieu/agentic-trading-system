@@ -1,0 +1,54 @@
+[
+  {
+    "id": "streak-spread-tight",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Consecutive-loss streak + tight-spread conditioned skip: skip the open leg of an oracle signal when EITHER (a) the last 2 consecutive closed positions both had negative estimated PnL (streak signal), OR (b) current spread > 1.1x rolling 60-tick median (spread signal). Reduce-only orders always execute. The streak captures serial correlation in adverse oracle regimes; the spread filter removes adverse entry moments where oracle reliability is lower.",
+    "algorithm_path": "execution_algos/streak-spread-tight/",
+    "scores": {
+      "sharpe": 2.76,
+      "realized_pnl": 4772.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 140.52,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 106428,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date train window (20260308-20260320, 12 trading days): streak-spread-tight $4772.0/106428 trades vs simple $1984.0/132536 trades; delta_pnl=+140.52%, well above +5.0% gate. Win rate: 37.1% vs 35.6% (+1.5pp). Max drawdown: -1.41% vs -3.77% (improved). Skip rate: 19.7% (26,108 fewer trades). Improvement consistent across ALL 12 dates. Config: sigma=5, seed=42, horizon=30s. Slippage: both 0.0 (zero fill-cost model, see research/NOTES.md).",
+    "timestamp": "2026-05-11T22:40:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 1764.6,
+      "tokens_used": {
+        "input": 119,
+        "output": 40760,
+        "cache_creation": 548825,
+        "cache_read": 2168645,
+        "total": 2758349
+      }
+    }
+  },
+  {
+    "id": "spread-filter-v2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Single-parameter refinement of spread-filter: lower the spread_threshold from 2.0x to 1.3x to increase skip rate from ~0.2% to ~4-5%. In the sigma=5 near-random oracle environment (~48% win rate), the 2.0x threshold fired on only 12/5522 trades. A 1.3x threshold targets moderately wide-spread ticks where oracle accuracy drops below the session mean, selectively removing more losing trades.",
+    "algorithm_path": "execution_algos/spread-filter-v2/",
+    "scores": {
+      "sharpe": 117.23,
+      "realized_pnl": 1818.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 14.61,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 5271,
+      "passed": true
+    },
+    "notes": "PASS — aggregated over all 3 train dates (20260308, 20260309, 20260310): spread-filter-v2 $1818.50/5271 trades (win_rate=49.61%) vs simple $1586.75/5522 trades (win_rate=48.32%); delta_pnl=+14.61%, well above the +5.0% gate. Skip rate: 251/5522=4.55%. Sharpe improved: 117.23 vs 99.78. Max drawdown improved: -0.38% vs -0.43%. Consistent improvement across all 3 dates (20260308: +28.47%, 20260309: +13.05%, 20260310: +13.57%). Context: sigma=5 oracle (near-random, ~48% win rate); all prior entries (sigma=0.5) are incomparable. The 1.3x threshold confirmed that moderately wide spreads negatively predict oracle trade quality. Suggested next: (1) try threshold 1.1-1.2x; (2) composite spread+imbalance filter; (3) session-time conditioning.",
+    "timestamp": "2026-05-10T16:08:42Z",
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
+  }
+]
