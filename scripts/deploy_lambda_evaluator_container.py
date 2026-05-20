@@ -131,13 +131,21 @@ def main() -> None:
     role = cfg["Role"]
     timeout = cfg.get("Timeout", 900)
     memory = cfg.get("MemorySize", 1024)
+    ephemeral_storage = int(os.environ.get("EPHEMERAL_STORAGE_MB", "10240"))
     env_vars = (cfg.get("Environment") or {}).get("Variables", {})
 
     with tempfile.TemporaryDirectory() as td:
         tdp = Path(td)
         # Prefer using the local, repository-backed handler source so
         # recent edits to scripts/ are included in the built image.
-        extract_handler(Path("scripts/06-deploy-lambda-evaluator-v2.sh"), tdp / "index.py")
+        handler_source = Path("scripts/06-deploy-lambda-evaluator-v2.sh")
+        if handler_source.exists():
+            extract_handler(handler_source, tdp / "index.py")
+        elif not download_current_lambda_handler(lam, source_function, tdp / "index.py"):
+            raise RuntimeError(
+                "Could not find a local handler source file and failed to download "
+                f"the existing Lambda handler from {source_function}"
+            )
         apply_robustness_fixes(tdp / "index.py")
         (tdp / "requirements.txt").write_text(
             "\n".join(
@@ -234,6 +242,7 @@ CMD ["index.lambda_handler"]
                     Code={"ImageUri": image_uri},
                     Timeout=timeout,
                     MemorySize=memory,
+                    EphemeralStorage={"Size": ephemeral_storage},
                     Environment={"Variables": env_vars},
                 )
             else:
@@ -254,6 +263,7 @@ CMD ["index.lambda_handler"]
                     FunctionName=function_name,
                     Timeout=timeout,
                     MemorySize=memory,
+                    EphemeralStorage={"Size": ephemeral_storage},
                     Environment={"Variables": env_vars},
                 )
                 break

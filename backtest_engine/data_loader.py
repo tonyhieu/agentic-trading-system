@@ -27,6 +27,16 @@ def _underlying_from_symbol(symbol: str) -> str:
     return symbol.rstrip("0123456789").rstrip(_MONTH_CODES)
 
 
+def _prune_empty_dirs(start: Path, stop: Path) -> None:
+    current = start
+    while current != stop:
+        try:
+            current.rmdir()
+        except OSError:
+            break
+        current = current.parent
+
+
 def _build_instrument(symbol: str) -> FuturesContract:
     return FuturesContract(
         instrument_id=InstrumentId(symbol=Symbol(symbol), venue=Venue("GLBX")),
@@ -59,6 +69,7 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     retriever = DataRetriever(bucket, region, cache_dir)
     retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
 
+    dataset_root = Path(cache_dir) / DATASET_NAME / DATASET_VERSION
     partition_dir = (
         Path(cache_dir) / DATASET_NAME / DATASET_VERSION
         / "partitions" / f"date={date}"
@@ -74,10 +85,24 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     if not symbol_path.exists():
         filter_dbn_partition(full_path, symbol_path, symbol)
 
+    # The raw multi-instrument file is only needed while generating the
+    # single-symbol cache, so free its space before decoding the smaller file.
+    try:
+        full_path.unlink()
+    except FileNotFoundError:
+        pass
+
     instrument = _build_instrument(symbol)
 
     loader = DatabentoDataLoader()
-    all_data = loader.from_dbn_file(symbol_path, include_trades=True)
-    # `symbol_path` is single-instrument by construction; this is a safety net.
-    ticks = [d for d in all_data if d.instrument_id == instrument.id]
-    return instrument, ticks
+    try:
+        all_data = loader.from_dbn_file(symbol_path, include_trades=True)
+        # `symbol_path` is single-instrument by construction; this is a safety net.
+        ticks = [d for d in all_data if d.instrument_id == instrument.id]
+        return instrument, ticks
+    finally:
+        try:
+            symbol_path.unlink()
+        except FileNotFoundError:
+            pass
+        _prune_empty_dirs(partition_dir, dataset_root)
