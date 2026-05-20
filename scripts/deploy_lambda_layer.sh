@@ -19,8 +19,13 @@ set -e
 
 # Configuration
 LAYER_NAME="${1:-lambda-core-dependencies}"
-AWS_REGION="${2:-us-east-2}"
+AWS_REGION="${2:-us-east-1}"
 FUNCTION_NAME="execution-algorithm-evaluator"
+LAMBDA_RUNTIME="${LAMBDA_RUNTIME:-python3.11}"
+DOCKER_IMAGE="${DOCKER_IMAGE:-public.ecr.aws/lambda/python:3.11}"
+NAUTILUS_TRADER_VERSION="${NAUTILUS_TRADER_VERSION:-1.219.0}"
+LAYER_S3_BUCKET="${LAYER_S3_BUCKET:-agentic-trading-snapshots-uchicago-spring-2026}"
+LAYER_S3_PREFIX="${LAYER_S3_PREFIX:-lambda-layers}"
 WORK_DIR=$(mktemp -d)
 
 # Colors for output
@@ -81,23 +86,57 @@ log_success "AWS authenticated as account: $ACCOUNT_ID"
 log_info "Building Lambda layer in Docker..."
 log_info "Working directory: $WORK_DIR"
 
-docker run --rm --entrypoint /bin/bash \
+docker run --rm --platform linux/amd64 --entrypoint /bin/bash \
   -v "$WORK_DIR:/workspace" \
-  public.ecr.aws/lambda/python:3.11 -c '
+  "$DOCKER_IMAGE" -c '
 set -e
 echo "[1/5] Installing system dependencies..."
-yum install -y -q git zip
+if command -v yum >/dev/null 2>&1; then
+  yum install -y -q git zip gcc gcc-c++ make clang rust cargo
+elif command -v dnf >/dev/null 2>&1; then
+  dnf install -y git zip gcc gcc-c++ make clang rust cargo
+elif command -v microdnf >/dev/null 2>&1; then
+  microdnf install -y git zip gcc gcc-c++ make clang rust cargo
+fi
 
 echo "[2/5] Creating Python package directory..."
 mkdir -p /tmp/python
 
+echo "[2.5/5] Writing dependency constraints..."
+cat >/tmp/constraints.txt <<'CONSTRAINTS'
+numpy==1.26.4
+pandas==2.2.3
+pyarrow==20.0.0
+CONSTRAINTS
+
+echo "[2.6/5] Upgrading pip and applying constraints to build deps..."
+python -m pip install -q --upgrade pip
+export PIP_CONSTRAINT=/tmp/constraints.txt
+export PIP_BUILD_CONSTRAINT=/tmp/constraints.txt
+export PARALLEL_BUILD=False
+export CARGO_BUILD_JOBS=1
+export PYO3_ONLY=True
+export HIGH_PRECISION=False
+
 echo "[3/5] Installing Python dependencies..."
-pip install -q \
-  boto3>=1.26.0 \
-  requests>=2.28.0 \
-  gitpython>=3.1.0 \
-  zstandard>=0.19.0 \
+pip install -q --constraint /tmp/constraints.txt \
+  numpy==1.26.4 \
+  pandas==2.2.3 \
+  pyarrow==20.0.0 \
+  nautilus-trader=='"$NAUTILUS_TRADER_VERSION"' \
+  boto3==1.34.162 \
+  requests==2.32.3 \
+  gitpython==3.1.43 \
+  zstandard==0.23.0 \
+  python-dotenv>=1.0.0 \
   -t /tmp/python/
+
+echo "[3.5/5] Pruning and stripping for layer size..."
+find /tmp/python -type d -name "__pycache__" -prune -exec rm -rf {} +
+find /tmp/python -type d -name "tests" -prune -exec rm -rf {} +
+find /tmp/python -type f -name "*.pyc" -delete
+find /tmp/python -type f -name "*.a" -delete
+find /tmp/python -type f -name "*.so" -exec strip -s {} + || true
 
 echo "[4/5] Installing zip utility..."
 # Already installed above
@@ -117,15 +156,30 @@ ls -lh "$WORK_DIR/lambda_layer.zip"
 ###############################################################################
 
 log_info "Publishing layer to AWS Lambda..."
-
-LAYER_VERSION=$(aws lambda publish-layer-version \
-  --layer-name "$LAYER_NAME" \
-  --description "Core Python dependencies for algorithm evaluation" \
-  --zip-file "fileb://$WORK_DIR/lambda_layer.zip" \
-  --compatible-runtimes python3.11 \
-  --region "$AWS_REGION" \
-  --query 'Version' \
-  --output text)
+ZIP_SIZE_BYTES=$(wc -c <"$WORK_DIR/lambda_layer.zip")
+MAX_DIRECT_UPLOAD_BYTES=70000000
+if [ "$ZIP_SIZE_BYTES" -gt "$MAX_DIRECT_UPLOAD_BYTES" ]; then
+  LAYER_S3_KEY="${LAYER_S3_PREFIX}/${LAYER_NAME}/$(date -u +%Y%m%dT%H%M%SZ)-nautilus-trader-${NAUTILUS_TRADER_VERSION}.zip"
+  log_warn "Layer zip is too large for direct publish ($ZIP_SIZE_BYTES bytes). Uploading to s3://$LAYER_S3_BUCKET/$LAYER_S3_KEY"
+  aws s3 cp "$WORK_DIR/lambda_layer.zip" "s3://$LAYER_S3_BUCKET/$LAYER_S3_KEY" --region "$AWS_REGION" >/dev/null
+  LAYER_VERSION=$(aws lambda publish-layer-version \
+    --layer-name "$LAYER_NAME" \
+    --description "Core Python dependencies for algorithm evaluation (nautilus-trader ${NAUTILUS_TRADER_VERSION})" \
+    --content S3Bucket="$LAYER_S3_BUCKET",S3Key="$LAYER_S3_KEY" \
+    --compatible-runtimes "$LAMBDA_RUNTIME" \
+    --region "$AWS_REGION" \
+    --query 'Version' \
+    --output text)
+else
+  LAYER_VERSION=$(aws lambda publish-layer-version \
+    --layer-name "$LAYER_NAME" \
+    --description "Core Python dependencies for algorithm evaluation (nautilus-trader ${NAUTILUS_TRADER_VERSION})" \
+    --zip-file "fileb://$WORK_DIR/lambda_layer.zip" \
+    --compatible-runtimes "$LAMBDA_RUNTIME" \
+    --region "$AWS_REGION" \
+    --query 'Version' \
+    --output text)
+fi
 
 LAYER_ARN="arn:aws:lambda:$AWS_REGION:$ACCOUNT_ID:layer:$LAYER_NAME:$LAYER_VERSION"
 
@@ -139,6 +193,7 @@ log_info "Attaching layer to function: $FUNCTION_NAME"
 
 aws lambda update-function-configuration \
   --function-name "$FUNCTION_NAME" \
+  --runtime "$LAMBDA_RUNTIME" \
   --layers "$LAYER_ARN" \
   --region "$AWS_REGION" >/dev/null
 

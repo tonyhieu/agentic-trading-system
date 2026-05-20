@@ -17,7 +17,8 @@
       "WebSearch",
       "WebFetch(domain:arxiv.org)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:ssrn.com)"
+      "WebFetch(domain:ssrn.com)",
+      "Bash(git add research/overview.csv)"
     ],
     "deny": [
       "Read(./strategies)",
