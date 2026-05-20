@@ -13,6 +13,7 @@ import subprocess
 import json
 import os
 import sys
+import shutil
 from pathlib import Path
 from typing import List, Dict, Optional
 import hashlib
@@ -33,21 +34,23 @@ class DataRetriever:
         self.region = region
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Verify AWS CLI is available
-        self._check_aws_cli()
+        self.aws_cli_available = self._check_aws_cli()
     
-    def _check_aws_cli(self):
-        """Verify AWS CLI is installed."""
-        try:
-            subprocess.run(["aws", "--version"], capture_output=True, check=True)
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            print("Error: AWS CLI not installed.", file=sys.stderr)
-            print("Install with: brew install awscli (macOS) or pip install awscli", file=sys.stderr)
-            sys.exit(1)
+    def _check_aws_cli(self) -> bool:
+        """Detect whether AWS CLI is installed."""
+        if shutil.which("aws") is not None:
+            return True
+
+        print(
+            "Warning: AWS CLI not installed; boto3-backed sync will still work, but aws-cli commands are unavailable.",
+            file=sys.stderr,
+        )
+        return False
     
     def _run_aws(self, cmd: str) -> str:
         """Execute AWS CLI command and return output."""
+        if not self.aws_cli_available:
+            raise RuntimeError("AWS CLI is not installed")
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode != 0:
             raise RuntimeError(f"AWS command failed: {result.stderr}")

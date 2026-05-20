@@ -166,7 +166,7 @@ def main() -> None:
         (tdp / "Dockerfile").write_text(
             """FROM python:3.12-slim
 WORKDIR /var/task
-RUN apt-get update && apt-get install -y --no-install-recommends curl git ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl git ca-certificates zstd && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
 # Include repository scripts in the image so index.py can copy patched retrievers into cloned snapshots
