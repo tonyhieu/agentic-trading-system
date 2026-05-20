@@ -131,6 +131,8 @@ jobs:
             --function-name "${EVALUATOR_FUNCTION_NAME}" \
             --region "${LAMBDA_REGION}" \
             --cli-binary-format raw-in-base64-out \
+            --cli-connect-timeout 30 \
+            --cli-read-timeout 1200 \
             --payload "file://${PAYLOAD_FILE}" \
             "$RESPONSE_FILE" \
             >/tmp/evaluator-invoke-metadata.json
