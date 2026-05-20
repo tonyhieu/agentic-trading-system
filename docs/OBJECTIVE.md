@@ -442,13 +442,20 @@ The agent writes `"meta": {"duration_seconds": null, "tokens_used": null}` as
 placeholders when appending the entry — both fields are diagnostic and do
 **not** affect the gate. A `SubagentStop` hook
 (`.claude/hooks/patch_program_db_tokens.py`, registered in
-`.claude/settings.json`) then backfills both from the subagent's transcript:
+`.claude/settings.json`) then backfills both with **per-iteration** values:
 
-- `duration_seconds` — wall-clock seconds from the subagent's first
-  message to its last message.
+- `duration_seconds` — wall-clock seconds covering **this iteration's**
+  slice of the subagent transcript (first to last message of the slice).
 - `tokens_used` — `{"input": ..., "output": ..., "cache_creation": ...,
-  "cache_read": ..., "total": ...}` summed across every assistant message
-  in the transcript.
+  "cache_read": ..., "total": ...}` summed across the transcript records
+  produced **during this iteration**.
+
+The researcher's subagent transcript can persist and grow across loop
+iterations, so the hook scopes each backfill with an offset cursor
+(`research/.meta_cursor.json`, git-ignored, machine-local): it scans only
+the transcript lines added since the previous backfill. If the hook is
+skipped or fails for an iteration, the next iteration's metadata covers
+both iterations combined.
 
 The hook auto-commits the patch as `chore(<algo-id>): backfill execution
 metadata` so the working tree stays clean. If the hook is disabled or

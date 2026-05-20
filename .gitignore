@@ -56,3 +56,6 @@ temp/
 tmp/
 docs/oracle_strategy_implementation.md
 /NautilusDocs
+
+# Local hook state (per-iteration metadata cursor) -- machine-local, do not commit
+research/.meta_cursor.json

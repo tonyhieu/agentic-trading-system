@@ -1,26 +1,36 @@
 #!/usr/bin/env python3
 """SubagentStop hook: backfill the `meta` block of the most-recent entry in
-research/program_database.json with execution metadata from the just-stopped
-subagent's transcript.
+research/program_database.json with per-iteration execution metadata from the
+just-stopped subagent's transcript.
 
 Triggered on every SubagentStop. The hook is a no-op unless the most-recent
 entry has `meta.duration_seconds is None` AND `meta.tokens_used is None` (the
 researcher's marker that this entry expects a backfill). Subagents that are
 not the researcher leave the file untouched.
 
-Computes:
-  - meta.duration_seconds: wall-clock seconds from first to last transcript
-    message, parsed from the per-message `timestamp` field.
+Per-iteration scoping. The researcher subagent's transcript persists and
+grows when the loop driver continues the same subagent across research-loop
+iterations. Scanning the whole transcript every time would make each entry
+cumulative (issue #78). Instead, an offset cursor at
+`research/.meta_cursor.json` records how many transcript lines have already
+been consumed; each run scans only the new slice. The cursor is machine-local
+runtime state (it stores an absolute transcript path) and is git-ignored. If
+it is missing or stale, the hook re-scans from the start -- over-counting at
+worst once, never under-counting.
+
+Computes (over the current iteration's slice only):
+  - meta.duration_seconds: wall-clock seconds from the slice's first
+    transcript message to its last, parsed from the per-message `timestamp`.
   - meta.tokens_used: {"input": ..., "output": ..., "cache_creation": ...,
-    "cache_read": ..., "total": ...} summed across every message that
-    carries a `usage` block in the transcript.
+    "cache_read": ..., "total": ...} summed across every transcript record
+    in the slice that carries a `usage` block.
 
 After patching, attempts a `chore(<algo-id>): backfill execution metadata`
 commit so the working tree stays clean, then attempts
 `git push --set-upstream origin <branch>` if the current branch is an
 `iter/*` branch. Both steps are best-effort: a failure (pre-commit hook,
 dirty unrelated files, no git, no remote, no auth, etc.) is silently
-ignored — the local commit stays in place and the user can push manually.
+ignored -- the local commit stays in place and the user can push manually.
 """
 from __future__ import annotations
 
@@ -42,16 +52,36 @@ def _parse_ts(raw: str | None) -> datetime | None:
         return None
 
 
-def _scan_transcript(transcript_path: Path) -> tuple[dict[str, int] | None, float | None]:
-    """Return (token totals, duration_seconds). Either may be None on failure."""
+def _scan_transcript(
+    transcript_path: Path,
+    start_line: int = 0,
+) -> tuple[dict[str, int] | None, float | None, int]:
+    """Scan transcript lines [start_line, EOF) for token totals and duration.
+
+    Returns (token_totals, duration_seconds, lines_seen):
+      - token_totals / duration_seconds are computed ONLY over the slice of
+        lines at index >= start_line. Either may be None when that slice
+        carries no usage blocks / no timestamps.
+      - lines_seen is the TOTAL physical line count of the file (including
+        lines before start_line) -- the next cursor value. On an OSError it
+        is 0, which signals "unreadable; do not advance the cursor".
+
+    A physical-line offset is used (not a record index) because the transcript
+    is append-only JSONL: line N keeps its content across runs, and the count
+    is immune to JSON parse failures and blank lines.
+    """
     totals = {"input": 0, "output": 0, "cache_creation": 0, "cache_read": 0}
     saw_usage = False
     first_ts: datetime | None = None
     last_ts: datetime | None = None
+    lines_seen = 0
 
     try:
         with transcript_path.open() as f:
-            for line in f:
+            for idx, line in enumerate(f):
+                lines_seen = idx + 1
+                if idx < start_line:
+                    continue  # Already consumed by a prior iteration.
                 line = line.strip()
                 if not line:
                     continue
@@ -75,7 +105,7 @@ def _scan_transcript(transcript_path: Path) -> tuple[dict[str, int] | None, floa
                     totals["cache_creation"] += int(usage.get("cache_creation_input_tokens", 0) or 0)
                     totals["cache_read"] += int(usage.get("cache_read_input_tokens", 0) or 0)
     except OSError:
-        return None, None
+        return None, None, 0
 
     token_totals: dict[str, int] | None = None
     if saw_usage:
@@ -86,7 +116,45 @@ def _scan_transcript(transcript_path: Path) -> tuple[dict[str, int] | None, floa
     if first_ts is not None and last_ts is not None and last_ts >= first_ts:
         duration = (last_ts - first_ts).total_seconds()
 
-    return token_totals, duration
+    return token_totals, duration, lines_seen
+
+
+def _read_cursor(cursor_path: Path) -> dict[str, Any] | None:
+    """Return the cursor state `{"transcript_path": str, "lines_consumed":
+    int >= 0}`, or None when the file is absent, unreadable, corrupt, or has
+    the wrong shape. A None result makes the caller scan from line 0."""
+    try:
+        data = json.loads(cursor_path.read_text())
+    except (OSError, json.JSONDecodeError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    tp = data.get("transcript_path")
+    lc = data.get("lines_consumed")
+    # bool is a subclass of int -- reject it explicitly.
+    if not isinstance(tp, str) or isinstance(lc, bool) or not isinstance(lc, int) or lc < 0:
+        return None
+    return {"transcript_path": tp, "lines_consumed": lc}
+
+
+def _write_cursor(cursor_path: Path, transcript_path: Path, lines_consumed: int) -> None:
+    """Best-effort: persist the offset cursor so the next SubagentStop scans
+    only new transcript lines. A failure here is non-fatal -- the next run
+    finds no/old cursor and re-scans from the start, which over-counts at
+    worst once and never under-counts."""
+    try:
+        cursor_path.write_text(
+            json.dumps(
+                {
+                    "transcript_path": str(transcript_path),
+                    "lines_consumed": lines_consumed,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+    except OSError:
+        return  # Best-effort: next run resets to a full scan.
 
 
 def _try_commit(cwd: str, algo_id: str) -> None:
@@ -164,7 +232,9 @@ def main() -> None:
     meta = last.get("meta")
     if not isinstance(meta, dict):
         return
-    # Only patch entries the researcher explicitly marked for backfill.
+    # Only patch entries the researcher explicitly marked for backfill. This
+    # early-return runs before the cursor is read, so an already-backfilled
+    # entry never advances the cursor.
     if meta.get("tokens_used") is not None or meta.get("duration_seconds") is not None:
         return
 
@@ -172,9 +242,24 @@ def main() -> None:
     if not transcript_path.exists():
         return
 
-    token_totals, duration = _scan_transcript(transcript_path)
+    # The transcript persists and grows when the loop driver continues the same
+    # researcher subagent across iterations. Scan only the slice produced since
+    # the last backfill so each entry records its own iteration, not a running
+    # total (issue #78). The cursor lives next to the database and is git-ignored.
+    cursor_path = Path(cwd) / "research" / ".meta_cursor.json"
+    cursor = _read_cursor(cursor_path)
+    start_line = 0
+    if cursor is not None and cursor["transcript_path"] == str(transcript_path):
+        start_line = cursor["lines_consumed"]
+
+    token_totals, duration, lines_seen = _scan_transcript(transcript_path, start_line)
+
+    # Cursor pointed past EOF (transcript truncated or rotated) -> rescan whole.
+    if start_line > lines_seen:
+        token_totals, duration, lines_seen = _scan_transcript(transcript_path, 0)
+
     if token_totals is None and duration is None:
-        return  # Nothing useful extracted; skip silently
+        return  # Empty slice / nothing useful; leave the cursor unadvanced.
 
     if token_totals is not None:
         last["meta"]["tokens_used"] = token_totals
@@ -182,6 +267,10 @@ def main() -> None:
         last["meta"]["duration_seconds"] = round(duration, 1)
 
     db_path.write_text(json.dumps(db, indent=2) + "\n")
+
+    # Advance the cursor only after a real backfill consumed this slice, and
+    # before the git steps so a commit/push failure cannot lose the progress.
+    _write_cursor(cursor_path, transcript_path, lines_seen)
 
     algo_id = str(last.get("id") or "unknown")
     _try_commit(cwd, algo_id)
