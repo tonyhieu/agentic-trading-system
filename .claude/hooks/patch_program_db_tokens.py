@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
 """SubagentStop hook: backfill the `meta` block of the most-recent entry in
 research/program_database.json with per-iteration execution metadata from the
-just-stopped subagent's transcript.
+main session transcript.
 
 Triggered on every SubagentStop. The hook is a no-op unless the most-recent
 entry has `meta.duration_seconds is None` AND `meta.tokens_used is None` (the
 researcher's marker that this entry expects a backfill). Subagents that are
 not the researcher leave the file untouched.
 
-Per-iteration scoping. The researcher subagent's transcript persists and
-grows when the loop driver continues the same subagent across research-loop
-iterations. Scanning the whole transcript every time would make each entry
-cumulative (issue #78). Instead, an offset cursor at
+Per-iteration scoping. The `transcript_path` a SubagentStop hook receives is
+the main session transcript -- the parent conversation file, which
+accumulates across every subagent invocation in the session. It is NOT the
+just-stopped subagent's own transcript. Scanning the whole file every time
+would make each entry cumulative (issue #78). Instead, an offset cursor at
 `research/.meta_cursor.json` records how many transcript lines have already
 been consumed; each run scans only the new slice. The cursor is machine-local
 runtime state (it stores an absolute transcript path) and is git-ignored. If
 it is missing or stale, the hook re-scans from the start -- over-counting at
 worst once, never under-counting.
+
+Because the transcript is the main session's, `meta` measures the session
+slice between SubagentStop firings, not the researcher subagent's own compute
+(which lives in a separate `subagents/agent-<id>.jsonl`). See issue #88 for
+the follow-up to scan the per-subagent transcript instead.
 
 Computes (over the current iteration's slice only):
   - meta.duration_seconds: wall-clock seconds from the slice's first
