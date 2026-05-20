@@ -25,13 +25,13 @@ strategy:
   # run_backtest() when absent.
   kwargs:
     horizon_seconds:        30.0   # forecast window for the oracle signal
-    sigma:                   5   # noise added to the forecast (0 = perfect oracle)
+    sigma:                 217.67 # noise added to the forecast (targets 1bps R^2)
     seed:                    42    # RNG seed (reproducibility when sigma > 0)
     signal_interval_seconds: 1.0   # cadence of generated signals
 
 data_window:
   # Train/test split (ISO dates, inclusive). Must lie within the dataset's date_range.
-  train: ["2026-03-08", "2026-03-10"]
+  train: ["2026-03-08", "2026-03-21"]
   test:  ["2026-03-26", "2026-04-06"]
   # Cost cap: max date partitions an agent may download in a single iteration.
   # 10 days × ~330 MB ≈ $0.13 per iteration.
@@ -61,6 +61,15 @@ loop:
   max_iterations: 30
   # Stop after N consecutive FAIL outcomes (§5).
   stop_after_consecutive_failures: 3
+  # Per-iteration wall-clock budget for scripts/run_research_backtest.py.
+  # When set, the runner records a monotonic start time and refuses to
+  # begin a new (date, algo|baseline) backtest once elapsed exceeds this
+  # value — partial results from completed dates are aggregated as
+  # usual. Guards against the per-date cascade documented in issue #61
+  # where a wedged algorithm + 600s subprocess timeout could burn ~2
+  # hours of wall-clock before the iteration completed. Set to 0 or
+  # remove to disable.
+  iteration_timeout_seconds: 5400   # 90 minutes
 
 refinement:
   # Used when an iteration builds on a prior passing algorithm (§6). The
@@ -69,7 +78,7 @@ refinement:
   # regressing the others. There is no formal lineage tracking (no parent_id);
   # the relationship lives in the algorithm's NOTES.md hypothesis prose.
   targets:
-    min_sharpe_delta:       0.10   # absolute Sharpe improvement
+    min_sharpe_delta:       0.5    # absolute Sharpe improvement
     min_pnl_delta_pct:      2.0    # percentage points of realized P&L
     max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
     min_winrate_delta_pp:   2.0    # percentage points

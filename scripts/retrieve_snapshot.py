@@ -15,7 +15,11 @@ import json
 import os
 import subprocess
 import sys
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except Exception:
+    def load_dotenv(*a, **k):
+        return False
 
 load_dotenv()
 

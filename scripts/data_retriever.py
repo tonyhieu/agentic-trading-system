@@ -16,7 +16,12 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Optional
 import hashlib
-from dotenv import load_dotenv
+import time
+try:
+    from dotenv import load_dotenv
+except Exception:
+    def load_dotenv(*a, **k):
+        return False
 
 load_dotenv()
 
@@ -132,11 +137,30 @@ class DataRetriever:
                 for page in pages:
                     for obj in page.get('Contents', []) or []:
                         key = obj['Key']
-                        # download each object under this prefix
-                        rel_name = key.split('/')[-1]
-                        target = local_dir / rel_name
+                        # preserve subpath under prefix to avoid collisions
+                        rel_path = os.path.relpath(key, prefix)
+                        target = local_dir / rel_path
+                        target.parent.mkdir(parents=True, exist_ok=True)
                         print(f"Downloading s3://{self.bucket_name}/{key} -> {target}")
-                        s3.download_file(self.bucket_name, key, str(target))
+                        tmp_target = target.parent / (target.name + '.download')
+                        # retry download with exponential backoff
+                        success = False
+                        for attempt in range(3):
+                            try:
+                                s3.download_file(self.bucket_name, key, str(tmp_target))
+                                if tmp_target.stat().st_size == 0:
+                                    raise RuntimeError("Downloaded zero-length file")
+                                # atomic replace
+                                os.replace(str(tmp_target), str(target))
+                                success = True
+                                break
+                            except Exception as e:
+                                print(f"Warning: download failed for {key} (attempt {attempt+1}): {e}", file=sys.stderr)
+                                time.sleep(2 ** attempt)
+                                continue
+                        if not success:
+                            print(f"Warning: failed to download {key} after retries", file=sys.stderr)
+                            continue
                         found = True
                 if found:
                     print(f"✓ Synced: {partition_path} (from s3://{self.bucket_name}/{prefix})")

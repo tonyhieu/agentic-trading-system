@@ -46,7 +46,7 @@ until a passing algorithm is found or the iteration budget in
 3. IMPLEMENT execution_algos/<algo-id>/execution_algorithm.py + register in factory
 4. BACKTEST your algo + baseline over **train** dates with `python scripts/run_research_backtest.py --algo <algo-id>`. Test is held out for Lambda.
 5. COMPARE backtest-results.json deltas against pass_gate → PASS / CLOSE / FAIL (decision is train-only)
-6. APPEND entry to research/program_database.json + git commit on a fresh `iter/<algo-id>-<timestamp>` branch (the SubagentStop hook backfills `meta` and pushes the branch to `origin`)
+6. APPEND entry to research/program_database.json + row to research/overview.csv + git commit on a fresh `iter/<algo-id>-<timestamp>` branch (the SubagentStop hook backfills `meta` and pushes the branch to `origin`)
 7. On PASS: git push origin snapshots/<algo-id> — this triggers the Lambda evaluator on test
 8. POST-SNAPSHOT (in a follow-up invocation): retrieve the Lambda OOS report and merge into backtest-results.json (the `evaluate` skill)
 ```
@@ -143,8 +143,12 @@ on the same `(strategy_name, date, symbol)`. The gate requires:
 - `mean_slippage` does not regress by more than `pass_gate.max_slippage_regression_pct`
 
 Algorithms within `pass_gate.close_margin_pct` of either condition count as
-CLOSE — an informational status. A future iteration may try a related
-approach, but there's no formal retry counter.
+CLOSE — an informational status. Concretely: with `min_pnl_improvement_pct=5`
+and `close_margin_pct=2`, `vs_baseline_pnl_pct ∈ [3, 5)` is CLOSE; `<3` is
+FAIL; `≥5` is PASS. (The margin is one-sided — slipping below the gate by
+up to the margin is CLOSE; exceeding the gate is always PASS, not "CLOSE
+on the high side".) A future iteration may try a related approach, but
+there's no formal retry counter.
 
 ---
 
@@ -185,7 +189,17 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
 5. BACKTEST (train window only)
    Run:
 
-       python scripts/run_research_backtest.py --algo <algo-id>
+       python scripts/run_research_backtest.py --algo <algo-id> --use-cached-baseline
+
+   `--use-cached-baseline` skips the deterministic baseline subprocess and
+   reads its existing per-date metrics.json files from disk
+   (execution_algos/<baseline_dir>/results/<date>/metrics.json), cutting
+   per-iteration compute by ~50%. If you have changed
+   config.yaml → strategy.kwargs since the cache was last computed,
+   refresh first with `python scripts/run_research_backtest.py
+   --baseline-only` and then rerun the line above. Do NOT hand-roll a
+   per-algo runner script — that workaround pattern has been eliminated;
+   use this flag instead.
 
    This reads config.yaml → data_window.train and pairs your algo with the
    baseline (cfg["pass_gate"]["baseline"]) on each train date in fresh
@@ -213,7 +227,7 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    expectation given the hypothesis. For aggregation rules (sum / mean /
    min / weighted) see snapshot/SKILL.md §3; for the underlying per-date
    metrics if you need to drill down, see the
-   results/<timestamp>-<sha>/metrics.json files referenced in run_dirs.
+   results/<YYYYMMDD>/metrics.json files referenced in run_dirs.
 
    Append backtest observations to execution_algos/<algo-id>/NOTES.md (§10).
 
@@ -224,10 +238,24 @@ not loop internally. The human (or a future orchestrator) is the loop driver.
    FAIL  — does not meet gate                     → log reason
 
 8. LOG to research/program_database.json (every attempt — pass, close, or fail)
-   Append the entry, then commit it together with the algorithm code on a
-   fresh per-iteration branch (so the base branch stays clean):
+   Append the entry. Also append one row to research/overview.csv —
+   a flat, scannable view of every attempt with these columns
+   (read values from execution_algos/<algo-id>/results/backtest-results.json):
+
+     | CSV column                      | Source                                       |
+     |---------------------------------|----------------------------------------------|
+     | algo_name                       | top-level `algo_name`                        |
+     | status                          | this iteration's decision (pass/close/fail)  |
+     | total_pnl                       | `performance.realized_pnl`                   |
+     | sharpe_ratio                    | `performance.sharpe_ratio`                   |
+     | implementation_shortfall_bps    | `performance.is_weighted_bps`                |
+     | trade_count                     | `performance.trade_count`                    |
+     | win_rate                        | `performance.win_rate`                       |
+
+   Then commit both files together with the algorithm code on a fresh
+   per-iteration branch (so the base branch stays clean):
      git checkout -b iter/<algo-id>-$(date -u +%Y%m%dT%H%M%SZ)
-     git add execution_algos/<algo-id>/ research/program_database.json
+     git add execution_algos/<algo-id>/ research/program_database.json research/overview.csv
      git commit -m "<algo-id>: <status>, +X.X% pnl vs baseline"
    Stay on the iter branch when the invocation ends — the `SubagentStop`
    hook will land its metadata-backfill commit on the same branch and then
@@ -291,8 +319,8 @@ gate at all, status=FAIL/CLOSE per §5 step 7.
 See the **`snapshot` skill** for the full procedure. Quick version:
 
 1. Confirm the latest run dir exists at
-   `execution_algos/<algo-id>/results/<timestamp>-<sha>/` (created by
-   `run_backtest()`).
+   `execution_algos/<algo-id>/results/<YYYYMMDD>/` (created by
+   `run_backtest()`, one folder per trading date in the train window).
 2. Ensure `execution_algos/<algo-id>/NOTES.md` has all sections filled in (§10).
 3. From inside the project (Docker is fine):
    ```bash
@@ -332,6 +360,9 @@ Two note files, different purposes:
 
 - **Raw numbers only.** Don't round Sharpe up or drawdown down.
 - **Always report trade_count.** A Sharpe of 2.0 on 8 trades is meaningless — say so.
+- **Small-N risk.** Annualized Sharpe computed from ~13 dates has high standard error
+  (~0.4 units). Never use Sharpe as a primary pass criterion; it is a secondary
+  discriminator for refinement only.
 - **Never cherry-pick dates.** Only the train/test split in `config.yaml → data_window`.
 - **Report degradation.** Train improves but test regresses = FAIL. Write it as FAIL.
 - **Don't speculate from too few trades.** Say "insufficient data" instead.
@@ -375,6 +406,8 @@ File: `research/program_database.json` — JSON array, append-only.
              "trade_count": 134, "passed": true},
   "notes": "Strong on high-vol; degrades when book is thin.",
   "timestamp": "2026-04-15T14:32:00Z",
+  "strategy_kwargs_hash": "sha256:7f3e…",
+  "oos_retrieved_at": null,
   "meta": {
     "duration_seconds": null,
     "tokens_used": null
@@ -398,6 +431,10 @@ File: `research/program_database.json` — JSON array, append-only.
 - `baseline` records which gate baseline was used (for reproducibility when the config changes).
 - No structured lineage between entries — if an algorithm builds on a prior one, that relationship lives in the algorithm's `NOTES.md` Hypothesis prose, not here.
 - Write and `git add` together with the algorithm code in one commit (§5 step 8).
+- A flat sibling view lives at `research/overview.csv` — append one row per
+  attempt at the same time you append to the database (column mapping in §5
+  step 8). The CSV is a scannable derived view; `program_database.json`
+  remains the canonical record.
 
 **Execution metadata (`meta` block)**:
 

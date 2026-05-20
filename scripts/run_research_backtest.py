@@ -47,9 +47,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
+import resource
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -72,11 +75,63 @@ DEFAULT_SYMBOL = "MESM6"
 # Per-backtest timeout for subprocess isolation. A 1-day backtest should
 # complete in well under 60s; this is a sanity ceiling, not a normal-case
 # limit. If you regularly bump this, something else is wrong.
-SUBPROCESS_TIMEOUT_SEC = 600
+#
+# Lowered from 600s to 180s as part of issue #61. The original 600s
+# existed primarily to absorb the memory-pressure tail when a Nautilus
+# engine pushed past available RAM and the OS started thrashing — a
+# wedged subprocess could stall for many minutes before either crashing
+# or finishing. With the RLIMIT_AS memory cap also added under #61, the
+# memory-pressure failure mode now raises MemoryError in seconds, so
+# the tail no longer exists and 180s gives ample headroom over the
+# ~27s observed for the simple baseline on the busiest cached day.
+SUBPROCESS_TIMEOUT_SEC = 180
+
+# Per-backtest virtual-memory ceiling for the --internal-single-run child.
+# Nautilus holds all order/fill/position objects in engine.trader caches
+# until reports are generated at end; a busy day on a non-skip algo can
+# push RSS past 10 GB (~9.5 GB measured for the simple baseline on
+# 20260312). On a 16 GB / 0 swap host that's right at the OOM edge, and
+# the allocator stalls under pressure make the subprocess timeout look
+# like a hang. With this cap, the child raises MemoryError quickly
+# instead of thrashing the OS — turns the failure mode from "wedge for
+# minutes" into "fail in seconds." Override with RESEARCH_MEM_CAP_GB=0
+# to disable. Enforced via RLIMIT_AS — works on Linux (the agent-loop
+# host); macOS treats it as advisory and the setrlimit call may return
+# EINVAL, in which case we log a warning and continue uncapped.
+MEMORY_CAP_GB_DEFAULT = 12
 
 # Magic prefix on the child's stdout line carrying the result payload.
 # Anything goes after this prefix as long as it's a single line of JSON.
 METRICS_MARKER = "__METRICS_JSON__"
+
+
+def _apply_memory_cap() -> None:
+    """Set RLIMIT_AS for the current process to bound peak memory.
+
+    No-op when RESEARCH_MEM_CAP_GB=0 or when the platform refuses the
+    setrlimit call (e.g. unprivileged WSL). Failures are non-fatal — we
+    log a warning to stderr and continue; the original failure mode
+    (OS-level memory pressure) is no worse than not having the cap.
+    """
+    try:
+        cap_gb = float(os.environ.get("RESEARCH_MEM_CAP_GB", MEMORY_CAP_GB_DEFAULT))
+    except ValueError:
+        print(
+            f"WARN: RESEARCH_MEM_CAP_GB={os.environ.get('RESEARCH_MEM_CAP_GB')!r} "
+            f"is not a number; ignoring",
+            file=sys.stderr,
+        )
+        return
+    if cap_gb <= 0:
+        return
+    cap_bytes = int(cap_gb * 1024 * 1024 * 1024)
+    try:
+        resource.setrlimit(resource.RLIMIT_AS, (cap_bytes, cap_bytes))
+    except (ValueError, OSError) as exc:
+        print(
+            f"WARN: could not apply RLIMIT_AS={cap_gb} GB ({exc}); continuing without cap",
+            file=sys.stderr,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -110,6 +165,14 @@ def parse_args() -> argparse.Namespace:
         help="Run only the baseline (refreshes its result dirs). Skip the algo.",
     )
     p.add_argument(
+        "--use-cached-baseline", action="store_true",
+        help="Skip the baseline subprocess; read existing "
+             "<baseline>/results/<date>/metrics.json from disk instead. "
+             "Missing cache entries surface as failures, same UX as today "
+             "when a baseline subprocess fails on a date with no DBN data. "
+             "Run --baseline-only first to populate or refresh the cache.",
+    )
+    p.add_argument(
         "--dry-run", action="store_true",
         help="Print the (date, algo) backtest plan and exit without running.",
     )
@@ -128,14 +191,23 @@ def load_config(path: Path) -> dict:
 
 
 def train_dates_from_config(cfg: dict) -> list[str]:
-    """Calendar-day YYYYMMDD list, both endpoints inclusive.
+    """Calendar-day YYYYMMDD list, both endpoints inclusive, weekends-aware.
 
-    Uses freq='D' not freq='B'. GLBX FX futures trade Sunday evening through
-    Friday US time, so Sunday partitions exist in the dataset. Missing dates
-    surface downstream as a run_backtest() failure, which we catch and skip.
+    GLBX FX futures trade Sunday evening through Friday US time, so:
+      - Saturday partitions don't exist → drop (dropping here saves a
+        wasted S3 sync attempt + a guaranteed failure entry in the
+        runner's per-date loop, which used to cost ~600s per Saturday
+        on cascade-fail).
+      - Sunday partitions DO exist (the evening session) → keep.
+    Other non-trading dates (US holidays) are not filtered here; they
+    still surface downstream as a run_backtest() failure, which we
+    catch and skip.
     """
     start, end = cfg["data_window"]["train"]
-    return pd.date_range(start, end, freq="D").strftime("%Y%m%d").tolist()
+    days = pd.date_range(start, end, freq="D")
+    # pandas dayofweek: Mon=0..Sun=6. Drop Saturday only.
+    days = days[days.dayofweek != 5]
+    return days.strftime("%Y%m%d").tolist()
 
 
 # ---------------------------------------------------------------------------
@@ -150,6 +222,28 @@ def algo_results_dir(algo_name: str) -> Path:
     """
     dir_name = EXECUTION_DIRS.get(algo_name, algo_name)
     return REPO_ROOT / "execution_algos" / dir_name / "results"
+
+
+def load_cached_baseline_metrics(baseline_name: str, date: str) -> dict:
+    """Read pre-computed baseline metrics for one date from disk.
+
+    Returns the same dict shape as `run_one()` (includes `_run_dir` and
+    `_date`). Raises FileNotFoundError if the metrics.json is absent — the
+    caller treats that like a subprocess failure and drops the date from
+    the comparable set.
+    """
+    run_dir = algo_results_dir(baseline_name) / date
+    metrics_file = run_dir / "metrics.json"
+    if not metrics_file.exists():
+        raise FileNotFoundError(
+            f"--use-cached-baseline: no metrics.json at "
+            f"{metrics_file.relative_to(REPO_ROOT)} "
+            f"(run `--baseline-only` to populate)"
+        )
+    metrics = json.loads(metrics_file.read_text())
+    metrics["_run_dir"] = str(run_dir.relative_to(REPO_ROOT))
+    metrics["_date"] = date
+    return metrics
 
 
 def newest_run_dir_excluding(results_dir: Path, exclude: set[Path]) -> Path | None:
@@ -283,16 +377,16 @@ def aggregate(per_date: list[dict]) -> dict:
     """Aggregate per-date metrics into a single block.
 
     Aggregation rules from snapshot/SKILL.md section 3:
-      - sums: realized_pnl, total_commissions, trade_count, winners, losers,
-              order_count, fill_count
-      - mean: sharpe_ratio (per-date mean — known to be coarse in zero-slip
-              fill model; see suggested_improvements.md section 5)
+      - sums: realized_pnl, unrealized_pnl, total_commissions, trade_count,
+              winners, losers, order_count, fill_count, is_total_price
+      - mean: sharpe_ratio (per-date mean of daily-scaled Sharpe)
       - min:  max_drawdown_pct (most negative)
       - win_rate: recomputed from summed counts
       - mean_slippage: trade-count-weighted mean
       - max_abs_slippage: max across days
-      - total_return_pct: recomputed from summed pnl / starting_balance
-                         (no cross-day compounding)
+      - is_weighted_bps: captured-order-count-weighted mean across dates
+      - total_return_pct: recomputed from (realized + unrealized) /
+                         starting_balance (no cross-day compounding)
     """
     if not per_date:
         raise ValueError("aggregate() called with empty list")
@@ -308,20 +402,56 @@ def aggregate(per_date: list[dict]) -> dict:
     else:
         mean_slip = sum(m["mean_slippage"] for m in per_date) / len(per_date)
 
+    # IS: captured-order-count-weighted mean of per-date is_weighted_bps. Skip
+    # dates where no orders captured an arrival mid (is_weighted_bps is None).
+    is_dates = [
+        m for m in per_date
+        if m.get("is_weighted_bps") is not None and m.get("arrival_mid_captured", 0) > 0
+    ]
+    total_captured = sum(m["arrival_mid_captured"] for m in is_dates)
+    if is_dates and total_captured > 0:
+        is_weighted_bps = sum(
+            m["is_weighted_bps"] * m["arrival_mid_captured"] for m in is_dates
+        ) / total_captured
+        is_total_price = sum(m.get("is_total_price") or 0.0 for m in is_dates)
+    else:
+        is_weighted_bps = None
+        is_total_price = None
+
+    summed_unrealized = _sum(per_date, "unrealized_pnl", 0.0)
+
+    daily_returns = [
+        (m.get("realized_pnl", 0.0) + m.get("unrealized_pnl", 0.0)) / STARTING_BALANCE_USD
+        for m in per_date
+    ]
+    if len(daily_returns) > 1:
+        # Cross-day annualized Sharpe: mean(daily_returns) / std(daily_returns) * sqrt(252)
+        ret_series = pd.Series(daily_returns)
+        mean_ret = ret_series.mean()
+        std_ret = ret_series.std(ddof=1)
+        agg_sharpe = float(mean_ret / std_ret * math.sqrt(252)) if std_ret > 0 else 0.0
+    else:
+        # Cannot compute cross-day variance with N=1.
+        agg_sharpe = 0.0
+
     return {
-        "realized_pnl":      summed_pnl,
-        "sharpe_ratio":      sum(m["sharpe_ratio"] for m in per_date) / len(per_date),
-        "max_drawdown_pct":  min(m["max_drawdown_pct"] for m in per_date),
-        "win_rate":          (summed_winners / summed_trades) if summed_trades else 0.0,
-        "trade_count":       summed_trades,
-        "winners":           summed_winners,
-        "losers":            _sum(per_date, "losers",     0),
-        "order_count":       _sum(per_date, "order_count", 0),
-        "fill_count":        _sum(per_date, "fill_count",  0),
-        "mean_slippage":     mean_slip,
-        "max_abs_slippage":  max(m["max_abs_slippage"] for m in per_date),
-        "total_commissions": _sum(per_date, "total_commissions", 0.0),
-        "total_return_pct":  (summed_pnl / STARTING_BALANCE_USD) * 100,
+        "realized_pnl":       summed_pnl,
+        "unrealized_pnl": summed_unrealized,
+        "sharpe_ratio":       agg_sharpe,
+        "sharpe_n_days":      len(per_date),
+        "max_drawdown_pct":   min(m["max_drawdown_pct"] for m in per_date),
+        "win_rate":           (summed_winners / summed_trades) if summed_trades else 0.0,
+        "trade_count":        summed_trades,
+        "winners":            summed_winners,
+        "losers":             _sum(per_date, "losers",     0),
+        "order_count":        _sum(per_date, "order_count", 0),
+        "fill_count":         _sum(per_date, "fill_count",  0),
+        "mean_slippage":      mean_slip,
+        "max_abs_slippage":   max(m["max_abs_slippage"] for m in per_date),
+        "total_commissions":  _sum(per_date, "total_commissions", 0.0),
+        "total_return_pct":   ((summed_pnl + summed_unrealized) / STARTING_BALANCE_USD) * 100,
+        "is_weighted_bps":    is_weighted_bps,
+        "is_total_price":     is_total_price,
     }
 
 
@@ -349,18 +479,29 @@ def write_backtest_results(
 ) -> Path:
     """Write <algo>/results/backtest-results.json per snapshot/SKILL.md section 3."""
     perf_keys = (
-        "realized_pnl", "sharpe_ratio", "max_drawdown_pct", "win_rate",
+        "realized_pnl", "unrealized_pnl",
+        "sharpe_ratio", "sharpe_n_days", "max_drawdown_pct", "win_rate",
         "trade_count", "mean_slippage", "max_abs_slippage",
         "total_commissions", "total_return_pct",
+        "is_weighted_bps", "is_total_price",
     )
     performance = {k: algo_agg[k] for k in perf_keys}
-    performance["vs_baseline_pnl_pct"]      = safe_pct_delta(algo_agg["realized_pnl"],  base_agg["realized_pnl"])
+    algo_total = algo_agg["realized_pnl"] + algo_agg["unrealized_pnl"]
+    base_total = base_agg["realized_pnl"] + base_agg["unrealized_pnl"]
+    performance["vs_baseline_pnl_pct"]      = safe_pct_delta(algo_total,                base_total)
     performance["vs_baseline_slippage_pct"] = safe_pct_delta(algo_agg["mean_slippage"], base_agg["mean_slippage"])
+    if algo_agg["is_weighted_bps"] is not None and base_agg["is_weighted_bps"] is not None:
+        performance["vs_baseline_is_bps"] = safe_pct_delta(
+            algo_agg["is_weighted_bps"], base_agg["is_weighted_bps"]
+        )
+    else:
+        performance["vs_baseline_is_bps"] = None
 
     payload = {
         "algo_name":     algo_name,
         "backtest_date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "baseline":      baseline_name,
+        "sharpe_metric_version": "v2",
         "strategy_used": cfg["strategy"]["name"],
         "symbol":        symbol,
         "performance":   performance,
@@ -372,6 +513,38 @@ def write_backtest_results(
         "run_dirs": run_dirs,
     }
     out_path = algo_results_dir(algo_name) / "backtest-results.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n")
+    return out_path
+
+
+def write_metadata(
+    *,
+    algo_name: str,
+    cfg: dict,
+    symbol: str,
+    per_date_metrics: list[dict],
+) -> Path:
+    """Write the consolidated `<algo>/results/metadata.json` reproduction file.
+
+    Constructed directly from `cfg`, the algorithm name, and the per-run trading
+    dates. No per-run metadata sidecar is read or needed — the parent has
+    everything required to fully describe the reproduction.
+    """
+    runs = [{"date": m["_date"]} for m in per_date_metrics]
+
+    payload = {
+        "strategy_name":             cfg["strategy"]["name"],
+        "strategy_kwargs":           cfg["strategy"]["kwargs"],
+        "execution_algorithm_name":  algo_name,
+        "execution_algorithm_kwargs": {},
+        "symbol":                    symbol,
+        "dataset_name":              cfg["dataset"]["name"],
+        "dataset_version":           cfg["dataset"]["version"],
+        "runs":                      sorted(runs, key=lambda r: r["date"] or ""),
+    }
+
+    out_path = algo_results_dir(algo_name) / "metadata.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n")
     return out_path
@@ -421,23 +594,29 @@ def print_summary(
     print(f"  {'metric':<24}{'algo':>14}{'baseline':>14}{'delta_%':>12}")
     print("  " + "-" * 64)
     rows = [
-        ("realized_pnl",     algo_agg["realized_pnl"],     base_agg["realized_pnl"]),
-        ("sharpe_ratio",     algo_agg["sharpe_ratio"],     base_agg["sharpe_ratio"]),
-        ("max_drawdown_pct", algo_agg["max_drawdown_pct"], base_agg["max_drawdown_pct"]),
-        ("win_rate",         algo_agg["win_rate"],         base_agg["win_rate"]),
-        ("trade_count",      algo_agg["trade_count"],      base_agg["trade_count"]),
-        ("mean_slippage",    algo_agg["mean_slippage"],    base_agg["mean_slippage"]),
+        ("realized_pnl",       algo_agg["realized_pnl"],       base_agg["realized_pnl"]),
+        ("unrealized_pnl", algo_agg["unrealized_pnl"], base_agg["unrealized_pnl"]),
+        ("sharpe_ratio",       algo_agg["sharpe_ratio"],       base_agg["sharpe_ratio"]),
+        ("max_drawdown_pct",   algo_agg["max_drawdown_pct"],   base_agg["max_drawdown_pct"]),
+        ("win_rate",           algo_agg["win_rate"],           base_agg["win_rate"]),
+        ("trade_count",        algo_agg["trade_count"],        base_agg["trade_count"]),
+        ("mean_slippage",      algo_agg["mean_slippage"],      base_agg["mean_slippage"]),
     ]
     for name, mine, base in rows:
         print(f"  {name:<24}{mine:>14.4f}{base:>14.4f}{safe_pct_delta(mine, base):>+12.2f}")
+    if algo_agg.get("is_weighted_bps") is not None and base_agg.get("is_weighted_bps") is not None:
+        mine, base = algo_agg["is_weighted_bps"], base_agg["is_weighted_bps"]
+        print(f"  {'is_weighted_bps':<24}{mine:>14.4f}{base:>14.4f}{safe_pct_delta(mine, base):>+12.2f}")
 
-    delta_pnl_pct = safe_pct_delta(algo_agg["realized_pnl"], base_agg["realized_pnl"])
+    algo_total = algo_agg["realized_pnl"] + algo_agg["unrealized_pnl"]
+    base_total = base_agg["realized_pnl"] + base_agg["unrealized_pnl"]
+    delta_pnl_pct = safe_pct_delta(algo_total, base_total)
     verdict = classify_verdict(delta_pnl_pct, cfg)
     gate_min   = cfg["pass_gate"]["min_pnl_improvement_pct"]
     gate_close = cfg["pass_gate"]["close_margin_pct"]
     print()
     print(f"  Pass gate: min_pnl_improvement_pct={gate_min}, close_margin_pct={gate_close}")
-    print(f"  Suggested verdict (train-only): {verdict}  (delta_pnl_pct={delta_pnl_pct:+.2f})")
+    print(f"  Suggested verdict (train-only): {verdict}  (delta_pnl_pct={delta_pnl_pct:+.2f}, basis=realized+unrealized)")
     print()
     print("  Note: this is an informational suggestion. The final PASS/CLOSE/FAIL")
     print("  decision rests with the agent per OBJECTIVE.md section 5 step 7.")
@@ -462,6 +641,8 @@ def _do_internal_single_run(args: argparse.Namespace) -> int:
     On failure we exit non-zero; parent surfaces stderr tail. Do not print
     anything else to stdout after the marker line.
     """
+    _apply_memory_cap()
+
     if not args.algo:
         print("ERROR: --internal-single-run requires --algo", file=sys.stderr)
         return 2
@@ -526,20 +707,38 @@ def main() -> int:
               f"Use --baseline-only to refresh just the baseline.", file=sys.stderr)
         return 2
 
+    if args.use_cached_baseline and args.baseline_only:
+        print("ERROR: --use-cached-baseline and --baseline-only are mutually "
+              "exclusive (one reads the cache, the other writes it).",
+              file=sys.stderr)
+        return 2
+
     # ----- plan -----
-    print(f"Plan: {len(dates) * (1 if args.baseline_only else 2)} backtest(s)")
+    if args.baseline_only:
+        planned = len(dates)
+    elif args.use_cached_baseline:
+        planned = len(dates)  # only the algo runs as a subprocess
+    else:
+        planned = len(dates) * 2
+    print(f"Plan: {planned} backtest(s)")
     print(f"  symbol  : {args.symbol}")
     print(f"  strategy: {cfg['strategy']['name']}")
     if not args.baseline_only:
         print(f"  algo    : {args.algo}")
-    print(f"  baseline: {baseline}")
+    baseline_mode = "cached" if args.use_cached_baseline else "subprocess"
+    print(f"  baseline: {baseline} ({baseline_mode})")
     print(f"  dates   : {', '.join(dates)}")
     if args.dry_run:
         print()
         for date in dates:
             if not args.baseline_only:
                 print(f"  - run_backtest(execution_algorithm={args.algo}, date={date})")
-            print(f"  - run_backtest(execution_algorithm={baseline}, date={date})")
+            if args.use_cached_baseline:
+                cached_path = algo_results_dir(baseline) / date / "metrics.json"
+                print(f"  - read cached baseline metrics: "
+                      f"{cached_path.relative_to(REPO_ROOT)}")
+            else:
+                print(f"  - run_backtest(execution_algorithm={baseline}, date={date})")
         print()
         print("(dry-run: no backtests executed)")
         return 0
@@ -549,7 +748,28 @@ def main() -> int:
     base_metrics: dict[str, dict] = {}
     failures: list[tuple[str, str, str]] = []  # (algo_name, date, error)
 
+    # Iteration wall-clock budget (issue #61). Guards against the per-date
+    # cascade where a wedged algorithm + 600s subprocess timeout could burn
+    # ~2 hours of wall-clock before the iteration completed. 0 / missing
+    # disables. Checked at the *start* of each date — the in-flight
+    # subprocess (if any) is allowed to finish so we don't lose work that
+    # was about to land.
+    budget_sec = float(cfg.get("loop", {}).get("iteration_timeout_seconds", 0) or 0)
+    loop_start = time.monotonic()
+    budget_exceeded = False
+
     for date in dates:
+        if budget_sec > 0 and (time.monotonic() - loop_start) > budget_sec:
+            remaining = [d for d in dates[dates.index(date):]]
+            print(
+                f"\n⚠ ITERATION BUDGET EXCEEDED ({budget_sec:.0f}s). "
+                f"Skipping {len(remaining)} remaining date(s): "
+                f"{', '.join(remaining)}",
+                file=sys.stderr,
+            )
+            budget_exceeded = True
+            break
+
         if not args.baseline_only:
             print(f"\n>>> run_backtest({args.algo}, {date}) ...", flush=True)
             try:
@@ -564,18 +784,30 @@ def main() -> int:
                 print(f"    FAIL {exc}", file=sys.stderr)
                 failures.append((args.algo, date, str(exc)))
 
-        print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
-        try:
-            m = run_one(
-                algo_name=baseline, date=date,
-                symbol=args.symbol, config_path=args.config,
-            )
-            base_metrics[date] = m
-            print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                  f"sharpe={m['sharpe_ratio']:.2f}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"    FAIL {exc}", file=sys.stderr)
-            failures.append((baseline, date, str(exc)))
+        if args.use_cached_baseline:
+            print(f"\n>>> cached baseline({baseline}, {date}) ...", flush=True)
+            try:
+                m = load_cached_baseline_metrics(baseline, date)
+                base_metrics[date] = m
+                print(f"    CACHE trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                      f"sharpe={m['sharpe_ratio']:.2f}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"    FAIL {exc}", file=sys.stderr)
+                failures.append((baseline, date, str(exc)))
+        else:
+            print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
+            try:
+                m = run_one(
+                    algo_name=baseline, date=date,
+                    symbol=args.symbol, config_path=args.config,
+                )
+                base_metrics[date] = m
+                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
+                print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                      f"sharpe={s_ratio:.2f}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"    FAIL {exc}", file=sys.stderr)
+                failures.append((baseline, date, str(exc)))
 
     # ----- report failures -----
     if failures:
@@ -589,10 +821,34 @@ def main() -> int:
 
     # ----- baseline-only branch -----
     if args.baseline_only:
-        base_agg = aggregate(list(base_metrics.values()))
+        base_dates = sorted(base_metrics)
+        base_agg = aggregate([base_metrics[d] for d in base_dates])
+
+        # Write the same aggregate files as a normal --algo run, using the
+        # baseline as its own comparator. vs_baseline_* deltas come out as 0.
+        out_path = write_backtest_results(
+            algo_name=baseline,
+            baseline_name=baseline,
+            cfg=cfg,
+            symbol=args.symbol,
+            algo_agg=base_agg,
+            base_agg=base_agg,
+            train_dates=base_dates,
+            run_dirs=[base_metrics[d]["_run_dir"] for d in base_dates],
+        )
+        print(f"\nWrote: {out_path.relative_to(REPO_ROOT)}")
+
+        meta_path = write_metadata(
+            algo_name=baseline,
+            cfg=cfg,
+            symbol=args.symbol,
+            per_date_metrics=[base_metrics[d] for d in base_dates],
+        )
+        print(f"Wrote: {meta_path.relative_to(REPO_ROOT)}")
+
         print_summary(algo_name=None, baseline_name=baseline,
                       algo_agg=None, base_agg=base_agg, cfg=cfg)
-        return 0 if not failures else 1
+        return 0 if not failures and not budget_exceeded else 1
 
     if not algo_metrics:
         print("\nERROR: no successful algo runs — cannot aggregate.", file=sys.stderr)
@@ -624,10 +880,18 @@ def main() -> int:
     )
     print(f"\nWrote: {out_path.relative_to(REPO_ROOT)}")
 
+    meta_path = write_metadata(
+        algo_name=args.algo,
+        cfg=cfg,
+        symbol=args.symbol,
+        per_date_metrics=[algo_metrics[d] for d in comparable],
+    )
+    print(f"Wrote: {meta_path.relative_to(REPO_ROOT)}")
+
     print_summary(algo_name=args.algo, baseline_name=baseline,
                   algo_agg=algo_agg, base_agg=base_agg, cfg=cfg)
 
-    return 0 if not failures else 1
+    return 0 if not failures and not budget_exceeded else 1
 
 
 if __name__ == "__main__":
