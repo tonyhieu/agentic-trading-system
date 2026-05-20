@@ -119,7 +119,7 @@ jobs:
 
       - name: Invoke evaluator
         env:
-          EVALUATOR_FUNCTION_NAME: execution-algorithm-evaluator
+          EVALUATOR_FUNCTION_NAME: execution-algorithm-evaluator-container
           LAMBDA_REGION: us-east-1
           ALGO_NAME: ${{ steps.meta.outputs.name }}
         run: |
