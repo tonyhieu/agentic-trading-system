@@ -138,7 +138,7 @@ def main() -> None:
         tdp = Path(td)
         # Prefer using the local, repository-backed handler source so
         # recent edits to scripts/ are included in the built image.
-        handler_source = Path("scripts/06-deploy-lambda-evaluator-v2.sh")
+        handler_source = Path("scripts/deploy-lambda-evalutor-v2.sh")
         if handler_source.exists():
             extract_handler(handler_source, tdp / "index.py")
         elif not download_current_lambda_handler(lam, source_function, tdp / "index.py"):
