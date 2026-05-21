@@ -126,6 +126,7 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       PYTHONUNBUFFERED: "1"
+      PRESERVE_DATA_CACHE: "1"
       ALGO_NAME: ${{ needs.create-snapshot.outputs.algo_name }}
       SNAPSHOT_DIR: ${{ needs.create-snapshot.outputs.snapshot_dir }}
       REPORT_KEY: evaluation_reports/${{ needs.create-snapshot.outputs.algo_name }}/${{ needs.create-snapshot.outputs.snapshot_dir }}.json
@@ -150,9 +151,17 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install boto3 requests pandas numpy zstandard nautilus-trader==1.225.0 python-dotenv
 
+      - name: Warm data cache
+        run: |
+          python3 - <<'PY'
+          from backtest_engine.data_loader import load_dbn_partition
+          load_dbn_partition("20260330", "MESM6")
+          print("Cached 20260330/MESM6")
+          PY
+
       - name: Run evaluator
         run: |
-          python3 scripts/local-evaluator.py "$ALGO_NAME" 2 \
+          python3 scripts/local-evaluator.py "$ALGO_NAME" 1 \
             --report-s3-bucket "${{ secrets.S3_BUCKET_NAME }}" \
             --report-s3-key "$REPORT_KEY"
 

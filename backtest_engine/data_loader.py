@@ -69,9 +69,12 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     region = os.environ.get("AWS_REGION", "us-east-1")
     cache_dir = os.environ.get("DATA_CACHE_DIR", "./data-cache")
     subsample_rate = int(os.environ.get("TICK_SUBSAMPLE_RATE", "1"))
+    preserve_cache = (
+        os.environ.get("EVALUATION_RUNTIME") == "ec2"
+        or os.environ.get("PRESERVE_DATA_CACHE") == "1"
+    )
 
     retriever = DataRetriever(bucket, region, cache_dir)
-    retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
 
     dataset_root = Path(cache_dir) / DATASET_NAME / DATASET_VERSION
     partition_dir = (
@@ -86,6 +89,18 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     # Filter to the requested symbol once, cache the small result, and decode
     # that instead. See backtest_engine/dbn_filter.py.
     symbol_path = partition_dir / f"data.{symbol}.dbn.zst"
+
+    if symbol_path.exists():
+        instrument = _build_instrument(symbol)
+        loader = DatabentoDataLoader()
+        all_data = loader.from_dbn_file(symbol_path, include_trades=True)
+        ticks = [d for d in all_data if d.instrument_id == instrument.id]
+        if subsample_rate > 1:
+            ticks = ticks[::subsample_rate]
+        return instrument, ticks
+
+    retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
+
     if not symbol_path.exists():
         filter_dbn_partition(full_path, symbol_path, symbol)
 
@@ -110,8 +125,9 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
         
         return instrument, ticks
     finally:
-        try:
-            symbol_path.unlink()
-        except FileNotFoundError:
-            pass
-        _prune_empty_dirs(partition_dir, dataset_root)
+        if not preserve_cache:
+            try:
+                symbol_path.unlink()
+            except FileNotFoundError:
+                pass
+            _prune_empty_dirs(partition_dir, dataset_root)
