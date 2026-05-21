@@ -227,9 +227,10 @@ def run_backtest_for_day(algorithm_dir: str, algorithm_name: str, date: str) -> 
             strategy_name="ema_cross",
             execution_algorithm_name=algorithm_name,
             strategy_kwargs={
-                "instrument_id": InstrumentId(symbol=Symbol(SYMBOL), venue=Venue("GLBX"))
+                "instrument_id": InstrumentId(symbol=Symbol(SYMBOL), venue=Venue("GLBX")),
+                "exec_algorithm_id": "MY_GENERIC_ALGO",
             },
-            execution_algorithm_kwargs={"exec_id": f"EVAL-{algorithm_name}"},
+            execution_algorithm_kwargs={"exec_id": "MY_GENERIC_ALGO"},
             date=date,
             symbol=SYMBOL,
         )
