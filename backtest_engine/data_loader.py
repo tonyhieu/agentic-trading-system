@@ -61,10 +61,14 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
 
     `date` is YYYYMMDD (e.g. "20260406"); `symbol` is a Databento raw_symbol
     such as "MESM6" (Micro E-mini S&P 500, June 2026) or "GCM6" (Gold, June 2026).
+
+    Tick subsampling can be enabled via TICK_SUBSAMPLE_RATE env var (default 1 = no subsampling).
+    For memory-constrained environments (e.g., Lambda), set to 10 or higher to keep every Nth tick.
     """
     bucket = os.environ["S3_BUCKET_NAME"]
     region = os.environ.get("AWS_REGION", "us-east-1")
     cache_dir = os.environ.get("DATA_CACHE_DIR", "./data-cache")
+    subsample_rate = int(os.environ.get("TICK_SUBSAMPLE_RATE", "1"))
 
     retriever = DataRetriever(bucket, region, cache_dir)
     retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
@@ -99,6 +103,11 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
         all_data = loader.from_dbn_file(symbol_path, include_trades=True)
         # `symbol_path` is single-instrument by construction; this is a safety net.
         ticks = [d for d in all_data if d.instrument_id == instrument.id]
+        
+        # Subsample ticks to reduce memory footprint in memory-constrained environments.
+        if subsample_rate > 1:
+            ticks = ticks[::subsample_rate]
+        
         return instrument, ticks
     finally:
         try:
