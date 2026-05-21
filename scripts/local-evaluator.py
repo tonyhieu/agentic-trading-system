@@ -40,6 +40,7 @@ import json
 import shutil
 import tempfile
 import traceback
+import argparse
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -63,6 +64,12 @@ Path(LOCAL_CACHE_DIR).mkdir(parents=True, exist_ok=True)
 IN_SAMPLE_DATES = [
     "20260323", "20260324", "20260325", "20260326", "20260327",
     "20260328", "20260329",
+]
+
+# Out-of-sample dates used by the cloud evaluation path.
+OOS_DATES = [
+    "20260330", "20260331", "20260401",
+    "20260402", "20260403", "20260405", "20260406",
 ]
 
 # Colors for output
@@ -369,19 +376,26 @@ class ExecutionMetrics:
 
 
 def save_evaluation_report(
-    algorithm_name: str, metrics: Dict, execution_dates: List[str]
+    algorithm_name: str,
+    metrics: Dict,
+    execution_dates: List[str],
+    metadata: Optional[Dict[str, Any]] = None,
+    report_s3_bucket: Optional[str] = None,
+    report_s3_key: Optional[str] = None,
 ) -> str:
     """Save evaluation report to local disk."""
     report = {
         "algorithm_name": algorithm_name,
         "evaluation_timestamp": datetime.utcnow().isoformat(),
-        "evaluation_type": "local_debug",
+        "evaluation_type": os.environ.get("EVALUATION_RUNTIME", "local_debug"),
         "metrics": metrics,
         "in_sample_period": {
             "dates": execution_dates,
             "duration_days": len(execution_dates),
         },
     }
+    if metadata:
+        report["metadata"] = metadata
 
     # Create reports directory
     reports_dir = Path(LOCAL_CACHE_DIR) / "evaluation-reports" / algorithm_name
@@ -393,6 +407,13 @@ def save_evaluation_report(
 
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
+
+    if report_s3_key:
+        import boto3
+
+        bucket = report_s3_bucket or S3_BUCKET
+        s3_client = boto3.client("s3", region_name=AWS_REGION)
+        s3_client.upload_file(str(report_file), bucket, report_s3_key)
 
     return str(report_file)
 
@@ -417,13 +438,15 @@ def print_results_summary(metrics: Dict[str, Any], algorithm_name: str):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <algorithm_name> [num_days]")
-        print(f"Example: {sys.argv[0]} simple 2")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Local execution algorithm evaluator")
+    parser.add_argument("algorithm_name")
+    parser.add_argument("num_days", nargs="?", type=int, default=2)
+    parser.add_argument("--report-s3-key", dest="report_s3_key", default=None)
+    parser.add_argument("--report-s3-bucket", dest="report_s3_bucket", default=None)
+    args = parser.parse_args()
 
-    algorithm_name = sys.argv[1]
-    num_days = int(sys.argv[2]) if len(sys.argv) > 2 else 2
+    algorithm_name = args.algorithm_name
+    num_days = args.num_days
 
     if num_days < 1 or num_days > len(IN_SAMPLE_DATES):
         log_error(f"num_days must be between 1 and {len(IN_SAMPLE_DATES)}")
@@ -439,12 +462,16 @@ def main():
 
     try:
         # Check for local data or download
-        local_dates = find_local_data(num_days)
-        if local_dates:
-            dates_to_eval = local_dates
+        if os.environ.get("EVALUATION_RUNTIME") == "ec2":
+            dates_to_eval = OOS_DATES
+            log_info("EC2 evaluation mode: using out-of-sample dates")
         else:
-            log_info("No local data found, downloading from S3...")
-            dates_to_eval = download_in_sample_data(num_days)
+            local_dates = find_local_data(num_days)
+            if local_dates:
+                dates_to_eval = local_dates
+            else:
+                log_info("No local data found, downloading from S3...")
+                dates_to_eval = download_in_sample_data(num_days)
 
         # Download algorithm
         algorithm_dir = clone_and_checkout_algorithm(algorithm_name)
@@ -452,20 +479,42 @@ def main():
         try:
             # Run backtests
             metrics = ExecutionMetrics()
+            successful_days = 0
+            failed_days: List[str] = []
+            failure_reasons: Dict[str, str] = {}
             for date in dates_to_eval:
                 try:
                     day_results = run_backtest_for_day(
                         algorithm_dir, algorithm_name, date
                     )
                     metrics.add_day_metrics(day_results)
+                    successful_days += 1
                 except Exception as e:
+                    failure_reasons[date] = str(e)
+                    failed_days.append(date)
                     log_warning(f"Skipping {date}: {e}")
                     continue
 
+            if successful_days == 0:
+                raise RuntimeError(
+                    "All evaluation dates failed; refusing to save fallback metrics. "
+                    f"first_error={next(iter(failure_reasons.values()), 'unknown')}"
+                )
+
             # Aggregate and save
             aggregated_metrics = metrics.aggregate()
+            metadata = {
+                "successful_days": successful_days,
+                "failed_days": failed_days,
+                "failure_reasons_by_date": failure_reasons,
+            }
             report_path = save_evaluation_report(
-                algorithm_name, aggregated_metrics, dates_to_eval
+                algorithm_name,
+                aggregated_metrics,
+                dates_to_eval,
+                metadata=metadata,
+                report_s3_bucket=args.report_s3_bucket,
+                report_s3_key=args.report_s3_key,
             )
 
             # Print results
@@ -482,8 +531,10 @@ def main():
                         "status": "success",
                         "algorithm_name": algorithm_name,
                         "report_path": report_path,
+                        "report_s3_key": args.report_s3_key,
                         "metrics": aggregated_metrics,
                         "dates_evaluated": dates_to_eval,
+                        "metadata": metadata,
                     },
                     indent=2,
                 )

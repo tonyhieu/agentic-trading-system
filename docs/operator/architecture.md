@@ -13,6 +13,7 @@ This repository runs **autonomous execution-algorithm research**:
   `execution_algos/<algo-id>/`, registers them in the factory, and runs
   `run_backtest()` against a baseline (default `simple`).
 - Passing algorithms are snapshotted to S3 via a `snapshots/*` branch push.
+- Snapshot evaluation now runs on a dedicated EC2 instance via SSM instead of Lambda so the backtest can use more memory.
 - Market data is stored in S3 and pulled on demand by the backtest engine —
   agents do not retrieve data directly.
 
