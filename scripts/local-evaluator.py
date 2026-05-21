@@ -236,7 +236,8 @@ def run_backtest_for_day(algorithm_dir: str, algorithm_name: str, date: str) -> 
         )
 
         # Extract results
-        account_report = engine.trader.generate_account_report(engine.venue)
+        glbx = Venue("GLBX")
+        account_report = engine.trader.generate_account_report(glbx)
         orders_report = engine.trader.generate_orders_report()
         fills_report = engine.trader.generate_order_fills_report()
 
