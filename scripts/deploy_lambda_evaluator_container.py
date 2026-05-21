@@ -130,7 +130,7 @@ def main() -> None:
     cfg = lam.get_function_configuration(FunctionName=source_function)
     role = cfg["Role"]
     timeout = cfg.get("Timeout", 900)
-    memory = cfg.get("MemorySize", 1024)
+    memory = min(int(os.environ.get("LAMBDA_MEMORY_MB", str(cfg.get("MemorySize", 1024)))), 3008)
     ephemeral_storage = int(os.environ.get("EPHEMERAL_STORAGE_MB", "10240"))
     env_vars = (cfg.get("Environment") or {}).get("Variables", {})
 
