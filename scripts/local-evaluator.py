@@ -81,19 +81,19 @@ NC = "\033[0m"
 
 
 def log_info(msg: str):
-    print(f"{BLUE}[INFO]{NC} {msg}")
+    print(f"{BLUE}[INFO]{NC} {msg}", flush=True)
 
 
 def log_success(msg: str):
-    print(f"{GREEN}[✓]{NC} {msg}")
+    print(f"{GREEN}[✓]{NC} {msg}", flush=True)
 
 
 def log_warning(msg: str):
-    print(f"{YELLOW}[⚠]{NC} {msg}")
+    print(f"{YELLOW}[⚠]{NC} {msg}", flush=True)
 
 
 def log_error(msg: str):
-    print(f"{RED}[✗]{NC} {msg}")
+    print(f"{RED}[✗]{NC} {msg}", flush=True)
 
 
 def find_local_data(num_days: int) -> Optional[List[str]]:
@@ -463,8 +463,10 @@ def main():
     try:
         # Check for local data or download
         if os.environ.get("EVALUATION_RUNTIME") == "ec2":
-            dates_to_eval = OOS_DATES
-            log_info("EC2 evaluation mode: using out-of-sample dates")
+            dates_to_eval = OOS_DATES[:num_days]
+            log_info(
+                f"EC2 evaluation mode: using first {len(dates_to_eval)} out-of-sample dates"
+            )
         else:
             local_dates = find_local_data(num_days)
             if local_dates:
