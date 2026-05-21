@@ -45,6 +45,10 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
+from nautilus_trader.model.identifiers import InstrumentId
+from nautilus_trader.model.identifiers import Symbol
+from nautilus_trader.model.identifiers import Venue
+
 # Add repo root to path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -222,7 +226,9 @@ def run_backtest_for_day(algorithm_dir: str, algorithm_name: str, date: str) -> 
         engine = run_backtest(
             strategy_name="ema_cross",
             execution_algorithm_name=algorithm_name,
-            strategy_kwargs={"instrument_id": f"{SYMBOL}.GLBX"},
+            strategy_kwargs={
+                "instrument_id": InstrumentId(symbol=Symbol(SYMBOL), venue=Venue("GLBX"))
+            },
             execution_algorithm_kwargs={"exec_id": f"EVAL-{algorithm_name}"},
             date=date,
             symbol=SYMBOL,
