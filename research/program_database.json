@@ -28,5 +28,29 @@
         "total": 2758349
       }
     }
+  },
+  {
+    "id": "streak-spread-tighter",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Building on streak-spread-tight (PASS, +140.52% vs baseline). ONE targeted change: reduce spread_multiplier from 1.1 to 1.0 (skip when spread strictly > rolling median instead of > 1.1x median). Hypothesis: more aggressive spread filtering on high-trade-count, low-win-rate dates (20260316-17: 33-34% win rate, 16-17K trades/day) would remove more adverse entries and improve net P&L. With 1.0x threshold, ~50% of ticks trigger the spread filter vs ~19.7% at 1.1x.",
+    "algorithm_path": "execution_algos/streak-spread-tighter/",
+    "scores": {
+      "sharpe": -25.62,
+      "realized_pnl": -4666.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": -516.54,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 58045,
+      "passed": false
+    },
+    "notes": "FAIL -- catastrophic regression. 9 of 12 train dates completed (3 largest dates timed out at 180s subprocess limit: 20260318, 20260319, 20260320). streak-spread-tighter: $-4,666.25/58,045 trades vs baseline $+1,120.25/64,706 trades (same 9 dates); delta_pnl=-516.54%, far below +5.0% gate. Win rate: 32.8% vs 35.75% (regressed). Sharpe: -25.62 vs +4.76. Root cause: at 1.0x threshold, ~50% of oracle orders are skipped. The _position_flat forced-re-entry mechanism then submits the NEXT order regardless of conditions. Since spread autocorrelates at 1-second timescale, forced re-entries often fire at still-elevated spread, defeating the filter entirely. Additionally, 3 large dates timed out -- the algorithm is too slow at high event rates with 50% skip rate. Config: sigma=217.67, seed=42, horizon=30s. Slippage: 0.0 (zero fill-cost model).",
+    "timestamp": "2026-05-21T00:40:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
