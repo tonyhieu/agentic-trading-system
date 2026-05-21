@@ -157,7 +157,7 @@ def instrument_id_for_symbol(metadata: bytes, symbol: str, version: int) -> set[
     return ids
 
 
-def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
+def filter_dbn_partition(src: Path, dst: Path, symbol: str, subsample_rate: int = 1) -> int:
     """Write a single-symbol copy of DBN partition `src` to `dst`.
 
     Streams `src` (a `.dbn.zst` file) through `zstd`, keeps only the records
@@ -171,6 +171,8 @@ def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
     """
     src, dst = Path(src), Path(dst)
     zstd = _require_zstd()
+    if subsample_rate < 1:
+        raise ValueError("subsample_rate must be >= 1")
 
     decomp = subprocess.Popen([zstd, "-dc", str(src)], stdout=subprocess.PIPE)
     try:
@@ -183,6 +185,7 @@ def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
             [zstd, "-q", "-f", "-o", str(tmp), "-"], stdin=subprocess.PIPE
         )
         kept = 0
+        matched = 0
         try:
             assert comp.stdin is not None
             comp.stdin.write(header)
@@ -208,6 +211,10 @@ def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
                         "little",
                     )
                     if iid in ids:
+                        matched += 1
+                        if matched % subsample_rate != 0:
+                            i += rec_len
+                            continue
                         out.append(buf[i : i + rec_len])
                         kept += 1
                     i += rec_len

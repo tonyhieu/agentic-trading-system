@@ -88,21 +88,20 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
     # `from_dbn_file` decodes the whole file before any instrument filter runs.
     # Filter to the requested symbol once, cache the small result, and decode
     # that instead. See backtest_engine/dbn_filter.py.
-    symbol_path = partition_dir / f"data.{symbol}.dbn.zst"
+    cache_suffix = "" if subsample_rate == 1 else f".subsample{subsample_rate}"
+    symbol_path = partition_dir / f"data.{symbol}{cache_suffix}.dbn.zst"
 
     if symbol_path.exists():
         instrument = _build_instrument(symbol)
         loader = DatabentoDataLoader()
         all_data = loader.from_dbn_file(symbol_path, include_trades=True)
         ticks = [d for d in all_data if d.instrument_id == instrument.id]
-        if subsample_rate > 1:
-            ticks = ticks[::subsample_rate]
         return instrument, ticks
 
     retriever.sync_partition(DATASET_NAME, DATASET_VERSION, f"date={date}")
 
     if not symbol_path.exists():
-        filter_dbn_partition(full_path, symbol_path, symbol)
+        filter_dbn_partition(full_path, symbol_path, symbol, subsample_rate=subsample_rate)
 
     # The raw multi-instrument file is only needed while generating the
     # single-symbol cache, so free its space before decoding the smaller file.
@@ -118,11 +117,6 @@ def load_dbn_partition(date: str, symbol: str) -> tuple[Instrument, list]:
         all_data = loader.from_dbn_file(symbol_path, include_trades=True)
         # `symbol_path` is single-instrument by construction; this is a safety net.
         ticks = [d for d in all_data if d.instrument_id == instrument.id]
-        
-        # Subsample ticks to reduce memory footprint in memory-constrained environments.
-        if subsample_rate > 1:
-            ticks = ticks[::subsample_rate]
-        
         return instrument, ticks
     finally:
         if not preserve_cache:
