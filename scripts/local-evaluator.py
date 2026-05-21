@@ -224,7 +224,7 @@ def run_backtest_for_day(algorithm_dir: str, algorithm_name: str, date: str) -> 
 
         # Run backtest
         engine = run_backtest(
-            strategy_name="ema_cross",
+            strategy_name="oracle",
             execution_algorithm_name=algorithm_name,
             strategy_kwargs={
                 "instrument_id": InstrumentId(symbol=Symbol(SYMBOL), venue=Venue("GLBX")),
@@ -465,7 +465,8 @@ def main():
     log_info("=" * 70)
     log_info(f"Algorithm: {algorithm_name}")
     log_info(f"Days: {num_days}")
-    log_info(f"Data type: In-sample")
+    data_type = "Out-of-sample" if os.environ.get("EVALUATION_RUNTIME") == "ec2" else "In-sample"
+    log_info(f"Data type: {data_type}")
     log_info(f"Symbol: {SYMBOL}")
 
     try:

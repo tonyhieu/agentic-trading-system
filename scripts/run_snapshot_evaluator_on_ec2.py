@@ -121,7 +121,7 @@ fi
 pip install --upgrade pip
 pip install boto3 requests pandas numpy zstandard nautilus-trader==1.225.0 python-dotenv
 
-python3 scripts/local-evaluator.py "$ALGO_NAME" 2 \
+python3 scripts/local-evaluator.py "$ALGO_NAME" 7 \
   --report-s3-bucket "$S3_BUCKET_NAME" \
   --report-s3-key {shlex.quote(args.report_s3_key)}
 """

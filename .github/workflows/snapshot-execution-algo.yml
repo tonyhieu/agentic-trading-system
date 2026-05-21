@@ -157,13 +157,22 @@ jobs:
         run: |
           python3 - <<'PY'
           from backtest_engine.data_loader import load_dbn_partition
-          load_dbn_partition("20260330", "MESM6")
-          print("Cached 20260330/MESM6")
+          for date in [
+              "20260330",
+              "20260331",
+              "20260401",
+              "20260402",
+              "20260403",
+              "20260405",
+              "20260406",
+          ]:
+              load_dbn_partition(date, "MESM6")
+              print(f"Cached {date}/MESM6")
           PY
 
       - name: Run evaluator
         run: |
-          python3 scripts/local-evaluator.py "$ALGO_NAME" 1 \
+          python3 scripts/local-evaluator.py "$ALGO_NAME" 7 \
             --report-s3-bucket "${{ secrets.S3_BUCKET_NAME }}" \
             --report-s3-key "$REPORT_KEY"
 
