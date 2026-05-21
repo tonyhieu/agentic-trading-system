@@ -46,9 +46,11 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
+import random
 import resource
 import subprocess
 import sys
@@ -176,6 +178,16 @@ def parse_args() -> argparse.Namespace:
         "--dry-run", action="store_true",
         help="Print the (date, algo) backtest plan and exit without running.",
     )
+    p.add_argument(
+        "--smoke", action="store_true",
+        help="Bypass Nautilus entirely; generate deterministic synthetic "
+             "metrics for the algo and baseline (seeded by algo_name+date). "
+             "Outputs go to execution_algos/<algo>/results-smoke/, not "
+             "results/. Use to test pipeline infrastructure (factory "
+             "registration, aggregation, paths, commit/hook/snapshot) in "
+             "seconds rather than the ~30 min a real run takes. Mutually "
+             "exclusive with --use-cached-baseline and --baseline-only.",
+    )
     # Hidden: spawned recursively by run_one() to get subprocess isolation.
     # Not for users; running it manually has no extra behavior worth exposing.
     p.add_argument(
@@ -214,14 +226,17 @@ def train_dates_from_config(cfg: dict) -> list[str]:
 # Run-dir lookup
 # ---------------------------------------------------------------------------
 
-def algo_results_dir(algo_name: str) -> Path:
-    """Path to <algo>/results/ on disk.
+def algo_results_dir(algo_name: str, subdir: str = "results") -> Path:
+    """Path to <algo>/<subdir>/ on disk.
 
     EXECUTION_DIRS handles the legacy 'simple' -> 'simple_execution_strategy'
     mapping; new algos use their factory name as the directory name.
+
+    `subdir` is "results" for normal runs and "results-smoke" for smoke runs
+    (so synthetic artifacts never collide with canonical ones).
     """
     dir_name = EXECUTION_DIRS.get(algo_name, algo_name)
-    return REPO_ROOT / "execution_algos" / dir_name / "results"
+    return REPO_ROOT / "execution_algos" / dir_name / subdir
 
 
 def load_cached_baseline_metrics(baseline_name: str, date: str) -> dict:
@@ -366,6 +381,103 @@ def run_one(*, algo_name: str, date: str, symbol: str, config_path: Path) -> dic
 
 
 # ---------------------------------------------------------------------------
+# Smoke mode (synthetic metrics — Nautilus bypass for infra testing)
+# ---------------------------------------------------------------------------
+
+SMOKE_SUBDIR = "results-smoke"
+
+
+def smoke_metrics_for(*, algo_name: str, date: str) -> dict:
+    """Deterministic synthetic per-date metrics, seeded by (algo_name, date).
+
+    Schema matches compute_metrics() in backtest_engine/results.py so the
+    aggregator path is exercised identically to a real run. Reruns of the
+    same (algo_name, date) produce identical numbers — the seed is hashed
+    from the pair, not time-based.
+    """
+    seed = int.from_bytes(
+        hashlib.sha256(f"{algo_name}::{date}".encode()).digest()[:8],
+        "big",
+    )
+    rng = random.Random(seed)
+
+    starting = 1_000_000.0
+    realized = rng.uniform(50.0, 350.0)
+    trade_count = rng.randint(100, 500)
+    win_rate = rng.uniform(0.40, 0.55)
+    winners = int(round(trade_count * win_rate))
+    losers = trade_count - winners
+    order_count = trade_count * 2
+
+    return {
+        "starting_balance":     starting,
+        "final_equity":         starting + realized,
+        "total_return_pct":     realized / starting * 100,
+        "realized_pnl":         realized,
+        "max_drawdown_pct":     -rng.uniform(0.001, 0.005),
+        "sharpe_ratio":         rng.uniform(1.0, 3.5),
+        "trade_count":          trade_count,
+        "winners":              winners,
+        "losers":               losers,
+        "win_rate":             winners / trade_count if trade_count else 0.0,
+        "long_count":           trade_count // 2,
+        "short_count":          trade_count - trade_count // 2,
+        "order_count":          order_count,
+        "fill_count":           order_count,
+        "total_commissions":    0.0,
+        "mean_slippage":        0.0,
+        "max_abs_slippage":     0.0,
+        "arrival_mid_captured": order_count,
+        "arrival_mid_total":    order_count,
+        "is_mean_bps":          rng.uniform(0.05, 0.25),
+        "is_weighted_bps":      rng.uniform(0.05, 0.25),
+        "is_max_bps":           rng.uniform(20.0, 35.0),
+        "is_min_bps":           -rng.uniform(3.0, 8.0),
+        "is_total_price":       float(rng.randint(30, 120)),
+        "unrealized_pnl":       0.0,
+    }
+
+
+def smoke_run_one(*, algo_name: str, date: str) -> dict:
+    """Generate synthetic metrics, write to results-smoke/<date>/metrics.json,
+    and return the dict with `_run_dir` + `_date` attached.
+
+    Mimics `_run_one_in_process()`'s return shape so the aggregator path
+    is exercised unchanged. Unlike `persist()` it overwrites without
+    complaint — smoke is for repeated pipeline testing, not canonical runs.
+    """
+    run_dir = algo_results_dir(algo_name, subdir=SMOKE_SUBDIR) / date
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    metrics = smoke_metrics_for(algo_name=algo_name, date=date)
+    (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+
+    metrics["_run_dir"] = str(run_dir.relative_to(REPO_ROOT))
+    metrics["_date"] = date
+    return metrics
+
+
+def smoke_preflight(algo_name: str, baseline_name: str) -> str | None:
+    """Verify both algos are registered in the factory.
+
+    Catches the most common bug (forgetting to register a new algo in
+    `execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES`) without
+    paying the Nautilus startup cost or running an actual backtest.
+
+    Returns an error message on failure, None on success.
+    """
+    from execution_algos import _EXEC_ALGORITHM_FACTORIES
+    for name in (algo_name, baseline_name):
+        if name not in _EXEC_ALGORITHM_FACTORIES:
+            available = ", ".join(sorted(_EXEC_ALGORITHM_FACTORIES))
+            return (
+                f"'{name}' not registered in _EXEC_ALGORITHM_FACTORIES. "
+                f"Available: {available}"
+            )
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Aggregation (per snapshot/SKILL.md section 3 rules)
 # ---------------------------------------------------------------------------
 
@@ -476,6 +588,7 @@ def write_backtest_results(
     base_agg: dict,
     train_dates: list[str],
     run_dirs: list[str],
+    results_subdir: str = "results",
 ) -> Path:
     """Write <algo>/results/backtest-results.json per snapshot/SKILL.md section 3."""
     perf_keys = (
@@ -512,7 +625,7 @@ def write_backtest_results(
         },
         "run_dirs": run_dirs,
     }
-    out_path = algo_results_dir(algo_name) / "backtest-results.json"
+    out_path = algo_results_dir(algo_name, subdir=results_subdir) / "backtest-results.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n")
     return out_path
@@ -524,6 +637,7 @@ def write_metadata(
     cfg: dict,
     symbol: str,
     per_date_metrics: list[dict],
+    results_subdir: str = "results",
 ) -> Path:
     """Write the consolidated `<algo>/results/metadata.json` reproduction file.
 
@@ -544,7 +658,7 @@ def write_metadata(
         "runs":                      sorted(runs, key=lambda r: r["date"] or ""),
     }
 
-    out_path = algo_results_dir(algo_name) / "metadata.json"
+    out_path = algo_results_dir(algo_name, subdir=results_subdir) / "metadata.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n")
     return out_path
@@ -675,6 +789,78 @@ def _do_internal_single_run(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Smoke entry point
+# ---------------------------------------------------------------------------
+
+def run_smoke(*, args: argparse.Namespace, cfg: dict, baseline: str,
+              dates: list[str]) -> int:
+    """Generate synthetic metrics for algo + baseline across `dates`, run
+    aggregation, write backtest-results.json + metadata.json under
+    `results-smoke/`. End-to-end pipeline test without Nautilus.
+    """
+    err = smoke_preflight(args.algo, baseline)
+    if err:
+        print(f"ERROR: {err}", file=sys.stderr)
+        return 1
+
+    print("=" * 66)
+    print("⚠  SMOKE MODE — synthetic metrics, not real backtests")
+    print("=" * 66)
+    print(f"  algo    : {args.algo}")
+    print(f"  baseline: {baseline}")
+    print(f"  dates   : {len(dates)} ({dates[0]} … {dates[-1]})")
+    print(f"  output  : execution_algos/<algo>/{SMOKE_SUBDIR}/")
+    print()
+
+    if args.dry_run:
+        for date in dates:
+            print(f"  - smoke_run_one(algo={args.algo}, date={date})")
+            print(f"  - smoke_run_one(algo={baseline}, date={date})")
+        print()
+        print("(dry-run: no smoke runs executed)")
+        return 0
+
+    algo_metrics: dict[str, dict] = {}
+    base_metrics: dict[str, dict] = {}
+    for date in dates:
+        algo_metrics[date] = smoke_run_one(algo_name=args.algo, date=date)
+        base_metrics[date] = smoke_run_one(algo_name=baseline,   date=date)
+
+    comparable = sorted(set(algo_metrics) & set(base_metrics))
+    algo_agg = aggregate([algo_metrics[d] for d in comparable])
+    base_agg = aggregate([base_metrics[d] for d in comparable])
+
+    out_path = write_backtest_results(
+        algo_name=args.algo,
+        baseline_name=baseline,
+        cfg=cfg,
+        symbol=args.symbol,
+        algo_agg=algo_agg,
+        base_agg=base_agg,
+        train_dates=comparable,
+        run_dirs=[algo_metrics[d]["_run_dir"] for d in comparable],
+        results_subdir=SMOKE_SUBDIR,
+    )
+    print(f"Wrote: {out_path.relative_to(REPO_ROOT)}")
+
+    meta_path = write_metadata(
+        algo_name=args.algo,
+        cfg=cfg,
+        symbol=args.symbol,
+        per_date_metrics=[algo_metrics[d] for d in comparable],
+        results_subdir=SMOKE_SUBDIR,
+    )
+    print(f"Wrote: {meta_path.relative_to(REPO_ROOT)}")
+
+    print_summary(algo_name=args.algo, baseline_name=baseline,
+                  algo_agg=algo_agg, base_agg=base_agg, cfg=cfg)
+    print()
+    print("⚠  SMOKE numbers are synthetic — do NOT commit results-smoke/ "
+          "or write them to program_database.json.")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -712,6 +898,17 @@ def main() -> int:
               "exclusive (one reads the cache, the other writes it).",
               file=sys.stderr)
         return 2
+
+    if args.smoke and (args.use_cached_baseline or args.baseline_only):
+        print("ERROR: --smoke is mutually exclusive with --use-cached-baseline "
+              "and --baseline-only (smoke generates synthetic metrics for both "
+              "algo and baseline; nothing to cache or refresh).",
+              file=sys.stderr)
+        return 2
+
+    # ----- smoke mode: bypass Nautilus, generate synthetic metrics -----
+    if args.smoke:
+        return run_smoke(args=args, cfg=cfg, baseline=baseline, dates=dates)
 
     # ----- plan -----
     if args.baseline_only:

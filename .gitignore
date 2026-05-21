@@ -31,6 +31,10 @@ snapshots/
 # Cached market-data partitions synced from S3
 data-cache/
 
+# Smoke-test artifacts (synthetic metrics from `--smoke`; never commit)
+results-smoke/
+**/results-smoke/
+
 # IDE
 .vscode/
 .idea/
