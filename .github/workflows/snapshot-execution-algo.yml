@@ -127,6 +127,7 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       PYTHONUNBUFFERED: "1"
       PRESERVE_DATA_CACHE: "1"
+      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
       ALGO_NAME: ${{ needs.create-snapshot.outputs.algo_name }}
       SNAPSHOT_DIR: ${{ needs.create-snapshot.outputs.snapshot_dir }}
       REPORT_KEY: evaluation_reports/${{ needs.create-snapshot.outputs.algo_name }}/${{ needs.create-snapshot.outputs.snapshot_dir }}.json
