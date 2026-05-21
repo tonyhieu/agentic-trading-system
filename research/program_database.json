@@ -58,5 +58,29 @@
         "total": 631436
       }
     }
+  },
+  {
+    "id": "streak-spread-multi-skip",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Building on streak-spread-tight (PASS, +140.52% vs baseline). ONE targeted change: replace the hard 'forced re-entry after exactly 1 skip' guarantee with 'forced re-entry after at most max_consecutive_skips=3 consecutive skips'. Hypothesis: allowing 2-3 consecutive skips lets spread autocorrelation decay before re-entering, avoiding the immediate-post-skip adverse entry identified as the streak-spread-tighter root cause.",
+    "algorithm_path": "execution_algos/streak-spread-multi-skip/",
+    "scores": {
+      "sharpe": -26.99,
+      "realized_pnl": -3937.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": -331.72,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 77578,
+      "passed": false
+    },
+    "notes": "FAIL -- catastrophic regression. 11 of 12 train dates completed (20260319 timed out at 180s subprocess limit). streak-spread-multi-skip: $-3,937.50/77,578 trades vs baseline $+1,699.25/108,217 trades (same 11 dates); delta_pnl=-331.72%, far below +5.0% gate. Win rate: 33.4% vs 35.6% (regressed). Sharpe: -26.99. Root cause: _streak_triggered() has a side effect that updates _prev_pnl_1 and _prev_pnl_2 on EVERY call, including during consecutive skips. Allowing 3 consecutive skips means the streak history is updated 3x from the same underlying position, creating artificial streak persistence that causes over-filtering on GOOD days (20260308-20260311 with 47-54% baseline win rates). Every date is negative. Config: sigma=217.67, seed=42, horizon=30s. Slippage: 0.0 (zero fill-cost model).",
+    "timestamp": "2026-05-21T01:20:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

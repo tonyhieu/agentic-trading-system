@@ -1,3 +1,4 @@
 algo_name,status,total_pnl,sharpe_ratio,implementation_shortfall_bps,trade_count,win_rate
 streak-spread-tight,pass,4772.0,2.76,0.032733385,106428,0.37145300108993873
 streak-spread-tighter,fail,-4666.25,-25.615065711246697,0.06156565479541784,58045,0.3284003790162805
+streak-spread-multi-skip,fail,-3937.5,-26.987251967095172,0.04121012475529623,77578,0.333844646678182

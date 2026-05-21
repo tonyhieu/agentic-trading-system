@@ -119,3 +119,14 @@ the spread-filter nearly achieved ($1622.50, +2.25%).
 **Why**: Operator ran the agent on the bare host instead of inside `docker compose run dev`. The repo's tooling assumes the Docker context where `awscli` is baked in.
 **Alternatives**: (a) `brew install awscli` and re-run on host; (b) install Docker and use `docker compose run --rm dev`; (c) pre-seed `data-cache/` from another machine for an offline iteration.
 **Impact**: No program_database.json entry was written (no attempt was actually executed). No algorithm code was created. The iteration budget was not consumed. Operator decision required before the next invocation.
+
+---
+
+## [2026-05-21 01:20] RESULT WARNING: streak-spread-multi-skip catastrophic failure from streak side-effect bug
+
+**Detail**: `_streak_triggered()` in the streak-spread family of algorithms has a side effect: it updates `_prev_pnl_1` and `_prev_pnl_2` on EVERY call, regardless of whether an order is actually submitted. In `streak-spread-tight`, this was mitigated because the `_position_flat=True` re-entry guarantee bypassed the streak check on the first order after a skip. In `streak-spread-multi-skip`, the multi-skip logic allows up to 3 consecutive skips, calling `_streak_triggered()` on each — each call updates the PnL history with a quote-based estimate from the same real position, creating artificial streak persistence.
+**Why**: The side effect was inherited from the original streak implementation without being identified as a design flaw. It works in `streak-spread-tight` because the `_position_flat` flag causes the re-entry to skip the streak check entirely.
+**Alternatives**: (a) Move the PnL history update to `_record_open()` only, so it fires exactly once per actual submission. (b) Separate the evaluation function (returns triggered bool without side effects) from the update function (call only on actual submissions). Either approach would fix the bug for future multi-skip variants.
+**Impact**: The multi-skip concept is not inherently flawed — the idea of allowing 2-3 consecutive skips to let spread autocorrelation decay before re-entering is sound. The implementation failed due to the side-effect bug. A fixed implementation (update streak history only on actual submissions) is a high-value next attempt.
+
+⚠ NOTE WRITTEN: research/NOTES.md — streak-spread-multi-skip catastrophic failure from streak side-effect bug
