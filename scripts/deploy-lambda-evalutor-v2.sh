@@ -278,6 +278,7 @@ def run_backtest_for_day(algorithm_dir, algorithm_name, date, symbol="MESM6"):
         
         # Run backtest with the algorithm being tested
         # The strategy_name ("ema_cross") is fixed; the execution_algorithm_name varies per evaluation
+        log_print(f"→ Starting Nautilus backtest engine for {date}")
         run_backtest(
             strategy_name="ema_cross",
             execution_algorithm_name=algorithm_name,
@@ -286,6 +287,7 @@ def run_backtest_for_day(algorithm_dir, algorithm_name, date, symbol="MESM6"):
             date=date,
             symbol=symbol
         )
+        log_print(f"← Backtest engine finished for {date}")
 
         # Read persisted run artifact metrics produced by run_backtest().
         results_root = Path(algorithm_dir) / "execution_algos" / algorithm_name / "results"
