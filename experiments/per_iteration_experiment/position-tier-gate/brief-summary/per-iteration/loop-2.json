@@ -17,8 +17,14 @@
   },
   "context_chars_in": 1471,
   "context_tokens_estimated": 367,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 2,
+    "output": 1366,
+    "cache_creation": 473,
+    "cache_read": 57520,
+    "total": 59361
+  },
+  "duration_seconds": 1448.7,
   "summary_out": {
     "changed": "Replaced loop-1's one-way all-time-peak equity circuit breaker with a re-arming breaker: a decaying peak reference (peak_decay=0.10, pulled toward current realized P&L on each non-high close) plus a latched hysteresis band (latch SKIP above drawdown_halt=220 USD, unlatch only below drawdown_rearm=80 USD).",
     "outcome": "pnl -50.3% vs base position-tier-gate (-8857.50 vs -5892.25), slippage 0.0%, sharpe -28.30; trade_count jumped to 152300 (loop-1 was 32475, base 101304); max_drawdown worsened to -0.139%.",
