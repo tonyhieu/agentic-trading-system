@@ -3,6 +3,7 @@ from pathlib import Path
 
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
+from nautilus_trader.backtest.models import FillModel
 from nautilus_trader.common.config import LoggingConfig
 from nautilus_trader.model import DataType
 from nautilus_trader.model import Money
@@ -73,6 +74,13 @@ def run_backtest(
         account_type=AccountType.MARGIN,
         base_currency=USD,
         starting_balances=[Money(STARTING_BALANCE_USD, USD)],
+        # Explicit fill model so the modelling assumption is version-controlled.
+        # prob_fill_on_limit=1.0 is the Nautilus default (a resting limit fills
+        # whenever the market trades to its price); the default
+        # fill_limit_inside_spread=False already gives realistic passive
+        # matching with natural adverse selection. random_seed keeps runs
+        # deterministic if prob_fill_on_limit is later lowered for queue realism.
+        fill_model=FillModel(prob_fill_on_limit=1.0, random_seed=42),
     )
 
     engine.add_instrument(instrument)

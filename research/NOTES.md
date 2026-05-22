@@ -119,3 +119,32 @@ the spread-filter nearly achieved ($1622.50, +2.25%).
 **Why**: Operator ran the agent on the bare host instead of inside `docker compose run dev`. The repo's tooling assumes the Docker context where `awscli` is baked in.
 **Alternatives**: (a) `brew install awscli` and re-run on host; (b) install Docker and use `docker compose run --rm dev`; (c) pre-seed `data-cache/` from another machine for an offline iteration.
 **Impact**: No program_database.json entry was written (no attempt was actually executed). No algorithm code was created. The iteration budget was not consumed. Operator decision required before the next invocation.
+
+---
+
+## [2026-05-21 23:30] ASSUMPTION: simple baseline switched to passive (maker) execution
+
+**Detail**: The `simple` execution algorithm (the pass-gate baseline) was
+rewritten from a market-order pass-through to passive limit-order execution. It
+posts a resting limit at the touch (buy at bid, sell at ask) for each order the
+strategy emits, and crosses the unfilled remainder with a market order only if
+the limit does not fill within `passive_timeout_seconds` (10s) or is superseded
+by the strategy's next order. `backtest_engine/backtest_low_level.py` now passes
+an explicit `FillModel(prob_fill_on_limit=1.0, random_seed=42)` to `add_venue()`.
+**Why**: At sigma≈217 (R²≈1 bp) the per-trade forecast edge is smaller than the
+bid-ask spread, so crossing it on every trade is a structural loss. Earning the
+spread via MAKER fills is the only execution-layer fix (Option B of the
+operator analysis).
+**Alternatives**: `config.yaml → execution_constraints.top_of_book_only`'s
+comment ("fill at ask_px for buys / bid_px for sells") describes the *taker*
+model; under passive execution read it as "post at the touch, never walk the
+book" — a buy limit at the bid is still top-of-book. The constraint is
+documentation-only (nothing in code enforces it), so no code change was made.
+`prob_fill_on_limit=1.0` is optimistic (no queue position) — lowering it is a
+realism refinement for later.
+**Impact**: Existing `program_database.json` / `overview.csv` baseline
+comparisons were produced against the old taker pass-through and are NOT
+comparable to results under the passive baseline. This is a deliberate
+operator-level benchmark redesign, not a research-agent change.
+
+⚠ NOTE WRITTEN: research/NOTES.md — simple baseline switched to passive (maker) execution
