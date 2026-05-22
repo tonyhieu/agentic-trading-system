@@ -31,5 +31,16 @@
     "trade_count": 131232,
     "context_chars_in": 2862,
     "timestamp": "2026-05-22T17:15:39Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "position-tier-gate-b-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": -50.324579,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": -28.296976422407855,
+    "trade_count": 152300,
+    "context_chars_in": 5234,
+    "timestamp": "2026-05-22T19:30:00Z"
   }
 ]
