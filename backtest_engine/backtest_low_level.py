@@ -108,6 +108,13 @@ def run_backtest(
         strategy_options.setdefault("trade_size", Decimal("1"))
     if execution_algorithm_name == "simple":
         execution_options.setdefault("exec_id", "MY_GENERIC_ALGO")
+        # The baseline holds each position for the oracle's forecast horizon.
+        # Keep config.yaml -> strategy.kwargs.horizon_seconds as the single source
+        # of truth and pass it through to the execution algorithm.
+        if oracle_options is not None:
+            execution_options.setdefault(
+                "horizon_seconds", oracle_options["horizon_seconds"]
+            )
 
     strategy = create_strategy(strategy_name, **strategy_options)
     engine.add_strategy(strategy=strategy)
