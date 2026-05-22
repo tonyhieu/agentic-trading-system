@@ -148,12 +148,3 @@ improvement is more about loss mitigation than win rate.
 during high-vol periods — is empirically confirmed. The vol-regime signal derived
 from the EWM ratio (fast/slow) effectively identifies periods where the noisy oracle
 (sigma=5) makes worse calls, and the probabilistic skip reduces participation there.
-
-**Suggested next attempt**: 
-1. Tune sensitivity (currently 2.0) — a higher value (e.g., 3.0) would be more
-   aggressive about skipping high-vol periods, potentially improving further.
-2. Asymmetric vol response: current algo skips all directions equally in high-vol.
-   Direction-conditioned skipping (e.g., skip BUYs in fast-rising vol, skip SELLs
-   in fast-falling vol) might be more precise.
-3. Trade_count is large (124k), so there is statistical power — Sharpe of 1.30 is
-   reliable, not noise-driven.
