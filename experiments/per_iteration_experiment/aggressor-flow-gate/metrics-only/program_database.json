@@ -64,5 +64,16 @@
     "trade_count": 105331,
     "context_chars_in": 397,
     "timestamp": "2026-05-22T16:06:09Z"
+  },
+  {
+    "loop": 7,
+    "algo_id": "afg-m-l7",
+    "status": "completed",
+    "vs_base_pnl_pct": 7.268020708881322,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 6.142181716116662,
+    "trade_count": 105087,
+    "context_chars_in": 476,
+    "timestamp": "2026-05-22T16:22:18Z"
   }
 ]
