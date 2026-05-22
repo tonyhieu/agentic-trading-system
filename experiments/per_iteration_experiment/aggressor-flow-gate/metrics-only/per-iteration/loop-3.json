@@ -12,13 +12,19 @@
     "max_drawdown_pct": -0.043174773332440006,
     "win_rate": 0.35138234619523984,
     "trade_count": 113358,
-    "vs_base_pnl_pct": -38.032656312226204,
+    "vs_base_pnl_pct": -38.0326563122262,
     "vs_base_slippage_pct": 0.0
   },
   "context_chars_in": 158,
   "context_tokens_estimated": 39,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 2,
+    "output": 1232,
+    "cache_creation": 1065,
+    "cache_read": 50705,
+    "total": 53004
+  },
+  "duration_seconds": 824.4,
   "summary_out": null,
   "full_reasoning": null,
   "timestamp": "2026-05-22T15:17:46Z"
