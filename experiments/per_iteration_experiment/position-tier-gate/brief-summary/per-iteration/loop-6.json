@@ -1,0 +1,30 @@
+{
+  "experiment":    "per_iteration_experiment",
+  "base_algo":     "position-tier-gate",
+  "context_mode":  "brief-summary",
+  "loop":          6,
+  "algo_id":       "position-tier-gate-b-l6",
+  "status":        "completed",
+  "metrics": {
+    "realized_pnl":             -7563.719999999998,
+    "mean_slippage":            0.0,
+    "sharpe_ratio":             -19.933829357545143,
+    "max_drawdown_pct":         -0.15140436258762652,
+    "win_rate":                 0.3286080105055811,
+    "trade_count":              152300,
+    "vs_base_pnl_pct":          -28.3673,
+    "vs_base_slippage_pct":     0.0
+  },
+  "context_chars_in":         10150,
+  "context_tokens_estimated": 2537,
+  "tokens_used":     null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Built on loop-5's passive-then-aggressive transformation by posting the post-only LIMIT child ONE TICK INSIDE the same-side touch (BUY at bid+1tick, SELL at ask-1tick via instrument.make_price) instead of AT the touch; everything else (held-back primary as market fallback, 750ms timeout, CLOSE straight-to-market, fail-open warmup) unchanged from loop-5.",
+    "outcome": "pnl -28.4% vs base position-tier-gate (-7563.72 vs -5892.25), slippage 0.0% (both 0.0), sharpe -19.93; trade_count 152300, win_rate 0.329, max_drawdown -0.151. is_weighted_bps rose to 0.03857 — a 14.8% REGRESSION vs loop-5's 0.03359; still beats base (-14.3%) and edges simple (-0.94%) but is strictly worse than loop-5 on the execution objective. All 12 train dates completed, per-date trade counts 449-28377 (no low-sample date). FAILs vs the simple baseline on P&L (+156).",
+    "hypothesis": "Loop-5's next directive named posting one tick inside the touch to trade fill-rate against price improvement; the bet was that a price one tick closer to the mid is hit by enough extra flow (the marginal flow trading through the first tick of depth) that fewer orders fall through to the +half_spread market fallback, and that fill-rate gain would outweigh the +1-tick-worse IS cost paid on each passive fill.",
+    "next": "The hypothesis was wrong — the +1-tick per-fill IS penalty is deterministic on every passive fill while the fill-rate gain is marginal, so moving the limit toward the mid strictly worsens aggregate IS. This establishes the IS-optimal passive resting price within loop-5's structure is AT the touch (inside_ticks=0), and loop-6 is the empirical proof that inside_ticks=1 < inside_ticks=0. The remaining untried execution-objective lever is the OTHER direction loop-5 named: tune passive_timeout_ms — a longer window converts market-fallback orders into loop-5-quality at-the-touch passive fills (no per-fill price penalty) at the cost of signal staleness / adverse selection. P&L remains unmovable by any execution-side choice under sigma=200; a future loop wanting positive P&L must change WHICH orders enter the fill set correlated with forward-return sign, which equity-feedback (loops 1-2) and book-imbalance (loop 3) already failed to do."
+  },
+  "full_reasoning": null,
+  "timestamp":      "2026-05-22T19:47:18Z"
+}

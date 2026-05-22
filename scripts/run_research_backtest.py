@@ -975,8 +975,12 @@ def main() -> int:
                     symbol=args.symbol, config_path=args.config,
                 )
                 algo_metrics[date] = m
+                # Per-date metrics.json carries `sharpe_ratio_intraday`;
+                # fall back across both keys rather than assuming
+                # `sharpe_ratio` (the aggregate-only name).
+                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
                 print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={m['sharpe_ratio']:.2f}")
+                      f"sharpe={s_ratio:.2f}")
             except Exception as exc:  # noqa: BLE001 — surface any failure to the agent
                 print(f"    FAIL {exc}", file=sys.stderr)
                 failures.append((args.algo, date, str(exc)))
@@ -986,8 +990,12 @@ def main() -> int:
             try:
                 m = load_cached_baseline_metrics(baseline, date)
                 base_metrics[date] = m
+                # Per-date baseline metrics.json carries `sharpe_ratio_intraday`;
+                # mirror the non-cached path (line ~1002) which already falls
+                # back across both keys rather than assuming `sharpe_ratio`.
+                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
                 print(f"    CACHE trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={m['sharpe_ratio']:.2f}")
+                      f"sharpe={s_ratio:.2f}")
             except Exception as exc:  # noqa: BLE001
                 print(f"    FAIL {exc}", file=sys.stderr)
                 failures.append((baseline, date, str(exc)))

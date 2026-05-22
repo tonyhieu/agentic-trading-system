@@ -45,6 +45,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.position-tier-gate-b-l5",
         "get_execution_algorithm",
     ),
+    "position-tier-gate-b-l6": (
+        "execution_algos.position-tier-gate-b-l6",
+        "get_execution_algorithm",
+    ),
 }
 
 
