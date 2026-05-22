@@ -51,7 +51,7 @@ class OracleStrategy(Strategy):
             return
 
         oracle_data_type = DataType(
-            OracleSignal,
+            "OracleSignal",
             metadata={"instrument_id": str(self.config.instrument_id)},
         )
         self.subscribe_data(
@@ -70,7 +70,7 @@ class OracleStrategy(Strategy):
             self._close_all_positions()
         self.unsubscribe_data(
             DataType(
-                OracleSignal,
+                "OracleSignal",
                 metadata={"instrument_id": str(self.config.instrument_id)},
             ),
             client_id=ClientId("ORACLE"),
