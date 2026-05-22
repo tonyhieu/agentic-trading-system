@@ -100,7 +100,7 @@ def run_backtest(
         # Route the oracle stream by instrument so the strategy can subscribe
         # to the exact custom feed it expects.
         signal_data_type = DataType(
-            "OracleSignal",
+            OracleSignal,
             metadata={"instrument_id": str(instrument.id)},
         )
         oracle_data = [CustomData(signal_data_type, sig) for sig in signals]

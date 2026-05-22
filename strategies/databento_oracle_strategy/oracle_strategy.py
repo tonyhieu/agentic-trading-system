@@ -51,7 +51,7 @@ class OracleStrategy(Strategy):
             return
 
         oracle_data_type = DataType(
-            "OracleSignal",
+            OracleSignal,
             metadata={"instrument_id": str(self.config.instrument_id)},
         )
         self.subscribe_data(
