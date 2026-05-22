@@ -82,6 +82,11 @@ class OracleStrategy(Strategy):
             return
 
         edge = data.future_price - data.current_price
+        self.log.info(
+            f"OracleSignal received: edge={edge:.4f}, threshold={self.config.entry_threshold}, "
+            f"future={data.future_price:.2f}, current={data.current_price:.2f}",
+            color=LogColor.BLUE,
+        )
 
         if edge > self.config.entry_threshold:
             if self.portfolio.is_flat(self.config.instrument_id):
