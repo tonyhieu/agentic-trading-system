@@ -17,6 +17,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.spread-filter-v2-test-2",
         "get_execution_algorithm",
     ),
+    "oracle-fix": (
+        "execution_algos.oracle-fix",
+        "get_execution_algorithm",
+    ),
 }
 
 
