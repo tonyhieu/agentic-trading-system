@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "awscli>=1.44.81",
+    "boto3>=1.43.13",
     "dotenv>=0.9.9",
     "fsspec[http]>=2026.2.0",
     "matplotlib>=3.10.8",

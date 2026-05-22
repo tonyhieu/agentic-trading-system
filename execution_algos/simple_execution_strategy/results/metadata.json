@@ -2,7 +2,7 @@
   "strategy_name": "oracle",
   "strategy_kwargs": {
     "horizon_seconds": 30.0,
-    "sigma": 5,
+    "sigma": 5.8,
     "seed": 42,
     "signal_interval_seconds": 1.0
   },
@@ -41,6 +41,9 @@
     },
     {
       "date": "20260318"
+    },
+    {
+      "date": "20260319"
     },
     {
       "date": "20260320"

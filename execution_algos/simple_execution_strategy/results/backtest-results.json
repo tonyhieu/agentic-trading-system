@@ -1,24 +1,24 @@
 {
   "algo_name": "simple",
-  "backtest_date": "2026-05-16T22:47:01Z",
+  "backtest_date": "2026-05-22T01:17:37Z",
   "baseline": "simple",
   "sharpe_metric_version": "v2",
   "strategy_used": "oracle",
   "symbol": "MESM6",
   "performance": {
-    "realized_pnl": 1699.25,
+    "realized_pnl": 489.0,
     "unrealized_pnl": 0.0,
-    "sharpe_ratio": 6.504060437275084,
-    "sharpe_n_days": 11,
-    "max_drawdown_pct": -0.03767481162594187,
-    "win_rate": 0.35575741334540784,
-    "trade_count": 108217,
+    "sharpe_ratio": 1.88113065999231,
+    "sharpe_n_days": 12,
+    "max_drawdown_pct": -0.049949750251248745,
+    "win_rate": 0.3515365387443023,
+    "trade_count": 136020,
     "mean_slippage": 0.0,
     "max_abs_slippage": 0.0,
     "total_commissions": 0.0,
-    "total_return_pct": 0.169925,
-    "is_weighted_bps": 0.04109706923926059,
-    "is_total_price": 5998.375,
+    "total_return_pct": 0.0489,
+    "is_weighted_bps": 0.038608569910869396,
+    "is_total_price": 7073.5,
     "vs_baseline_pnl_pct": 0.0,
     "vs_baseline_slippage_pct": 0.0,
     "vs_baseline_is_bps": 0.0
@@ -36,6 +36,7 @@
       "2026-03-16",
       "2026-03-17",
       "2026-03-18",
+      "2026-03-19",
       "2026-03-20"
     ],
     "test_dates": []
@@ -51,6 +52,7 @@
     "execution_algos/simple_execution_strategy/results/20260316",
     "execution_algos/simple_execution_strategy/results/20260317",
     "execution_algos/simple_execution_strategy/results/20260318",
+    "execution_algos/simple_execution_strategy/results/20260319",
     "execution_algos/simple_execution_strategy/results/20260320"
   ]
 }
