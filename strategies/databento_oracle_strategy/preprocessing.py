@@ -73,7 +73,7 @@ def build_oracle_signals(
 
         signals.append(
             OracleSignal(
-                instrument_id=current.instrument_id,
+                instrument_id=str(current.instrument_id),
                 current_price=float(current.price),
                 future_price=future_price,
                 ts_event=current.ts_event,

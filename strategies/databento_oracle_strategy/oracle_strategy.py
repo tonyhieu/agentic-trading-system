@@ -85,7 +85,7 @@ class OracleStrategy(Strategy):
             data = data.data
         if not isinstance(data, OracleSignal):
             return
-        if data.instrument_id != self.config.instrument_id:
+        if data.instrument_id != str(self.config.instrument_id):
             return
 
         edge = data.future_price - data.current_price

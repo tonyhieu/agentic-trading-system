@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from nautilus_trader.model.custom import customdataclass_pyo3
-from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.core.nautilus_pyo3.model import register_custom_data_class
 
 
 @customdataclass_pyo3()
 class OracleSignal:
-    instrument_id: InstrumentId
+    instrument_id: str
     current_price: float = 0.0
     future_price: float = 0.0
     ts_event: int = 0
