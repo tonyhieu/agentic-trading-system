@@ -85,6 +85,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-m-l6",
         "get_execution_algorithm",
     ),
+    "ptg-m-l7": (
+        "execution_algos.ptg-m-l7",
+        "get_execution_algorithm",
+    ),
 }
 
 
