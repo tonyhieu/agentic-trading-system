@@ -1,35 +1,45 @@
 #!/usr/bin/env python3
 """SubagentStop hook: backfill the `meta` block of the most-recent entry in
-research/program_database.json with per-iteration execution metadata from the
-main session transcript.
+research/program_database.json with per-iteration execution metadata for the
+researcher subagent.
 
 Triggered on every SubagentStop. The hook is a no-op unless the most-recent
 entry has `meta.duration_seconds is None` AND `meta.tokens_used is None` (the
 researcher's marker that this entry expects a backfill). Subagents that are
 not the researcher leave the file untouched.
 
-Per-iteration scoping. The `transcript_path` a SubagentStop hook receives is
-the main session transcript -- the parent conversation file, which
-accumulates across every subagent invocation in the session. It is NOT the
-just-stopped subagent's own transcript. Scanning the whole file every time
-would make each entry cumulative (issue #78). Instead, an offset cursor at
-`research/.meta_cursor.json` records how many transcript lines have already
-been consumed; each run scans only the new slice. The cursor is machine-local
-runtime state (it stores an absolute transcript path) and is git-ignored. If
-it is missing or stale, the hook re-scans from the start -- over-counting at
-worst once, never under-counting.
+Which transcript is measured (issue #88). A SubagentStop hook receives
+`transcript_path` for the MAIN session transcript -- the parent conversation,
+which accumulates across every subagent invocation. Scanning it measured the
+orchestrator's compute, not the researcher's. Instead this hook derives the
+researcher subagent's OWN transcript: subagent transcripts live beside the
+main one at `<session>/subagents/agent-<id>.jsonl`, each with a sibling
+`agent-<id>.meta.json` carrying `{"agentType": ...}`. The hook picks the
+most-recently-modified `.jsonl` whose meta marks it `agentType == "researcher"`
+-- the just-stopped researcher run. If no researcher transcript is found the
+hook is a no-op (both `meta` fields stay null, which callers already tolerate).
 
-Because the transcript is the main session's, `meta` measures the session
-slice between SubagentStop firings, not the researcher subagent's own compute
-(which lives in a separate `subagents/agent-<id>.jsonl`). See issue #88 for
-the follow-up to scan the per-subagent transcript instead.
+Per-iteration scoping. When the loop driver continues the same researcher
+subagent across iterations (SendMessage), one `agent-<id>.jsonl` keeps
+growing, so the hook still scopes each backfill with an offset cursor at
+`research/.meta_cursor.json` -- now keyed on the subagent transcript path.
+Each run scans only the lines added since the last backfill. A fresh subagent
+per iteration gets a new transcript file; the cursor path no longer matches
+and the whole file is scanned. The cursor is machine-local runtime state (it
+stores an absolute transcript path) and is git-ignored. If it is missing or
+stale, the hook re-scans from the start -- over-counting at worst once, never
+under-counting.
 
 Computes (over the current iteration's slice only):
   - meta.duration_seconds: wall-clock seconds from the slice's first
     transcript message to its last, parsed from the per-message `timestamp`.
   - meta.tokens_used: {"input": ..., "output": ..., "cache_creation": ...,
-    "cache_read": ..., "total": ...} summed across every transcript record
-    in the slice that carries a `usage` block.
+    "cache_read": ..., "total": ...} taken from the LAST usage block in the
+    slice, with `total` the sum of the four. The final turn's usage is a
+    snapshot of the run's peak context plus its last output; its four-field
+    sum matches the `total_tokens` Claude Code reports for the subagent.
+    Summing usage across every turn instead would N-count the cached context
+    that is re-read on each turn, inflating the figure by orders of magnitude.
 
 After patching, attempts a `chore(<algo-id>): backfill execution metadata`
 commit so the working tree stays clean, then attempts
@@ -58,16 +68,53 @@ def _parse_ts(raw: str | None) -> datetime | None:
         return None
 
 
+def _find_researcher_transcript(main_transcript: Path) -> Path | None:
+    """Locate the researcher subagent's own transcript.
+
+    Subagent transcripts sit beside the main session transcript at
+    `<main_transcript_stem>/subagents/agent-<id>.jsonl`, each paired with an
+    `agent-<id>.meta.json` holding `{"agentType": ...}`. Returns the
+    most-recently-modified `.jsonl` whose meta marks it the researcher (the
+    just-stopped run), or None when no such transcript exists.
+    """
+    subagents_dir = main_transcript.with_suffix("") / "subagents"
+    if not subagents_dir.is_dir():
+        return None
+
+    newest: Path | None = None
+    newest_mtime = -1.0
+    for jsonl in subagents_dir.glob("agent-*.jsonl"):
+        meta_path = jsonl.parent / (jsonl.stem + ".meta.json")
+        try:
+            meta = json.loads(meta_path.read_text())
+        except (OSError, json.JSONDecodeError, ValueError):
+            continue
+        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher"):
+            continue
+        try:
+            mtime = jsonl.stat().st_mtime
+        except OSError:
+            continue
+        if mtime > newest_mtime:
+            newest_mtime, newest = mtime, jsonl
+    return newest
+
+
 def _scan_transcript(
     transcript_path: Path,
     start_line: int = 0,
 ) -> tuple[dict[str, int] | None, float | None, int]:
-    """Scan transcript lines [start_line, EOF) for token totals and duration.
+    """Scan transcript lines [start_line, EOF) for token usage and duration.
 
     Returns (token_totals, duration_seconds, lines_seen):
-      - token_totals / duration_seconds are computed ONLY over the slice of
-        lines at index >= start_line. Either may be None when that slice
-        carries no usage blocks / no timestamps.
+      - token_totals is the LAST usage block found in the slice, normalized to
+        {"input", "output", "cache_creation", "cache_read", "total"} with
+        `total` the sum of the four. None when the slice carries no usage
+        block. The last block is used (not a per-turn sum) because the cached
+        context is re-read every turn -- summing `cache_read` across turns
+        N-counts it. The final turn's usage is a snapshot of peak context.
+      - duration_seconds spans the slice's first to last timestamped message.
+        None when the slice carries no timestamps.
       - lines_seen is the TOTAL physical line count of the file (including
         lines before start_line) -- the next cursor value. On an OSError it
         is 0, which signals "unreadable; do not advance the cursor".
@@ -76,8 +123,7 @@ def _scan_transcript(
     is append-only JSONL: line N keeps its content across runs, and the count
     is immune to JSON parse failures and blank lines.
     """
-    totals = {"input": 0, "output": 0, "cache_creation": 0, "cache_read": 0}
-    saw_usage = False
+    last_usage: dict[str, Any] | None = None
     first_ts: datetime | None = None
     last_ts: datetime | None = None
     lines_seen = 0
@@ -102,21 +148,21 @@ def _scan_transcript(
                         first_ts = ts
                     last_ts = ts
 
-                msg = record.get("message") or {}
-                usage = msg.get("usage") or {}
+                usage = (record.get("message") or {}).get("usage") or {}
                 if usage:
-                    saw_usage = True
-                    totals["input"] += int(usage.get("input_tokens", 0) or 0)
-                    totals["output"] += int(usage.get("output_tokens", 0) or 0)
-                    totals["cache_creation"] += int(usage.get("cache_creation_input_tokens", 0) or 0)
-                    totals["cache_read"] += int(usage.get("cache_read_input_tokens", 0) or 0)
+                    last_usage = usage
     except OSError:
         return None, None, 0
 
     token_totals: dict[str, int] | None = None
-    if saw_usage:
-        totals["total"] = sum(totals.values())
-        token_totals = totals
+    if last_usage is not None:
+        token_totals = {
+            "input": int(last_usage.get("input_tokens", 0) or 0),
+            "output": int(last_usage.get("output_tokens", 0) or 0),
+            "cache_creation": int(last_usage.get("cache_creation_input_tokens", 0) or 0),
+            "cache_read": int(last_usage.get("cache_read_input_tokens", 0) or 0),
+        }
+        token_totals["total"] = sum(token_totals.values())
 
     duration: float | None = None
     if first_ts is not None and last_ts is not None and last_ts >= first_ts:
@@ -222,10 +268,6 @@ def main() -> None:
     if not transcript_path_s or not cwd:
         return
 
-    transcript_path = Path(transcript_path_s)
-    if not transcript_path.exists():
-        return
-
     # --- Determine what needs patching ---
 
     # Path 1: research program database (existing researcher agent).
@@ -266,18 +308,32 @@ def main() -> None:
     if not db_needs_patch and loop_file is None:
         return  # Nothing to patch — skip transcript scan entirely.
 
-    # --- Scan the transcript slice for this iteration ---
+    # --- Find the subagent transcript to measure (issue #88) ---
+    # Use the subagent's own transcript rather than the main session transcript
+    # so meta reflects the subagent's compute, not the orchestrator's.
+    # Both "researcher" and "per-iteration-researcher" agent types are supported.
+    main_transcript = Path(transcript_path_s)
+    if not main_transcript.exists():
+        return
+
+    sub_transcript = _find_researcher_transcript(main_transcript)
+    if sub_transcript is None:
+        return  # No researcher transcript to measure; leave meta null.
+
+    # A continued subagent keeps appending to one transcript file. Scan only
+    # the slice produced since the last backfill so each entry records its own
+    # iteration. The cursor is keyed on the subagent transcript path.
     cursor_path = Path(cwd) / "research" / ".meta_cursor.json"
     cursor = _read_cursor(cursor_path)
     start_line = 0
-    if cursor is not None and cursor["transcript_path"] == str(transcript_path):
+    if cursor is not None and cursor["transcript_path"] == str(sub_transcript):
         start_line = cursor["lines_consumed"]
 
-    token_totals, duration, lines_seen = _scan_transcript(transcript_path, start_line)
+    token_totals, duration, lines_seen = _scan_transcript(sub_transcript, start_line)
 
     # Cursor pointed past EOF (transcript truncated or rotated) -> rescan whole.
     if start_line > lines_seen:
-        token_totals, duration, lines_seen = _scan_transcript(transcript_path, 0)
+        token_totals, duration, lines_seen = _scan_transcript(sub_transcript, 0)
 
     if token_totals is None and duration is None:
         return  # Empty slice / nothing useful; leave the cursor unadvanced.
@@ -312,7 +368,7 @@ def main() -> None:
 
     # Advance the cursor only after a real backfill consumed this slice, and
     # before the git steps so a commit/push failure cannot lose the progress.
-    _write_cursor(cursor_path, transcript_path, lines_seen)
+    _write_cursor(cursor_path, sub_transcript, lines_seen)
 
     _try_commit(cwd, algo_id, extra_files)
     _try_push(cwd)
