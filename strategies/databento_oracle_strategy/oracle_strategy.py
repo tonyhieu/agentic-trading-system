@@ -12,6 +12,7 @@ from decimal import Decimal
 from nautilus_trader.common.enums import LogColor
 from nautilus_trader.config import StrategyConfig
 from nautilus_trader.core.data import Data
+from nautilus_trader.model.data import CustomData
 from nautilus_trader.model import DataType
 from nautilus_trader.model.enums import OrderSide
 from nautilus_trader.model.enums import PositionSide
@@ -80,6 +81,8 @@ class OracleStrategy(Strategy):
         pass
 
     def on_data(self, data: Data) -> None:
+        if isinstance(data, CustomData):
+            data = data.data
         if not isinstance(data, OracleSignal):
             return
         if data.instrument_id != self.config.instrument_id:
