@@ -1,0 +1,30 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 5,
+  "algo_id": "position-tier-gate-b-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": -6548.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": -16.561539822519787,
+    "max_drawdown_pct": -0.14607437918388846,
+    "win_rate": 0.3286080105055811,
+    "trade_count": 152300,
+    "vs_base_pnl_pct": -11.133268276125419,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 7410,
+  "context_tokens_estimated": 1852,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Replaced loop-4's zero-latency market pass-through with a passive-then-aggressive order TRANSFORMATION: each OPEN leg first rests a post-only LIMIT child at the same-side touch (BUY at cached bid, SELL at cached ask) for passive_timeout_ms=750; on the time alert, if the limit is still unfilled it is canceled and the held-back primary MARKET order is submitted to sweep the position. Reduce-only CLOSE legs route straight to market (intraday_flat). Quantity-based child slicing was checked and ruled out first: every order is quantity==1.",
+    "outcome": "pnl -11.1% vs base position-tier-gate (-6548.25 vs -5892.25), slippage 0.0% (both 0.0), sharpe -16.56 (vs base -27.23); trade_count 152300, win_rate 0.329, max_drawdown -0.146. is_weighted_bps fell to 0.03359 \u2014 a 25.4% IS reduction vs base 0.04501 and BELOW simple's 0.03893 (vs_baseline_is_bps -13.60). All 12 train dates completed, per-date trade counts 449-28377 (no low-sample date). FAILs vs the simple baseline on P&L (+156).",
+    "hypothesis": "Loops 1-4 exhausted binary skip/submit and loop-4 proved IS is fixed across submit/skip policies; the one untried lever is order transformation. Quantity slicing is impossible (qty==1), so the order-TYPE half was tried: a post-only limit at the touch that FILLS provides liquidity and costs roughly -half_spread of IS (a price better than the arrival mid), so passive-then-aggressive should drive is_weighted_bps below the base and lift per-trade P&L by capturing the spread.",
+    "next": "The transformation worked on its target (IS: 0.0336, the first loop in this arm to beat base AND simple on is_weighted_bps) but P&L still fell 11.1% \u2014 IS and realized P&L are DECOUPLED here. Two causes: (1) adverse selection \u2014 a post-only limit at the touch fills precisely when price is about to move through it adversely, so the captured spread is handed back as the position is marked against that move; (2) trade_count is the ungated 152300 upper bound, so the structurally-negative sigma=200 per-trade edge dominates and execution-side savings are second-order. CONSTRAINT for future loops: order-execution choice (gate/no-gate, market/passive-limit) only redistributes a cost small relative to the directional loss \u2014 it cannot move P&L positive. To move P&L a future loop must change WHICH orders enter the fill set correlated with the sign of forward return (equity-feedback and book-imbalance already failed that). To further move the EXECUTION objective (is_bps), build on loop-5: tune passive_timeout_ms (longer => more passive fills => lower IS but more adverse selection) or post one tick inside the touch to trade fill-rate against price improvement."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-22T19:11:44Z"
+}
