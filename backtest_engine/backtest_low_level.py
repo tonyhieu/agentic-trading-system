@@ -62,7 +62,7 @@ def run_backtest(
 
     config = BacktestEngineConfig(
         trader_id=TraderId("BACKTESTER-001"),
-        logging=LoggingConfig(log_level="DEBUG"),
+        logging=LoggingConfig(log_level="WARNING"),
     )
     engine = BacktestEngine(config=config)
 
@@ -96,10 +96,12 @@ def run_backtest(
             "signal_interval_seconds": strategy_options.pop("signal_interval_seconds", 1.0),
         }
         signals = build_oracle_signals(ticks, **oracle_options)
-        # The DataEngine only routes custom Data subclasses through on_data
-        # when they're delivered as `CustomData(DataType, payload)` — raw
-        # subclass instances get dropped as "unrecognized type".
-        signal_data_type = DataType(OracleSignal)
+        # Route the oracle stream by instrument so the strategy can subscribe
+        # to the exact custom feed it expects.
+        signal_data_type = DataType(
+            OracleSignal,
+            metadata={"instrument_id": str(instrument.id)},
+        )
         wrapped_signals = [CustomData(signal_data_type, sig) for sig in signals]
         engine.add_data(wrapped_signals, client_id=ClientId("ORACLE"))
         print(f"Generated {len(signals)} oracle signals from {len(ticks)} ticks")

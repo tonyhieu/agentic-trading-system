@@ -16,6 +16,7 @@ from nautilus_trader.model import DataType
 from nautilus_trader.model.enums import OrderSide
 from nautilus_trader.model.enums import PositionSide
 from nautilus_trader.model.enums import TimeInForce
+from nautilus_trader.model.identifiers import ClientId
 from nautilus_trader.model.identifiers import ExecAlgorithmId
 from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.instruments import Instrument
@@ -48,13 +49,13 @@ class OracleStrategy(Strategy):
             self.stop()
             return
 
-        # Custom data is delivered to ``on_data`` only after subscribing — even
-        # for items injected via ``BacktestEngine.add_data``. The topic
-        # published by the data engine includes the instrument_id, so the
-        # subscription must match (otherwise no delivery).
+        oracle_data_type = DataType(
+            OracleSignal,
+            metadata={"instrument_id": str(self.config.instrument_id)},
+        )
         self.subscribe_data(
-            DataType(OracleSignal),
-            instrument_id=self.config.instrument_id,
+            oracle_data_type,
+            client_id=ClientId("ORACLE"),
         )
 
         self.log.info(
@@ -67,8 +68,11 @@ class OracleStrategy(Strategy):
         if self.config.close_positions_on_stop:
             self._close_all_positions()
         self.unsubscribe_data(
-            DataType(OracleSignal),
-            instrument_id=self.config.instrument_id,
+            DataType(
+                OracleSignal,
+                metadata={"instrument_id": str(self.config.instrument_id)},
+            ),
+            client_id=ClientId("ORACLE"),
         )
         self.log.info("OracleStrategy stopped.", color=LogColor.RED)
 
@@ -82,11 +86,6 @@ class OracleStrategy(Strategy):
             return
 
         edge = data.future_price - data.current_price
-        self.log.info(
-            f"OracleSignal received: edge={edge:.4f}, threshold={self.config.entry_threshold}, "
-            f"future={data.future_price:.2f}, current={data.current_price:.2f}",
-            color=LogColor.BLUE,
-        )
 
         if edge > self.config.entry_threshold:
             if self.portfolio.is_flat(self.config.instrument_id):
