@@ -75,5 +75,16 @@
     "trade_count": 91982,
     "context_chars_in": 476,
     "timestamp": "2026-05-22T18:52:26Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "ptg-m-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.34017595307918,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "trade_count": 136734,
+    "context_chars_in": 555,
+    "timestamp": "2026-05-22T18:53:30Z"
   }
 ]

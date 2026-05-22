@@ -1,0 +1,25 @@
+{
+  "experiment":    "per_iteration_experiment",
+  "base_algo":     "position-tier-gate",
+  "context_mode":  "metrics-only",
+  "loop":          8,
+  "algo_id":       "ptg-m-l8",
+  "status":        "completed",
+  "metrics": {
+    "realized_pnl":             156.0,
+    "mean_slippage":            0.0,
+    "sharpe_ratio":             0.599560040213869,
+    "max_drawdown_pct":         -0.05289973550132249,
+    "win_rate":                 0.3506443167025027,
+    "trade_count":              136734,
+    "vs_base_pnl_pct":          -96.34017595307918,
+    "vs_base_slippage_pct":     0.0
+  },
+  "context_chars_in":         555,
+  "context_tokens_estimated": 138,
+  "tokens_used":     null,
+  "duration_seconds": null,
+  "summary_out":    null,
+  "full_reasoning": null,
+  "timestamp":      "2026-05-22T18:53:30Z"
+}
