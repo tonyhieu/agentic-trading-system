@@ -1,25 +1,31 @@
 {
-  "experiment":    "per_iteration_experiment",
-  "base_algo":     "aggressor-flow-gate",
-  "context_mode":  "metrics-only",
-  "loop":          7,
-  "algo_id":       "afg-m-l7",
-  "status":        "completed",
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "metrics-only",
+  "loop": 7,
+  "algo_id": "afg-m-l7",
+  "status": "completed",
   "metrics": {
-    "realized_pnl":             1346.75,
-    "mean_slippage":            0.0,
-    "sharpe_ratio":             6.142181716116662,
-    "max_drawdown_pct":         -0.034474801769889825,
-    "win_rate":                 0.35341193487301,
-    "trade_count":              105087,
-    "vs_base_pnl_pct":          7.268020708881322,
-    "vs_base_slippage_pct":     0.0
+    "realized_pnl": 1346.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 6.142181716116662,
+    "max_drawdown_pct": -0.034474801769889825,
+    "win_rate": 0.35341193487301,
+    "trade_count": 105087,
+    "vs_base_pnl_pct": 7.268020708881322,
+    "vs_base_slippage_pct": 0.0
   },
-  "context_chars_in":         476,
+  "context_chars_in": 476,
   "context_tokens_estimated": 119,
-  "tokens_used":              null,
-  "duration_seconds":         null,
-  "summary_out":              null,
-  "full_reasoning":           null,
-  "timestamp":                "2026-05-22T16:22:18Z"
+  "tokens_used": {
+    "input": 2,
+    "output": 1127,
+    "cache_creation": 1044,
+    "cache_read": 69827,
+    "total": 72000
+  },
+  "duration_seconds": 964.4,
+  "summary_out": null,
+  "full_reasoning": null,
+  "timestamp": "2026-05-22T16:22:18Z"
 }
