@@ -25,6 +25,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vol-regime-sizer",
         "get_execution_algorithm",
     ),
+    "afg-m-l1": (
+        "execution_algos.afg-m-l1",
+        "get_execution_algorithm",
+    ),
 }
 
 

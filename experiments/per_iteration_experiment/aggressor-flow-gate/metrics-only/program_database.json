@@ -1,0 +1,13 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "afg-m-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -7.327757865790521,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 5.13018683849688,
+    "trade_count": 107623,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-22T14:07:44Z"
+  }
+]
