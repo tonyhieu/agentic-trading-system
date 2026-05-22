@@ -89,7 +89,7 @@ def _find_researcher_transcript(main_transcript: Path) -> Path | None:
             meta = json.loads(meta_path.read_text())
         except (OSError, json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(meta, dict) or meta.get("agentType") != "researcher":
+        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher"):
             continue
         try:
             mtime = jsonl.stat().st_mtime
@@ -209,16 +209,17 @@ def _write_cursor(cursor_path: Path, transcript_path: Path, lines_consumed: int)
         return  # Best-effort: next run resets to a full scan.
 
 
-def _try_commit(cwd: str, algo_id: str) -> None:
+def _try_commit(cwd: str, algo_id: str, extra_files: list[str] | None = None) -> None:
+    files = ["research/program_database.json"] + (extra_files or [])
     try:
         subprocess.run(
-            ["git", "-C", cwd, "add", "research/program_database.json"],
+            ["git", "-C", cwd, "add"] + files,
             check=True,
             capture_output=True,
         )
         # `git diff --cached --quiet` exits 0 if nothing staged, 1 if changes staged.
         diff = subprocess.run(
-            ["git", "-C", cwd, "diff", "--cached", "--quiet", "research/program_database.json"],
+            ["git", "-C", cwd, "diff", "--cached", "--quiet"] + files,
         )
         if diff.returncode == 0:
             return  # Nothing to commit
@@ -226,8 +227,7 @@ def _try_commit(cwd: str, algo_id: str) -> None:
             [
                 "git", "-C", cwd, "commit",
                 "-m", f"chore({algo_id}): backfill execution metadata",
-                "--", "research/program_database.json",
-            ],
+                "--"] + files,
             check=True,
             capture_output=True,
         )
@@ -268,43 +268,61 @@ def main() -> None:
     if not transcript_path_s or not cwd:
         return
 
+    # --- Determine what needs patching ---
+
+    # Path 1: research program database (existing researcher agent).
+    db_needs_patch = False
+    db: list[Any] = []
     db_path = Path(cwd) / "research" / "program_database.json"
-    if not db_path.exists():
-        return
+    if db_path.exists():
+        try:
+            db = json.loads(db_path.read_text())
+            if isinstance(db, list) and db:
+                last = db[-1]
+                meta = last.get("meta")
+                if isinstance(meta, dict):
+                    if meta.get("tokens_used") is None and meta.get("duration_seconds") is None:
+                        db_needs_patch = True
+        except (json.JSONDecodeError, OSError):
+            pass
 
-    try:
-        db = json.loads(db_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return
+    # Path 2: experiment loop file (per_iteration_experiment agent).
+    # Triggered by a git-ignored pointer file the agent writes before committing.
+    loop_file: Path | None = None
+    loop_file_rel: str | None = None
+    pointer_path = Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json"
+    if pointer_path.exists():
+        try:
+            pointer = json.loads(pointer_path.read_text())
+            rel = pointer.get("loop_file")
+            if rel:
+                candidate = Path(cwd) / rel
+                if candidate.exists():
+                    loop_data = json.loads(candidate.read_text())
+                    if loop_data.get("tokens_used") is None:
+                        loop_file = candidate
+                        loop_file_rel = rel
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
+            pass
 
-    if not isinstance(db, list) or not db:
-        return
+    if not db_needs_patch and loop_file is None:
+        return  # Nothing to patch — skip transcript scan entirely.
 
-    last = db[-1]
-    meta = last.get("meta")
-    if not isinstance(meta, dict):
-        return
-    # Only patch entries the researcher explicitly marked for backfill. This
-    # early-return runs before any transcript work, so an already-backfilled
-    # entry never advances the cursor.
-    if meta.get("tokens_used") is not None or meta.get("duration_seconds") is not None:
-        return
-
+    # --- Find the subagent transcript to measure (issue #88) ---
+    # Use the subagent's own transcript rather than the main session transcript
+    # so meta reflects the subagent's compute, not the orchestrator's.
+    # Both "researcher" and "per-iteration-researcher" agent types are supported.
     main_transcript = Path(transcript_path_s)
     if not main_transcript.exists():
         return
 
-    # The payload's transcript_path is the MAIN session transcript. Measure the
-    # researcher subagent's OWN transcript instead, so `meta` reflects the
-    # researcher's compute rather than the orchestrator's (issue #88).
     sub_transcript = _find_researcher_transcript(main_transcript)
     if sub_transcript is None:
         return  # No researcher transcript to measure; leave meta null.
 
-    # A continued researcher subagent keeps appending to one transcript file.
-    # Scan only the slice produced since the last backfill so each entry
-    # records its own iteration, not a running total. The cursor lives next to
-    # the database, is keyed on the subagent transcript path, and is git-ignored.
+    # A continued subagent keeps appending to one transcript file. Scan only
+    # the slice produced since the last backfill so each entry records its own
+    # iteration. The cursor is keyed on the subagent transcript path.
     cursor_path = Path(cwd) / "research" / ".meta_cursor.json"
     cursor = _read_cursor(cursor_path)
     start_line = 0
@@ -320,19 +338,39 @@ def main() -> None:
     if token_totals is None and duration is None:
         return  # Empty slice / nothing useful; leave the cursor unadvanced.
 
-    if token_totals is not None:
-        last["meta"]["tokens_used"] = token_totals
-    if duration is not None:
-        last["meta"]["duration_seconds"] = round(duration, 1)
+    # --- Patch: experiment loop file ---
+    extra_files: list[str] = []
+    if loop_file is not None and loop_file_rel is not None:
+        try:
+            loop_data = json.loads(loop_file.read_text())
+            if token_totals is not None:
+                loop_data["tokens_used"] = token_totals
+            if duration is not None:
+                loop_data["duration_seconds"] = round(duration, 1)
+            loop_file.write_text(json.dumps(loop_data, indent=2) + "\n")
+            extra_files.append(loop_file_rel)
+        except (OSError, json.JSONDecodeError):
+            pass  # Best-effort: leave loop file unpatched
 
-    db_path.write_text(json.dumps(db, indent=2) + "\n")
+    # --- Patch: research program database ---
+    algo_id = "unknown"
+    if db_needs_patch:
+        last = db[-1]
+        if token_totals is not None:
+            last["meta"]["tokens_used"] = token_totals
+        if duration is not None:
+            last["meta"]["duration_seconds"] = round(duration, 1)
+        db_path.write_text(json.dumps(db, indent=2) + "\n")
+        algo_id = str(last.get("id") or "unknown")
+    elif loop_file_rel is not None:
+        # Derive a label for the commit message from the loop file path.
+        algo_id = Path(loop_file_rel).parent.parent.name  # <mode> dir name
 
     # Advance the cursor only after a real backfill consumed this slice, and
     # before the git steps so a commit/push failure cannot lose the progress.
     _write_cursor(cursor_path, sub_transcript, lines_seen)
 
-    algo_id = str(last.get("id") or "unknown")
-    _try_commit(cwd, algo_id)
+    _try_commit(cwd, algo_id, extra_files)
     _try_push(cwd)
 
 

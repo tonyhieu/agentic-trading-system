@@ -135,11 +135,3 @@ The 10s rolling window with a 2-contract threshold provides an effective gate
 with a 21.6% skip rate, matching the 19-20% range of top-performing ob-imbalance
 and microprice-divergence algorithms. Net P&L improvement of +54.2% vs baseline
 exceeds all prior algorithms except the top two book-based gates.
-
-**Suggested next attempt**: Combine aggressor-flow-gate with the session-clock
-skip windows (session-clock-gate). The two signals are orthogonal by construction
-(one is temporal, one is from the trade tape), and their skips would rarely overlap.
-A combined gate could potentially achieve a 25-30% combined skip rate with better
-per-date consistency. Alternatively, tune the window to 5s (closer to 1-signal-interval
-of 1s but more responsive) or raise the threshold to 3-4 contracts to see if a
-stricter filter further concentrates the skip benefit.

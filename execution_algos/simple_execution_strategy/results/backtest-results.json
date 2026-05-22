@@ -1,6 +1,6 @@
 {
   "algo_name": "simple",
-  "backtest_date": "2026-05-21T00:00:00Z",
+  "backtest_date": "2026-05-22T08:47:02Z",
   "baseline": "simple",
   "sharpe_metric_version": "v2",
   "strategy_used": "oracle",
@@ -8,7 +8,7 @@
   "performance": {
     "realized_pnl": 156.0,
     "unrealized_pnl": 0.0,
-    "sharpe_ratio": 0.5995600402138687,
+    "sharpe_ratio": 0.599560040213869,
     "sharpe_n_days": 12,
     "max_drawdown_pct": -0.05289973550132249,
     "win_rate": 0.3506443167025027,
@@ -17,7 +17,7 @@
     "max_abs_slippage": 0.0,
     "total_commissions": 0.0,
     "total_return_pct": 0.0156,
-    "is_weighted_bps": 0.07627522971389422,
+    "is_weighted_bps": 0.03888245739380411,
     "is_total_price": 7161.0,
     "vs_baseline_pnl_pct": 0.0,
     "vs_baseline_slippage_pct": 0.0,

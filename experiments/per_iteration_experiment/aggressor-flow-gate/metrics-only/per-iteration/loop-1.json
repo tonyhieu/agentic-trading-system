@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "metrics-only",
+  "loop": 1,
+  "algo_id": "afg-m-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1163.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.13018683849688,
+    "max_drawdown_pct": -0.03394982176343574,
+    "win_rate": 0.35335383700510115,
+    "trade_count": 107623,
+    "vs_base_pnl_pct": -7.327757865790521,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": {
+    "input": 2,
+    "output": 1,
+    "cache_creation": 40979,
+    "cache_read": 0,
+    "total": 40982
+  },
+  "duration_seconds": 764.7,
+  "summary_out": null,
+  "full_reasoning": null,
+  "timestamp": "2026-05-22T14:07:44Z"
+}

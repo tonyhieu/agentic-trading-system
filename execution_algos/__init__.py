@@ -25,6 +25,74 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vol-regime-sizer",
         "get_execution_algorithm",
     ),
+    "afg-m-l1": (
+        "execution_algos.afg-m-l1",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l2": (
+        "execution_algos.afg-m-l2",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l3": (
+        "execution_algos.afg-m-l3",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l4": (
+        "execution_algos.afg-m-l4",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l5": (
+        "execution_algos.afg-m-l5",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l6": (
+        "execution_algos.afg-m-l6",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l7": (
+        "execution_algos.afg-m-l7",
+        "get_execution_algorithm",
+    ),
+    "afg-m-l8": (
+        "execution_algos.afg-m-l8",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l1": (
+        "execution_algos.vrs-m-l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l1": (
+        "execution_algos.ptg-m-l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l2": (
+        "execution_algos.ptg-m-l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l3": (
+        "execution_algos.ptg-m-l3",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l4": (
+        "execution_algos.ptg-m-l4",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l5": (
+        "execution_algos.ptg-m-l5",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l6": (
+        "execution_algos.ptg-m-l6",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l7": (
+        "execution_algos.ptg-m-l7",
+        "get_execution_algorithm",
+    ),
+    "ptg-m-l8": (
+        "execution_algos.ptg-m-l8",
+        "get_execution_algorithm",
+    ),
 }
 
 
