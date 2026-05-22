@@ -1,0 +1,30 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 2,
+  "algo_id": "position-tier-gate-b-l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": -8857.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": -28.296976422407855,
+    "max_drawdown_pct": -0.13859954955146397,
+    "win_rate": 0.32717662508207485,
+    "trade_count": 152300,
+    "vs_base_pnl_pct": -50.324578896007466,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 1471,
+  "context_tokens_estimated": 367,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Replaced loop-1's one-way all-time-peak equity circuit breaker with a re-arming breaker: a decaying peak reference (peak_decay=0.10, pulled toward current realized P&L on each non-high close) plus a latched hysteresis band (latch SKIP above drawdown_halt=220 USD, unlatch only below drawdown_rearm=80 USD).",
+    "outcome": "pnl -50.3% vs base position-tier-gate (-8857.50 vs -5892.25), slippage 0.0%, sharpe -28.30; trade_count jumped to 152300 (loop-1 was 32475, base 101304); max_drawdown worsened to -0.139%.",
+    "hypothesis": "Loop-1's breaker latched shut permanently under sigma=200 and collapsed trade_count, so making it re-arm should restore trading volume toward simple/base levels while still cutting exposure during genuine deep drawdowns.",
+    "next": "Equity-feedback gating is exhausted. The re-arm worked mechanically (trade_count rose) but proved loop-1's +71.6% was pure volume suppression, not trade selection \u2014 under sigma=200 the per-trade edge is structurally negative (~-5.8 USD/100 trades) so trading more loses more. A future loop should gate on an order-time signal-quality/market-state feature (spread, top-of-book imbalance, recent realized volatility) to skip genuinely worse entries rather than a random subset, or pivot the objective to a slippage/IS metric where real room exists."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-22T16:33:45Z"
+}
