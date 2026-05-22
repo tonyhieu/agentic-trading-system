@@ -6,8 +6,8 @@ if __name__ == "__main__":
         strategy_name="oracle",
         strategy_kwargs={
             "horizon_seconds": 30.0,
-            "sigma": 0.1,
-            "signal_interval_seconds": 60.0,
+            "sigma": 217.67,
+            "signal_interval_seconds": 1.0,
             "entry_threshold": 0.5,
             "seed": 42,
         },
