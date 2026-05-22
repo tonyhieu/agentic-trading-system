@@ -86,7 +86,7 @@ DEFAULT_SYMBOL = "MESM6"
 # memory-pressure failure mode now raises MemoryError in seconds, so
 # the tail no longer exists and 180s gives ample headroom over the
 # ~27s observed for the simple baseline on the busiest cached day.
-SUBPROCESS_TIMEOUT_SEC = 180
+SUBPROCESS_TIMEOUT_SEC = 1200
 
 # Per-backtest virtual-memory ceiling for the --internal-single-run child.
 # Nautilus holds all order/fill/position objects in engine.trader caches
@@ -100,7 +100,7 @@ SUBPROCESS_TIMEOUT_SEC = 180
 # to disable. Enforced via RLIMIT_AS — works on Linux (the agent-loop
 # host); macOS treats it as advisory and the setrlimit call may return
 # EINVAL, in which case we log a warning and continue uncapped.
-MEMORY_CAP_GB_DEFAULT = 12
+MEMORY_CAP_GB_DEFAULT = 16
 
 # Magic prefix on the child's stdout line carrying the result payload.
 # Anything goes after this prefix as long as it's a single line of JSON.

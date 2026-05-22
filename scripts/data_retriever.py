@@ -115,14 +115,22 @@ class DataRetriever:
         """Download a partition by relative path using boto3 (no aws cli required).
 
         Try several common layout variants until objects are found and downloaded.
+        Skips the S3 round-trip entirely when data.dbn.zst is already present
+        in the local cache.
         """
-        import boto3
-        s3 = boto3.client('s3', region_name=self.region)
-
         dataset_cache = self.cache_dir / dataset_name / version / "partitions"
         dataset_cache.mkdir(parents=True, exist_ok=True)
         local_dir = Path(dataset_cache / partition_path)
         local_dir.mkdir(parents=True, exist_ok=True)
+
+        cached_file = local_dir / "data.dbn.zst"
+        if cached_file.exists() and cached_file.stat().st_size > 0:
+            if verbose:
+                print(f"✓ Using cached partition: {cached_file}")
+            return
+
+        import boto3
+        s3 = boto3.client('s3', region_name=self.region)
 
         # candidate prefixes (object prefix inside the bucket)
         base = f"datasets/{dataset_name}/{version}"

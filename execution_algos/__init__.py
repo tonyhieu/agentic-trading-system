@@ -13,6 +13,18 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.streak-spread-tight",
         "get_execution_algorithm",
     ),
+    "position-tier-gate": (
+        "execution_algos.position-tier-gate",
+        "get_execution_algorithm",
+    ),
+    "aggressor-flow-gate": (
+        "execution_algos.aggressor-flow-gate",
+        "get_execution_algorithm",
+    ),
+    "vol-regime-sizer": (
+        "execution_algos.vol-regime-sizer",
+        "get_execution_algorithm",
+    ),
 }
 
 
