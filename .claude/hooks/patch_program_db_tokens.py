@@ -89,7 +89,7 @@ def _find_researcher_transcript(main_transcript: Path) -> Path | None:
             meta = json.loads(meta_path.read_text())
         except (OSError, json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher"):
+        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher", "island-researcher"):
             continue
         try:
             mtime = jsonl.stat().st_mtime
@@ -286,12 +286,19 @@ def main() -> None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Path 2: experiment loop file (per_iteration_experiment agent).
+    # Path 2: experiment loop file (per_iteration_experiment or island_experiment agent).
     # Triggered by a git-ignored pointer file the agent writes before committing.
+    # Each experiment writes its pointer to its own subdirectory; check both.
     loop_file: Path | None = None
     loop_file_rel: str | None = None
-    pointer_path = Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json"
-    if pointer_path.exists():
+    _experiment_pointer_dirs = [
+        Path(cwd) / "experiments" / "per_iteration_experiment",
+        Path(cwd) / "experiments" / "island_experiment",
+    ]
+    for _pointer_dir in _experiment_pointer_dirs:
+        pointer_path = _pointer_dir / ".current_loop.json"
+        if not pointer_path.exists():
+            continue
         try:
             pointer = json.loads(pointer_path.read_text())
             rel = pointer.get("loop_file")
@@ -302,6 +309,7 @@ def main() -> None:
                     if loop_data.get("tokens_used") is None:
                         loop_file = candidate
                         loop_file_rel = rel
+                        break  # first match wins; only one agent runs per SubagentStop
         except (OSError, json.JSONDecodeError, KeyError, TypeError):
             pass
 
