@@ -1,0 +1,30 @@
+{
+  "experiment":    "per_iteration_experiment",
+  "base_algo":     "position-tier-gate",
+  "context_mode":  "brief-summary",
+  "loop":          3,
+  "algo_id":       "position-tier-gate-b-l3",
+  "status":        "completed",
+  "metrics": {
+    "realized_pnl":         -6509.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         -22.468243881293006,
+    "max_drawdown_pct":     -0.1263994312025596,
+    "win_rate":             0.3398408924652524,
+    "trade_count":          131232,
+    "vs_base_pnl_pct":      -10.471382,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         2862,
+  "context_tokens_estimated": 715,
+  "tokens_used":      null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Removed loop-1/loop-2's portfolio-equity circuit breaker entirely and replaced it with an order-time top-of-book imbalance gate: an OPEN leg is skipped when imbalance=(bid_size-ask_size)/(bid_size+ask_size) leans against its direction by more than imb_threshold=0.5 (BUY into an ask-stacked book, SELL into a bid-stacked book); reduce-only closes always submit. A spread-in-ticks filter was also designed but dropped after diagnosis — see Outcome.",
+    "outcome": "pnl -10.5% vs base position-tier-gate (-6509.25 vs -5892.25), slippage 0.0% (both 0.0), sharpe -22.47 (vs base -27.23); win_rate 0.340 (+1.1pp vs base), trade_count 131232, max_drawdown worsened to -0.126%. FAILs vs the simple baseline (-6509.25 vs +156). All 12 train dates completed; per-date trade counts 432-24178 so no low-sample flag.",
+    "hypothesis": "Acting on loop-2's directive that equity-feedback gating is exhausted and a future loop should gate on an order-time market-state feature: if the structural per-trade drag under sigma=200 is concentrated in microstructure-disadvantaged entries (taken against visible resting liquidity), skipping those non-random entries should lift per-trade P&L and beat the equity-gate loops.",
+    "next": "Order-time top-of-book imbalance is NOT a usable signal-quality discriminator here: the filter cut a genuine continuous-feature subset (trade_count 131k, between base 101k and simple 137k — not collapsed) yet P&L still fell 10.5% vs base and win_rate barely moved (+1.1pp), meaning the sigma=200 drag is spread roughly uniformly across entries, not concentrated where the book leans. Two findings constrain future loops: (1) the cached quote_tick spread in this pipeline is quantized to ~3 discrete values (25/50/75 ticks) so spread-in-ticks gating is unusable and can crash _unrealized_pnl on a zero-position day; (2) entry-selection gating on book state does not work. The remaining real room is the execution objective itself — slippage is identically 0.0 on every algo so there is nothing to win there, but is_weighted_bps differs (loop-3 0.064 vs base 0.045 vs simple 0.039); a future loop should target implementation-shortfall (is_bps) via order timing/slicing rather than binary skip/submit entry gating, since skip-based selection has now failed three different ways."
+  },
+  "full_reasoning": null,
+  "timestamp":      "2026-05-22T17:15:39Z"
+}
