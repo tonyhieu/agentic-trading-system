@@ -1,35 +1,46 @@
 [
   {
-    "loop":                 1,
-    "algo_id":              "ptg-m-l1",
-    "status":               "completed",
-    "vs_base_pnl_pct":      0.0,
+    "loop": 1,
+    "algo_id": "ptg-m-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
     "vs_base_slippage_pct": 0.0,
-    "sharpe_ratio":         17.619000880006382,
-    "trade_count":          90433,
-    "context_chars_in":     0,
-    "timestamp":            "2026-05-22T17:39:16Z"
+    "sharpe_ratio": 17.619000880006382,
+    "trade_count": 90433,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-22T17:39:16Z"
   },
   {
-    "loop":                 2,
-    "algo_id":              "ptg-m-l2",
-    "status":               "completed",
-    "vs_base_pnl_pct":      -23.0557,
+    "loop": 2,
+    "algo_id": "ptg-m-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -23.0557,
     "vs_base_slippage_pct": 0.0,
-    "sharpe_ratio":         15.813224893481436,
-    "trade_count":          47725,
-    "context_chars_in":     78,
-    "timestamp":            "2026-05-22T17:48:06Z"
+    "sharpe_ratio": 15.813224893481436,
+    "trade_count": 47725,
+    "context_chars_in": 78,
+    "timestamp": "2026-05-22T17:48:06Z"
   },
   {
-    "loop":                 3,
-    "algo_id":              "ptg-m-l3",
-    "status":               "completed",
-    "vs_base_pnl_pct":      -7.038123167155426,
+    "loop": 3,
+    "algo_id": "ptg-m-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": -7.038123167155426,
     "vs_base_slippage_pct": 0.0,
-    "sharpe_ratio":         16.94589420387007,
-    "trade_count":          84541,
-    "context_chars_in":     158,
-    "timestamp":            "2026-05-22T17:58:50Z"
+    "sharpe_ratio": 16.94589420387007,
+    "trade_count": 84541,
+    "context_chars_in": 158,
+    "timestamp": "2026-05-22T17:58:50Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "ptg-m-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.34017595307917,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "trade_count": 136734,
+    "context_chars_in": 237,
+    "timestamp": "2026-05-22T18:14:32Z"
   }
 ]
