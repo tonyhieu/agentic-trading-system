@@ -232,6 +232,7 @@ def run_backtest_for_day(algorithm_dir: str, algorithm_name: str, date: str) -> 
                 "horizon_seconds": 30.0,
                 "sigma": 217.67,
                 "signal_interval_seconds": 1.0,
+                "entry_threshold": 0.0,
             },
             execution_algorithm_kwargs={"exec_id": "MY_GENERIC_ALGO"},
             date=date,

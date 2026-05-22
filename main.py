@@ -8,7 +8,7 @@ if __name__ == "__main__":
             "horizon_seconds": 30.0,
             "sigma": 217.67,
             "signal_interval_seconds": 1.0,
-            "entry_threshold": 0.5,
+            "entry_threshold": 0.0,
             "seed": 42,
         },
     )
