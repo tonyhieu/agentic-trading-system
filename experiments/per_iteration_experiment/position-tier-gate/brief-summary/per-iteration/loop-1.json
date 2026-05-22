@@ -1,30 +1,36 @@
 {
-  "experiment":    "per_iteration_experiment",
-  "base_algo":     "position-tier-gate",
-  "context_mode":  "brief-summary",
-  "loop":          1,
-  "algo_id":       "position-tier-gate-b-l1",
-  "status":        "completed",
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 1,
+  "algo_id": "position-tier-gate-b-l1",
+  "status": "completed",
   "metrics": {
-    "realized_pnl":         -1675.25,
-    "mean_slippage":        0.0,
-    "sharpe_ratio":         -106.02034827072642,
-    "max_drawdown_pct":     -0.01547499226250387,
-    "win_rate":             0.2966281755196305,
-    "trade_count":          32475,
-    "vs_base_pnl_pct":      71.56999108993427,
+    "realized_pnl": -1675.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": -106.02034827072642,
+    "max_drawdown_pct": -0.01547499226250387,
+    "win_rate": 0.2966281755196305,
+    "trade_count": 32475,
+    "vs_base_pnl_pct": 71.56999108993428,
     "vs_base_slippage_pct": 0.0
   },
-  "context_chars_in":        0,
+  "context_chars_in": 0,
   "context_tokens_estimated": 0,
-  "tokens_used":     null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 2,
+    "output": 1224,
+    "cache_creation": 570,
+    "cache_read": 47567,
+    "total": 49363
+  },
+  "duration_seconds": 724.8,
   "summary_out": {
-    "changed":    "Replaced the base algo's unconditional 'skip OPEN while a position is in-flight' serialize gate with a portfolio-equity circuit breaker: track cumulative realized P&L of closed positions and its running peak, skip OPEN legs only while realized P&L is more than drawdown_halt (150 USD) below that peak.",
-    "outcome":    "pnl +71.6% vs base position-tier-gate (-1675.25 vs -5892.25), slippage 0.0% (both 0.0), sharpe -106.02; max_drawdown improved ~84% (-0.099% to -0.015%); still FAILs the config pass gate vs simple baseline (+156).",
+    "changed": "Replaced the base algo's unconditional 'skip OPEN while a position is in-flight' serialize gate with a portfolio-equity circuit breaker: track cumulative realized P&L of closed positions and its running peak, skip OPEN legs only while realized P&L is more than drawdown_halt (150 USD) below that peak.",
+    "outcome": "pnl +71.6% vs base position-tier-gate (-1675.25 vs -5892.25), slippage 0.0% (both 0.0), sharpe -106.02; max_drawdown improved ~84% (-0.099% to -0.015%); still FAILs the config pass gate vs simple baseline (+156).",
     "hypothesis": "The base algo's blanket throttle skips opens all the time and that skipped subset is net-negative under the high-noise sigma=200 oracle; conditioning the throttle on realized-P&L drawdown should behave like simple on flat-to-up stretches (capturing upside) while cutting exposure only during genuine losing streaks.",
-    "next":       "The breaker latches one-way: once realized P&L drops below the all-time session peak it never re-arms under sigma=200, collapsing trade_count to 32k (76% below simple) and distorting Sharpe. Highest-leverage next change: make the breaker re-arm — use a rolling/decaying drawdown reference instead of an all-time peak, or resume opens once P&L recovers a fraction of the drawdown, or add a cooldown-then-retry so the algo samples fresh signals after a halt. Also tune drawdown_halt; 150 USD may engage too early."
+    "next": "The breaker latches one-way: once realized P&L drops below the all-time session peak it never re-arms under sigma=200, collapsing trade_count to 32k (76% below simple) and distorting Sharpe. Highest-leverage next change: make the breaker re-arm \u2014 use a rolling/decaying drawdown reference instead of an all-time peak, or resume opens once P&L recovers a fraction of the drawdown, or add a cooldown-then-retry so the algo samples fresh signals after a halt. Also tune drawdown_halt; 150 USD may engage too early."
   },
   "full_reasoning": null,
-  "timestamp":      "2026-05-22T16:08:18Z"
+  "timestamp": "2026-05-22T16:08:18Z"
 }
