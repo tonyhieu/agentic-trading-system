@@ -17,8 +17,14 @@
   },
   "context_chars_in": 317,
   "context_tokens_estimated": 79,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 2,
+    "output": 2,
+    "cache_creation": 1088,
+    "cache_read": 43591,
+    "total": 44683
+  },
+  "duration_seconds": 890.9,
   "summary_out": null,
   "full_reasoning": null,
   "timestamp": "2026-05-22T18:30:00Z"
