@@ -445,19 +445,25 @@ placeholders when appending the entry — both fields are diagnostic and do
 `.claude/settings.json`) then backfills both with **per-iteration** values:
 
 - `duration_seconds` — wall-clock seconds covering **this iteration's**
-  slice of the session transcript (first to last message of the slice).
+  slice of the researcher subagent transcript (first to last message of
+  the slice).
 - `tokens_used` — `{"input": ..., "output": ..., "cache_creation": ...,
-  "cache_read": ..., "total": ...}` summed across the transcript records
-  produced **during this iteration**.
+  "cache_read": ..., "total": ...}` taken from the **last usage block** of
+  this iteration's slice, with `total` the sum of the four. This matches the
+  `total_tokens` Claude Code reports for the subagent; summing usage across
+  every turn would N-count the cached context re-read each turn.
 
 The `transcript_path` a `SubagentStop` hook receives is the main session
-transcript, which accumulates across every subagent invocation, so the hook
-scopes each backfill with an offset cursor (`research/.meta_cursor.json`,
-git-ignored, machine-local): it scans only the transcript lines added since
-the previous backfill. If the hook is skipped or fails for an iteration, the
-next iteration's metadata covers both iterations combined. (Because it reads
-the session transcript, `meta` reflects the per-iteration session slice, not
-the researcher subagent's own compute — see issue #88.)
+transcript, but the hook does **not** measure it — it derives the researcher
+subagent's own transcript (`<session>/subagents/agent-<id>.jsonl`, picked by
+the `agentType: researcher` marker in the sibling `.meta.json`), so `meta`
+reflects the researcher's own compute (issue #88). Because a continued
+researcher subagent's transcript accumulates across iterations, the hook
+still scopes each backfill with an offset cursor (`research/.meta_cursor.json`,
+git-ignored, machine-local) keyed on that subagent transcript path: it scans
+only the lines added since the previous backfill. If the hook is skipped or
+fails for an iteration, the next iteration's metadata covers both iterations
+combined.
 
 The hook auto-commits the patch as `chore(<algo-id>): backfill execution
 metadata` so the working tree stays clean. If the hook is disabled or
