@@ -62,7 +62,7 @@ def run_backtest(
 
     config = BacktestEngineConfig(
         trader_id=TraderId("BACKTESTER-001"),
-        logging=LoggingConfig(log_level="WARNING"),
+        logging=LoggingConfig(log_level="DEBUG"),
     )
     engine = BacktestEngine(config=config)
 
