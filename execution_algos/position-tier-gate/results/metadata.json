@@ -2,7 +2,7 @@
   "strategy_name": "oracle",
   "strategy_kwargs": {
     "horizon_seconds": 30.0,
-    "sigma": 200.0,
+    "sigma": 6.0,
     "seed": 42,
     "signal_interval_seconds": 1.0
   },
