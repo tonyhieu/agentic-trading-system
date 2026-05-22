@@ -81,6 +81,7 @@ def run_backtest(
     strategy_options = dict(strategy_kwargs or {})
     execution_options = dict(execution_algorithm_kwargs or {})
     oracle_options: dict | None = None
+    oracle_data: list[CustomData] | None = None
 
     if strategy_name == "ema_cross":
         strategy_options.setdefault("instrument_id", instrument.id)
@@ -102,8 +103,7 @@ def run_backtest(
             "OracleSignal",
             metadata={"instrument_id": str(instrument.id)},
         )
-        wrapped_signals = [CustomData(signal_data_type, sig) for sig in signals]
-        engine.add_data(wrapped_signals, client_id=ClientId("ORACLE"))
+        oracle_data = [CustomData(signal_data_type, sig) for sig in signals]
         print(f"Generated {len(signals)} oracle signals from {len(ticks)} ticks")
 
         strategy_options.setdefault("instrument_id", instrument.id)
@@ -113,6 +113,9 @@ def run_backtest(
 
     strategy = create_strategy(strategy_name, **strategy_options)
     engine.add_strategy(strategy=strategy)
+
+    if oracle_data is not None:
+        engine.add_data(oracle_data, client_id=ClientId("ORACLE"))
 
     exec_algorithm = create_execution_algorithm(
         execution_algorithm_name,
