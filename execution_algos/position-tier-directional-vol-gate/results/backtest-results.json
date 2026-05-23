@@ -1,0 +1,56 @@
+{
+  "algo_name": "position-tier-directional-vol-gate",
+  "backtest_date": "2026-05-23T18:32:40Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 4491.75,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 21.08196864746067,
+    "sharpe_n_days": 11,
+    "max_drawdown_pct": -0.012149826864967175,
+    "win_rate": 0.39344924538667875,
+    "trade_count": 61886,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.449175,
+    "is_weighted_bps": 0.06797214058729283,
+    "is_total_price": 5793.375,
+    "vs_baseline_pnl_pct": 10285.549132947977,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 59.29491876252898
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260308",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260309",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260310",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260311",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260312",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260313",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260315",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260316",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260317",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260318",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-directional-vol-gate/results/20260320"
+  ]
+}

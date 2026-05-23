@@ -230,5 +230,52 @@
         "all_targets_missed": true
       }
     }
+  },
+  {
+    "id": "position-tier-directional-vol-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Asymmetric/directional refinement of iter-5 position-tier-vol-regime-gate (iter-5's own recommended next step). Symmetric vol-burst skip -> directional vol-burst skip: when current short-vol > vol_multiplier * baseline_median, SKIP only the side that points AGAINST the simultaneous short-window mid trend (BUY when mid_trend < 0 or SELL when mid_trend > 0); admit same-direction and neutral-trend bursts that iter-5 threw away. Mid trend uses a bounded deque of the last 20 mids with a 0.25-point eps deadzone. All other gates inherited verbatim from iter-5/iter-2: position_cap=1, EMA-imbalance gate (alpha=0.30, threshold=0.40, min_total_size=2.0), reduce-only fast-path.",
+    "algorithm_path": "execution_algos/position-tier-directional-vol-gate/",
+    "scores": {
+      "sharpe": 21.08,
+      "realized_pnl": 4491.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 10285.55,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 61886,
+      "passed": true
+    },
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iters 1-5 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED -- the subscribe_quote_ticks Rust/Nautilus 8 GiB OOM hazard at research/NOTES.md 2026-05-23 reproduces here too, as expected for any algo in this family). position-tier-directional-vol-gate $4491.75 / 61886 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl_pct=+10285.55%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model -- see research/NOTES.md 2026-04-30). Win rate 39.34% vs 35.02% (+4.33pp vs baseline). Trade count drops 44.49% vs baseline. Cross-day Sharpe 21.08 on N=11. Max drawdown -1.21% vs baseline -5.29%. REFINEMENT-vs-iter5 read (HONEST, this is the axis iter-5 NOTES.md recommended probing): pnl +2.62% ($4491.75 vs $4377.00) -- MEETS the min_pnl_delta_pct=+2.0 refinement target, sharpe +0.41 (21.08 vs 20.67) -- below min_sharpe_delta=+0.5 target, win_rate -0.02pp -- below min_winrate_delta_pp=+2.0 target, trade_count +4.4% (61886 vs 59258) -- expected since directional skips are a strict subset of symmetric skips, max_drawdown +0.01pp -- effectively unchanged. The directional vol gate qualitatively does what the hypothesis predicted: it preferentially blocks adverse-direction bursts and admits favourable-direction bursts; the +2.62% pnl lift is the net effect of admitting the +2628 extra entries iter-5 would have skipped. REFINEMENT-vs-iter2 read (the family-best on this train window): pnl -0.26% ($4491.75 vs $4503.25), sharpe +0.29 (21.08 vs 20.79), trade_count -0.54%, win_rate +0.05pp -- effectively identical to iter-2. The directional vol gate collapses back to roughly iter-2's behaviour: removing iter-5's symmetric vol filter while gaining the directional vol filter is a wash inside the position_cap=1 + EMA-imbalance pipeline. STRUCTURAL TAKEAWAY: Five iterations (iters 2-6) of varying upstream-signal/threshold/cap/vol-axis tweaks all converge to pnl in $4377-$4503 (a 2.9% spread on N=11), confirming that the position_cap=1 + reduce-only fast-path gate is the binding constraint on this family's pnl. The family-internal gradient on gate-axis tweaks is now exhausted; future iterations should change a structurally distinct mechanism (time-of-day filter is the cheapest next test; reduce-only-ladder is the more meaningful restructure). Per OBJECTIVE.md sec.6, this PASSES the baseline gate decisively (+10285% >> +5%) and is logged as a PARALLEL passing algorithm, NOT a new family-best. Iter-2 (position-tier-imbalance-ema-gate) remains the family-best on the train window. Do NOT snapshot as family-best. Trade count HIGH (61k+), not low-trade-count flagged. Config: sigma=6, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2.0, ema_alpha=0.30, vol_window=60, baseline_window=300, min_baseline_window=30, vol_multiplier=1.5, vol_sample_every=10, mid_trend_window=20, mid_trend_eps=0.25.",
+    "timestamp": "2026-05-23T18:35:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null,
+      "train_dates_aggregated": 11,
+      "train_dates_configured": 12,
+      "missing_dates": [
+        "2026-03-19"
+      ],
+      "refinement_axes_vs_iter5": {
+        "parent_id": "position-tier-vol-regime-gate",
+        "pnl_delta_pct": 2.62,
+        "sharpe_delta": 0.41,
+        "winrate_delta_pp": -0.02,
+        "trade_count_delta_pct": 4.4,
+        "mdd_delta_pp": 0.01,
+        "targets_met": "min_pnl_delta_pct only"
+      },
+      "refinement_axes_vs_iter2": {
+        "parent_id": "position-tier-imbalance-ema-gate",
+        "pnl_delta_pct": -0.26,
+        "sharpe_delta": 0.29,
+        "winrate_delta_pp": 0.05,
+        "trade_count_delta_pct": -0.54,
+        "mdd_delta_pp": 0.0,
+        "all_targets_missed": true
+      }
+    }
   }
 ]

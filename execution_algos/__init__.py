@@ -37,6 +37,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.position-tier-vol-regime-gate",
         "get_execution_algorithm",
     ),
+    "position-tier-directional-vol-gate": (
+        "execution_algos.position-tier-directional-vol-gate",
+        "get_execution_algorithm",
+    ),
     "aggressor-flow-gate": (
         "execution_algos.aggressor-flow-gate",
         "get_execution_algorithm",
