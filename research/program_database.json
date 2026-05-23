@@ -327,5 +327,43 @@
         "all_targets_missed": true
       }
     }
+  },
+  {
+    "id": "position-tier-reduce-only-defer-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Iter-8 STRUCTURAL pivot per iter-7 NOTES.md explicit recommendation. Inherit iter-2 best (position-tier-imbalance-ema-gate: position_cap=1 + EMA-imbalance open gate alpha=0.30/threshold=0.40/min_total_size=2.0) verbatim. Add the ONE mechanism NO prior iter has explored: EXIT-side reduce-only fast-path restructure. Reduce-only orders are deferred in a per-instrument FIFO queue WHILE EMA book lean remains favourable to the position (LONG-close: ema > close_favor_threshold=0.55; SHORT-close: ema < 0.45). Released on adverse-lean turn, OR max_defer_ticks=20, OR max_defer_seconds=15.0. Falsification path: if pnl falls or is unchanged, the EMA signal does NOT have meaningful continuation power post-open, and the position-tier family is structurally exhausted on this train window.",
+    "algorithm_path": "execution_algos/position-tier-reduce-only-defer-gate/",
+    "scores": {
+      "sharpe": 17.79,
+      "realized_pnl": 3521.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 8036.99,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 62160,
+      "passed": true
+    },
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iters 1-7 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED -- the subscribe_quote_ticks Rust/Nautilus 8 GiB OOM hazard at research/NOTES.md 2026-05-23 reproduces here too, as expected for any algo in this family). position-tier-reduce-only-defer-gate $3521.00 / 62160 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl=+8036.99%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model -- see research/NOTES.md 2026-04-30). Win rate 37.93% vs 35.02% (+2.91pp). Trade count drops 44.24% vs baseline. Cross-day Sharpe 17.79 on N=11. Max drawdown -1.31% vs baseline -5.29%. STRUCTURAL-vs-iter2 read (HONEST, this is the axis iter-7 NOTES.md explicitly recommended probing as the LAST unexplored mechanism in this family): pnl REGRESSION of -21.81% ($3521.00 vs $4503.25), Sharpe -3.00 (17.79 vs 20.79) -- far below min_sharpe_delta=+0.5 target, win_rate -1.36pp (37.93% vs 39.29%) -- misses min_winrate_delta_pp=+2.0, trade_count -0.10% (62160 vs 62220) -- essentially unchanged, max_drawdown +0.10pp (-1.31% vs -1.21%) -- misses min_mdd_delta_pp=-1.0. The reduce-only-defer mechanism FAILS to meet ANY refinement-axis target in config.yaml->refinement.targets vs iter-2 best; it regresses on every primary axis. FALSIFICATION RESULT (the load-bearing takeaway from this iteration): trade count nearly identical to iter-2 confirms the defer mechanism did NOT change entry-side behaviour; the -21.81% pnl loss is purely *per-close fill-quality* drift -- average pnl per trade fell from $0.0724 (iter-2) to $0.0566 (iter-8), a $0.016/trade adverse mid-drift per deferred close on ~62k closes. The EMA-imbalance signal does NOT have meaningful continuation power for short horizons AFTER the open decision is taken; treating it as a defer-close indicator is strictly worse than `submit_order(order)` immediately. The entire position-tier family is now STRUCTURALLY EXHAUSTED: iters 2-8 have tested 7 distinct mechanism axes (single-tick imbalance, EMA imbalance [best=iter-2], rolling OFI, cap=2 relaxation, sym vol-regime, dir vol-regime, TOD calendar, exit-side defer) and the iter-2 algorithm remains family-best with pnl=$4503 / sharpe=20.79. Per OBJECTIVE.md sec.6, this iteration PASSES the baseline gate decisively (+8036% >> +5%) and is logged as a PARALLEL passing algorithm, NOT a new family-best. Iter-2 remains family-best on the train window. Do NOT snapshot as family-best -- this iteration's value is the falsification + structural-exhaustion takeaway. Recommended next moves (priority order): (1) snapshot iter-2 to S3 for OOS Lambda confirmation -- the only remaining info that can change the picture for this family on the current strategy regime; (2) request operator switch strategy.name or strategy.kwargs.sigma in config.yaml to re-open the exec-algo design space; (3) exit-side LADDER with proper quantity-invariant child-order fragmentation (distinct from the pure defer tested here) is the only remaining mechanism untouched -- lower priority given the falsification result here. Trade count HIGH (62k+), not low-trade-count flagged. Config: sigma=6, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2.0, ema_alpha=0.30, close_favor_threshold=0.55, max_defer_ticks=20, max_defer_seconds=15.0.",
+    "timestamp": "2026-05-23T19:55:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null,
+      "train_dates_aggregated": 11,
+      "train_dates_configured": 12,
+      "missing_dates": [
+        "2026-03-19"
+      ],
+      "refinement_axes_vs_iter2": {
+        "parent_id": "position-tier-imbalance-ema-gate",
+        "pnl_delta_pct": -21.81,
+        "sharpe_delta": -3.0,
+        "winrate_delta_pp": -1.36,
+        "trade_count_delta_pct": -0.1,
+        "mdd_delta_pp": 0.1,
+        "all_targets_missed": true
+      }
+    }
   }
 ]

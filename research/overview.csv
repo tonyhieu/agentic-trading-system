@@ -1,0 +1,10 @@
+algo_name,status,total_pnl,sharpe_ratio,implementation_shortfall_bps,trade_count,win_rate
+streak-spread-tight,pass,4772.0,2.76,,106428,0.371
+position-tier-imbalance-gate,pass,4344.5,21.27,,62251,0.392
+position-tier-imbalance-ema-gate,pass,4503.25,20.79,0.0683,62220,0.393
+position-tier-ofi-gate,pass,2201.75,11.89,,56305,0.364
+position-tier-imbalance-cap2-gate,pass,2686.5,10.89,0.0676,86259,0.378
+position-tier-vol-regime-gate,pass,4377.0,20.67,0.0685,59258,0.394
+position-tier-directional-vol-gate,pass,4491.75,21.08,0.0680,61886,0.393
+position-tier-tod-gate,pass,3933.5,21.26,0.0683,57989,0.390
+position-tier-reduce-only-defer-gate,pass,3521.0,17.79,0.0799,62160,0.379
