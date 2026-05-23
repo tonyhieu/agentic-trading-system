@@ -119,8 +119,14 @@
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null,
+      "duration_seconds": 164.8,
+      "tokens_used": {
+        "input": 1,
+        "output": 683,
+        "cache_creation": 1833,
+        "cache_read": 68493,
+        "total": 71010
+      },
       "train_dates_aggregated": 11,
       "train_dates_configured": 12,
       "missing_dates": [
