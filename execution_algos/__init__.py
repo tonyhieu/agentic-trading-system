@@ -25,6 +25,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.position-tier-imbalance-ema-gate",
         "get_execution_algorithm",
     ),
+    "position-tier-imbalance-cap2-gate": (
+        "execution_algos.position-tier-imbalance-cap2-gate",
+        "get_execution_algorithm",
+    ),
     "position-tier-ofi-gate": (
         "execution_algos.position-tier-ofi-gate",
         "get_execution_algorithm",

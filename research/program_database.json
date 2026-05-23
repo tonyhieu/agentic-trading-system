@@ -142,5 +142,43 @@
         "all_targets_missed_except": "mdd_delta_pp (and even that misses the -1.0pp target)"
       }
     }
+  },
+  {
+    "id": "position-tier-imbalance-cap2-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Structural test of the position-tier gate's binding direction. Relax position_cap from 1 to 2 while inheriting position-tier-imbalance-ema-gate (iter-2 best) verbatim for every other component (EMA imbalance gate, thin-book guard, reduce-only fast-path). Tests whether cap=1 is the actual local optimum or merely a sufficient guard against the doubled-up netting-OMS cascade. If cap=2 also blocks the cascade while admitting profitable additional accumulation on sustained signals, pnl should rise; if cap=1 is the binding optimum, pnl should fall.",
+    "algorithm_path": "execution_algos/position-tier-imbalance-cap2-gate/",
+    "scores": {
+      "sharpe": 10.89,
+      "realized_pnl": 2686.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 6111.56,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86259,
+      "passed": true
+    },
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iters 1, 2, 3 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED -- the subscribe_quote_ticks Rust/Nautilus 8 GiB OOM hazard at research/NOTES.md 2026-05-23 reproduces here too, as expected for this algo family). position-tier-imbalance-cap2-gate $2686.50 / 86259 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl=+6111.56%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model -- see research/NOTES.md 2026-04-30). Win rate 37.77% vs 35.02% (+2.75pp vs baseline). Trade count drops 22.6% vs baseline (cap=2 lets through more entries than cap=1, but still gates a substantial fraction). Cross-day Sharpe 10.89 on N=11. STRUCTURAL-vs-iter2 read (HONEST, this is the axis the iteration was designed to probe): pnl REGRESSION of -40.34% ($2686.50 vs $4503.25), Sharpe regression of -9.90 (10.89 vs 20.79), win_rate -1.52pp (37.77% vs 39.29%), trade_count +38.6% (86259 vs 62220), max_drawdown WORSENS by -2.36pp (-3.57% vs -1.21%). The position cap relaxation from 1 to 2 is STRUCTURALLY WORSE than cap=1 on this train window across every refinement axis in config.yaml -> refinement.targets; the additional ~24k entries admitted by cap=2 (vs cap=1) are net adverse, dragging both win rate and pnl. POSITIVE-INFORMATION RESULT: this resolves the open question from iter-3 ('is cap=1 strictly binding or arbitrary?') decisively in favor of cap=1 being the actual local optimum on this train window. Future iterations of this family should NOT explore cap relaxation further; the remaining improvement gradient is on a different axis than gate threshold / signal class / cap size (candidates: time-of-day filter, vol-regime open-skip, reduce-only delayed execution). Do NOT snapshot as an improvement -- this is a PASS-vs-baseline-only entry whose value is the structural takeaway. Trade count HIGH (86k+), not low-trade-count flagged. Config: sigma=6, seed=42, horizon=30s; position_cap=2, skip_threshold=0.40, min_total_size=2.0, ema_alpha=0.30.",
+    "timestamp": "2026-05-23T16:30:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null,
+      "train_dates_aggregated": 11,
+      "train_dates_configured": 12,
+      "missing_dates": [
+        "2026-03-19"
+      ],
+      "refinement_axes_vs_iter2": {
+        "parent_id": "position-tier-imbalance-ema-gate",
+        "pnl_delta_pct": -40.34,
+        "sharpe_delta": -9.9,
+        "winrate_delta_pp": -1.52,
+        "trade_count_delta_pct": 38.6,
+        "mdd_delta_pp": -2.36,
+        "all_targets_missed": true
+      }
+    }
   }
 ]
