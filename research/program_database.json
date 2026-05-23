@@ -79,13 +79,19 @@
       "trade_count": 62220,
       "passed": true
     },
-    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iter 1 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED — reproduces the iter-1 Rust OOM exactly, see research/NOTES.md 2026-05-23). position-tier-imbalance-ema-gate $4503.25 / 62220 trades vs simple $43.25 / 111489 trades; delta_pnl=+10312.14%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model — see research/NOTES.md 2026-04-30). Win rate 39.3% vs 35.0% (+4.3pp). Trade count drops 44% vs baseline. REFINEMENT-vs-iter1 read: P&L +3.65% (4503.25 vs 4344.50), trade_count nearly identical (-31 of 62251, -0.05%), Sharpe -0.48 (20.79 vs 21.27), win_rate +0.09pp — the EMA smoothing at alpha=0.30 is essentially a no-op vs the single-tick imbalance gate within the position_cap=1 regime, where the positional gate already blocks the overwhelming majority of would-be order events. The +3.65% headline pnl bump is noise-dominated at N=11 and below the refinement-axis pnl target (+2.0pp), but the algorithm decisively passes the canonical baseline gate (+10312%>>+5%). Honesty: I do NOT claim EMA smoothing is a reliable improvement; the takeaway is that incremental tweaks to the imbalance read within this gate stack are exhausted and future iterations should change a structural mechanism (different signal class, different gate variable) rather than smooth the same signal further. Trade counts HIGH (62k+), not low-trade-count flagged. Config: sigma=5, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2, ema_alpha=0.30.",
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iter 1 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED \u2014 reproduces the iter-1 Rust OOM exactly, see research/NOTES.md 2026-05-23). position-tier-imbalance-ema-gate $4503.25 / 62220 trades vs simple $43.25 / 111489 trades; delta_pnl=+10312.14%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model \u2014 see research/NOTES.md 2026-04-30). Win rate 39.3% vs 35.0% (+4.3pp). Trade count drops 44% vs baseline. REFINEMENT-vs-iter1 read: P&L +3.65% (4503.25 vs 4344.50), trade_count nearly identical (-31 of 62251, -0.05%), Sharpe -0.48 (20.79 vs 21.27), win_rate +0.09pp \u2014 the EMA smoothing at alpha=0.30 is essentially a no-op vs the single-tick imbalance gate within the position_cap=1 regime, where the positional gate already blocks the overwhelming majority of would-be order events. The +3.65% headline pnl bump is noise-dominated at N=11 and below the refinement-axis pnl target (+2.0pp), but the algorithm decisively passes the canonical baseline gate (+10312%>>+5%). Honesty: I do NOT claim EMA smoothing is a reliable improvement; the takeaway is that incremental tweaks to the imbalance read within this gate stack are exhausted and future iterations should change a structural mechanism (different signal class, different gate variable) rather than smooth the same signal further. Trade counts HIGH (62k+), not low-trade-count flagged. Config: sigma=5, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2, ema_alpha=0.30.",
     "timestamp": "2026-05-23T02:42:00Z",
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null,
+      "duration_seconds": 2278.7,
+      "tokens_used": {
+        "input": 1,
+        "output": 1006,
+        "cache_creation": 326,
+        "cache_read": 116203,
+        "total": 117536
+      },
       "train_dates_aggregated": 11,
       "train_dates_configured": 12,
       "missing_dates": [
