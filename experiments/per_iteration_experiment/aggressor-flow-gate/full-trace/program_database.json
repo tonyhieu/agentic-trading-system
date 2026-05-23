@@ -3,7 +3,7 @@
     "loop": 1,
     "algo_id": "afg-f-l1",
     "status": "completed",
-    "vs_base_pnl_pct": -9.179609717642372,
+    "vs_base_pnl_pct": -9.179609717642371,
     "vs_base_slippage_pct": 0.0,
     "sharpe_ratio": 4.982391948282672,
     "trade_count": 109054,
@@ -36,7 +36,7 @@
     "loop": 4,
     "algo_id": "afg-f-l4",
     "status": "completed",
-    "vs_base_pnl_pct": -0.33851055754679436,
+    "vs_base_pnl_pct": -0.3385105575467944,
     "vs_base_slippage_pct": 0.0,
     "sharpe_ratio": 5.605645519385376,
     "trade_count": 106471,
@@ -75,5 +75,16 @@
     "trade_count": 104138,
     "context_chars_in": 125049,
     "timestamp": "2026-05-23T03:05:00Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "afg-f-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": 33.228515625,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 7.36558093540625,
+    "trade_count": 103664,
+    "context_chars_in": 159057,
+    "timestamp": "2026-05-23T19:31:07Z"
   }
 ]
