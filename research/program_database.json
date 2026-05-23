@@ -186,5 +186,43 @@
         "all_targets_missed": true
       }
     }
+  },
+  {
+    "id": "position-tier-vol-regime-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Structural axis change vs iter-2 best (position-tier-imbalance-ema-gate). Stack a short-window realized-vol regime gate on top of iter-2's algorithm: per quote tick, compute pstdev of mid log-returns over the last vol_window=60 quote ticks (O(1) via running sum and sum-of-squares), sample that short-vol into a baseline deque every vol_sample_every=10 quote ticks (length baseline_window=300). For OPEN-leg orders, if current short-vol > vol_multiplier=1.5 * baseline_median_vol, SKIP. All other gates inherited verbatim: position_cap=1, EMA-imbalance gate (alpha=0.30, threshold=0.40, min_total_size=2.0), reduce-only fast-path (intraday_flat). The structural change is the gate AXIS: from single-tick book imbalance (microstructure noise) to short-horizon realized vol (regime). Per iter-4's takeaway recommending a structurally different axis.",
+    "algorithm_path": "execution_algos/position-tier-vol-regime-gate/",
+    "scores": {
+      "sharpe": 20.67,
+      "realized_pnl": 4377.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 10020.23,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 59258,
+      "passed": true
+    },
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iters 1-4 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED -- confirmed reproduces the subscribe_quote_ticks Rust/Nautilus 8 GiB OOM hazard at research/NOTES.md 2026-05-23 via an explicit retry this iteration). position-tier-vol-regime-gate $4377.00 / 59258 trades vs simple $43.25 / 111489 trades; delta_pnl=+10020.23%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model). Win rate 39.36% vs 35.02% (+4.34pp vs baseline). Trade count drops 46.85% vs baseline. Cross-day Sharpe 20.67 on N=11. Max drawdown -1.22% vs baseline -5.29%. STRUCTURAL-vs-iter2 read (HONEST, this is the axis iter-4 recommended probing): pnl REGRESSION of -2.80% ($4377.00 vs $4503.25), Sharpe -0.12 (20.67 vs 20.79), win_rate +0.07pp (39.36% vs 39.29%), trade_count -4.76% (59258 vs 62220), max_drawdown -0.01pp (effectively unchanged). The vol-regime gate STACKED ON iter-2 does NOT meet ANY refinement-axis target in config.yaml->refinement: min_pnl_delta_pct=+2.0 MISSED, min_sharpe_delta=+0.5 MISSED, min_winrate_delta_pp=+2.0 MISSED, min_mdd_delta_pp=-1.0 MISSED. POSITIVE-INFORMATION RESULT: the vol-regime axis and the EMA-imbalance axis filter approximately the same marginal slice of entries on this train window -- additional symmetric entry gates within the position_cap=1 stack have diminishing returns. The next iteration should try an asymmetric/directional vol gate (skip BUYs only when vol high AND mid falling; skip SELLs only when vol high AND mid rising) OR move to a structurally different mechanism such as time-of-day filter or reduce-only delayed execution. Per OBJECTIVE.md sec.6, PASS-vs-baseline holds even when refinement targets miss; this algo is logged as a PARALLEL passing algorithm but should NOT be treated as an improvement over iter-2. Do NOT snapshot as the new family-best -- iter-2 remains the family-best on the train window. Trade count HIGH (59k+), not low-trade-count flagged. Implementation note: the FIRST pass at this algo computed statistics.pstdev/median per quote tick (O(N) Python) and timed out on 20260316 (1200s subprocess limit). The committed version uses O(1) running sum/sum-of-squares for short-vol and only samples to the baseline deque every Nth quote tick; all 10 attempted dates completed under timeout after that fix. Config: sigma=6, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2.0, ema_alpha=0.30, vol_window=60, baseline_window=300, min_baseline_window=30, vol_multiplier=1.5, vol_sample_every=10.",
+    "timestamp": "2026-05-23T17:55:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null,
+      "train_dates_aggregated": 11,
+      "train_dates_configured": 12,
+      "missing_dates": [
+        "2026-03-19"
+      ],
+      "refinement_axes_vs_iter2": {
+        "parent_id": "position-tier-imbalance-ema-gate",
+        "pnl_delta_pct": -2.8,
+        "sharpe_delta": -0.12,
+        "winrate_delta_pp": 0.07,
+        "trade_count_delta_pct": -4.76,
+        "mdd_delta_pp": -0.01,
+        "all_targets_missed": true
+      }
+    }
   }
 ]
