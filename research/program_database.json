@@ -283,5 +283,43 @@
         "all_targets_missed": true
       }
     }
+  },
+  {
+    "id": "position-tier-tod-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Structural axis change vs the position-tier family's exhausted gate-axis gradient (iters 2-6 all cluster pnl in $4377-$4503, \u22642.9% spread on N=11). Inherit iter-2 best (position-tier-imbalance-ema-gate: position_cap=1 + reduce-only fast-path + EMA-imbalance gate alpha=0.30/threshold=0.40/min_total_size=2.0) verbatim and add ONE new gate orthogonal to the entire book-signal axis the family has been exploring: a TIME-OF-DAY filter on OPEN-leg orders only. SKIP every OPEN order whose ts_init falls inside the first 30min after the cash-equity open (13:30 UTC \u2261 09:30 ET DST) or the last 30min before the cash-equity close (20:00 UTC \u2261 16:00 ET DST). Reduce-only orders bypass the TOD gate (intraday_flat compliance). Hypothesis: ES-family open/close are high-vol microstructure regimes where the oracle's 30s directional edge degrades; if pnl rises, the binding constraint has a session-time component; if pnl is unchanged/falls, the binding constraint is intraday-uniform within the position_cap=1 stack and iter-8 should pivot to an exit-side restructure.",
+    "algorithm_path": "execution_algos/position-tier-tod-gate/",
+    "scores": {
+      "sharpe": 21.26,
+      "realized_pnl": 3933.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 8994.8,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 57989,
+      "passed": true
+    },
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iters 1-6 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED -- the subscribe_quote_ticks Rust/Nautilus 8 GiB OOM hazard at research/NOTES.md 2026-05-23 reproduces here too, verified by an explicit retry this iteration). position-tier-tod-gate $3933.50 / 57989 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl=+8994.80%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model -- see research/NOTES.md 2026-04-30). Win rate 38.97% vs 35.02% (+3.95pp vs baseline). Trade count drops 47.99% vs baseline. Cross-day Sharpe 21.26 on N=11. Max drawdown -1.21% vs baseline -5.29%. REFINEMENT-vs-iter2 read (HONEST, this is the structural axis iter-6 NOTES.md recommended probing): pnl REGRESSION of -12.65% ($3933.50 vs $4503.25), sharpe +0.47 (21.26 vs 20.79) -- just below min_sharpe_delta=+0.5 target, win_rate -0.32pp (38.97% vs 39.29%) -- misses min_winrate_delta_pp=+2.0, trade_count -6.80% (57989 vs 62220; TOD gate removed ~4231 OPEN entries in open/close windows), max_drawdown unchanged (-0.0121 vs -0.0121) -- misses min_mdd_delta_pp=-1.0. The TOD gate misses EVERY refinement-axis target except sharpe (which itself misses by 0.03). STRUCTURAL TAKEAWAY (the load-bearing result from this iteration): the cash-equity open-30min and close-30min windows are NOT systematically adverse periods within the position_cap=1 + reduce-only fast-path stack on this train window. The ~4231 OPEN entries removed by the TOD gate were net positive (algo lost ~$570 of pnl per ~4231 fewer entries = ~$0.13 per skipped entry, which is in the range of the average winning trade). Sharpe ticked up only because variance dropped slightly more than mean dropped -- not a structural win. FALSIFICATION RESULT: the binding constraint of this family is essentially intraday-uniform; the session-time axis has no unrealised edge to recover. The DECISION-TIME entry-side gate axis (5 variations in iters 2-6 + 1 calendar variation in iter-7) is now FULLY exhausted at ~$4400 pnl. Iter-8 should pivot to the only remaining unexplored mechanism in this family: the EXIT-SIDE reduce-only fast-path (e.g., reduce-only ladder that defers closing for K ticks while book lean still favours the position; closes immediately on adverse lean). Per OBJECTIVE.md sec.6, this PASSES the baseline gate decisively (+8994% >> +5%) and is logged as a PARALLEL passing algorithm. Iter-2 (position-tier-imbalance-ema-gate) remains the family-best on the train window. Do NOT snapshot as family-best. Trade count HIGH (57k+), not low-trade-count flagged. Config: sigma=6, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2.0, ema_alpha=0.30, open_window_minutes=30, close_window_minutes=30, cash_open_utc=13:30, cash_close_utc=20:00 (US EDT for entire train window).",
+    "timestamp": "2026-05-23T19:15:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null,
+      "train_dates_aggregated": 11,
+      "train_dates_configured": 12,
+      "missing_dates": [
+        "2026-03-19"
+      ],
+      "refinement_axes_vs_iter2": {
+        "parent_id": "position-tier-imbalance-ema-gate",
+        "pnl_delta_pct": -12.65,
+        "sharpe_delta": 0.47,
+        "winrate_delta_pp": -0.32,
+        "trade_count_delta_pct": -6.8,
+        "mdd_delta_pp": 0.0,
+        "all_targets_missed": true
+      }
+    }
   }
 ]

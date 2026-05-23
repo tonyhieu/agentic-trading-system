@@ -1,0 +1,56 @@
+{
+  "algo_name": "position-tier-tod-gate",
+  "backtest_date": "2026-05-23T19:10:43Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 3933.5,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 21.25736068446702,
+    "sharpe_n_days": 11,
+    "max_drawdown_pct": -0.01209982757745702,
+    "win_rate": 0.389746331200745,
+    "trade_count": 57989,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.39335000000000003,
+    "is_weighted_bps": 0.06834091752289413,
+    "is_total_price": 5403.625,
+    "vs_baseline_pnl_pct": 8994.797687861272,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 60.159159486604196
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260308",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260309",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260310",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260311",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260312",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260313",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260315",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260316",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260317",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260318",
+    "/home/azureuser/agentic-trading-system/execution_algos/position-tier-tod-gate/results/20260320"
+  ]
+}
