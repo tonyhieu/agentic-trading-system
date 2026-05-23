@@ -1,0 +1,56 @@
+{
+  "algo_name": "position-tier-imbalance-ema-gate",
+  "backtest_date": "2026-05-23T02:41:12Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 4503.25,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 20.792863467105015,
+    "sharpe_n_days": 11,
+    "max_drawdown_pct": -0.01209982757745702,
+    "win_rate": 0.392928318868531,
+    "trade_count": 62220,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.45032500000000003,
+    "is_weighted_bps": 0.06825112055280402,
+    "is_total_price": 5843.25,
+    "vs_baseline_pnl_pct": 10312.1387283237,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 59.948717371172286
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260308",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260309",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260310",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260311",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260312",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260313",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260315",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260316",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260317",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260318",
+    "execution_algos/position-tier-imbalance-ema-gate/results/20260320"
+  ]
+}
