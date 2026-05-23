@@ -44,16 +44,24 @@
       "trade_count": 62251,
       "passed": true
     },
-    "notes": "PASS -- aggregated across 11 of 12 configured train dates (20260308-20260318, 20260320; 2026-03-19 EXCLUDED, see DATA ISSUE in research/NOTES.md 2026-05-23: reproducible 8 GiB Rust OOM in Nautilus backtest subprocess specific to this algo + that partition). position-tier-imbalance-gate $4344.50 / 62251 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl=+9945.09%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model — see research/NOTES.md 2026-04-30). Win rate 39.2% vs 35.0% (+4.2pp), confirming the imbalance filter preferentially removes losing trades. Trade count drops 44% (62251 vs 111489). Cross-day Sharpe 21.27 on N=11; dominated by the positional gate's variance reduction (base position-tier-gate already reaches sharpe=17.62 on 12 dates) with incremental P&L lift from the imbalance gate. Verdict robust to the missing date: even if 20260319 is assumed to add 0 P&L for the algo, the delta remains in the +9000% region. Trade counts are HIGH (62k+), not low-trade-count flagged. Config: sigma=5, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2.",
+    "notes": "PASS -- aggregated across 11 of 12 configured train dates (20260308-20260318, 20260320; 2026-03-19 EXCLUDED, see DATA ISSUE in research/NOTES.md 2026-05-23: reproducible 8 GiB Rust OOM in Nautilus backtest subprocess specific to this algo + that partition). position-tier-imbalance-gate $4344.50 / 62251 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl=+9945.09%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model \u2014 see research/NOTES.md 2026-04-30). Win rate 39.2% vs 35.0% (+4.2pp), confirming the imbalance filter preferentially removes losing trades. Trade count drops 44% (62251 vs 111489). Cross-day Sharpe 21.27 on N=11; dominated by the positional gate's variance reduction (base position-tier-gate already reaches sharpe=17.62 on 12 dates) with incremental P&L lift from the imbalance gate. Verdict robust to the missing date: even if 20260319 is assumed to add 0 P&L for the algo, the delta remains in the +9000% region. Trade counts are HIGH (62k+), not low-trade-count flagged. Config: sigma=5, seed=42, horizon=30s; position_cap=1, skip_threshold=0.40, min_total_size=2.",
     "timestamp": "2026-05-23T02:10:00Z",
     "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null,
+      "duration_seconds": 600.9,
+      "tokens_used": {
+        "input": 1,
+        "output": 110,
+        "cache_creation": 1243,
+        "cache_read": 57648,
+        "total": 59002
+      },
       "train_dates_aggregated": 11,
       "train_dates_configured": 12,
-      "missing_dates": ["2026-03-19"]
+      "missing_dates": [
+        "2026-03-19"
+      ]
     }
   }
 ]
