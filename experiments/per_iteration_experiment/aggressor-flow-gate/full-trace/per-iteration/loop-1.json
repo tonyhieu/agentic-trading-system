@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "full-trace",
+  "loop": 1,
+  "algo_id": "afg-f-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1140.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.982391948282672,
+    "max_drawdown_pct": -0.03577481218223604,
+    "win_rate": 0.35541108074898675,
+    "trade_count": 109054,
+    "vs_base_pnl_pct": -9.179609717642372,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 1 of the aggressor-flow-gate / full-trace arm; no prior loops in scope, so context_chars_in = 0. Starting point: base algo aggressor-flow-gate. The only signal available to inform a hypothesis was the base algo's own NOTES.md and its backtest-results.json. The base flagged one specific tension: although its net P&L was +704.8 % vs the simple baseline, its implementation-shortfall metric (is_weighted_bps) was ~22 % WORSE than the simple baseline, and the author's interpretation was that the gate sometimes fires on thin-tape noise, holding back entries that would have offered favorable fill prices.\n\nTargeted change: add a gross-volume floor in front of the existing absolute net-flow threshold. The flow-direction gate may only fire when sum(|size|) in the 10 s window >= min_gross_volume; below the floor, submit unconditionally. flow_threshold kept at the proven 2.0; min_gross_volume set to 8.0 contracts (4x the flow threshold -- enforces a >=25 % minimum signed/gross imbalance ratio before any skip). Implementation: mirror the base algo's O(1) running _net_flow with a sibling _gross_volume, updated on append and on prune. The deque, window, prune semantics, anti-cascade (_position_flat=True after any skip), reduce-only handling, and the quantity invariant are all preserved unchanged from the base -- the only behavioral delta is the new floor check in _flow_is_adverse.\n\nExpected effect was: realized_pnl roughly flat to +1-3 % vs base, trade_count slightly up, sharpe flat-to-up, drawdown not materially worse. The mechanism prediction was that disabling the gate on thin tape would let through trades that were 'noise skips' in the base algo, recovering some P&L while still catching the high-confidence (active-tape) adverse-flow cases.\n\nWhat actually happened: the mechanism worked exactly as designed (trade_count rose +1.73 % vs base; the gate fired less often, as planned), but the resulting net effect was OPPOSITE to the prediction. Realized P&L fell -9.18 % vs base; sharpe fell -0.611; drawdown worsened slightly (-0.0025 pp); win rate effectively unchanged (+0.05 pp). On the secondary metric, is_weighted_bps IMPROVED -7.07 % vs base, and vs_baseline_is_bps came in at 12.9 vs the base's 21.5 -- roughly 40 % better implementation shortfall. So the prediction about IS was correct, but the prediction about P&L was wrong.\n\nWhat this teaches: the base NOTES.md's 'thin-tape one-sided prints are noise' framing is empirically NOT supported. In MES futures on the oracle's 30 s horizon, even a small absolute net flow on a thin tape carries genuine directional information -- large enough that disabling the gate there costs more in adverse-entry P&L than it gains in fill-price quality. So IS and net P&L are picking up different things in this signal pair: IS rewards entering on the same side as recent aggressors (you get a better fill before the price runs); P&L rewards skipping when recent aggressors are predicting a 30 s adverse move. These two are not the same trade-off, and improving one does not automatically improve the other.\n\nDirections for loop 2 worth trying (in rough order of confidence and isolation):\n  1. Tighten the absolute threshold (2.0 -> 1.5 contracts). This loop showed that the base gate is, if anything, slightly under-sensitive -- the formerly-skipped thin-tape entries it was preventing ARE costing P&L. A lower threshold would skip more, including in thin-tape regimes, instead of fewer. This is a clean one-knob test that probes the same hypothesis from the opposite direction.\n  2. Asymmetric thresholds for BUY vs SELL. MES day vs overnight microstructure differs; a single symmetric threshold may be over-fitting one side at the expense of the other.\n  3. Gate on flow acceleration (first-difference of net_flow over a short interval) instead of (or in addition to) flow level. Responds faster to fresh aggression than a 10 s rolling sum and might catch the short-lived 'burst' patterns that the level metric averages out.\nWhat NOT to try in loop 2: any further attempt to reduce skips in thin-tape regimes. This loop conclusively shows that path hurts net P&L. The IS/P&L decoupling means IS improvements that come from removing skips are not improvements to the headline metric.",
+  "timestamp": "2026-05-23T01:20:21Z"
+}
