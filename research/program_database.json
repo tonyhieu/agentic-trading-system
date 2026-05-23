@@ -98,5 +98,43 @@
         "2026-03-19"
       ]
     }
+  },
+  {
+    "id": "position-tier-ofi-gate",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "Refinement of position-tier-imbalance-ema-gate. Replace the static/EMA-smoothed top-of-book imbalance gate with a rolling-window Order Flow Imbalance (OFI) gate per Cont/Kukanov/Stoikov 2014: per-tick OFI events e_n (signed bid/ask add+cancel deltas) accumulated in a 10s window; BUY orders skip when window-summed OFI <= -2.0 (book bleeding away from bids / building on asks = adverse to buying), SELL orders skip when summed OFI >= +2.0. All other gates inherited verbatim: positional cap=1 (cascade protection), reduce-only fast-path (intraday_flat), thin-book guard min_total_size=2.0. Motivation: static imbalance captures the level of bid/ask size at a single tick (noisy point read); OFI captures order-book flow over a short horizon and is shown empirically to be a substantially stronger short-horizon mid-direction predictor (Cont et al. 2014; Kolm/Turiel/Westray 2021). Iter-2 noted that incremental smoothing of the static signal was exhausted within the position_cap=1 stack and recommended a structural signal-class change; OFI is that change.",
+    "algorithm_path": "execution_algos/position-tier-ofi-gate/",
+    "scores": {
+      "sharpe": 11.89,
+      "realized_pnl": 2201.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 4990.75,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 56305,
+      "passed": true
+    },
+    "notes": "PASS vs baseline -- aggregated across the SAME 11 of 12 configured train dates as iter 1 and iter 2 (20260308-20260318, 20260320; 2026-03-19 EXCLUDED -- the Rust/Nautilus OOM hazard documented at research/NOTES.md 2026-05-23 reproduces in this algo too, as expected for any subscribe_quote_ticks variant in this family on that partition). position-tier-ofi-gate $2201.75 / 56305 trades vs simple $43.25 / 111489 trades on the same 11 dates; delta_pnl=+4990.75%, far above the +5.0% gate; slippage flat (both 0.0; zero-cost fill model -- see research/NOTES.md 2026-04-30). Win rate 36.43% vs 35.02% (+1.41pp). Trade count drops 49.5% (56305 vs 111489). Cross-day Sharpe 11.89 on N=11. REFINEMENT-vs-iter2 read (HONEST): pnl REGRESSION of -51.11% ($2201.75 vs $4503.25), Sharpe regression of -8.90 (11.89 vs 20.79), win_rate -2.86pp (36.43% vs 39.29%), trade_count -9.5% (56305 vs 62220), max_drawdown improved by +0.05pp (-1.25% vs -1.21%). The OFI gate is STRUCTURALLY WORSE than the static/EMA imbalance gate within this position_cap=1 stack on this train window; it does NOT meet ANY refinement-axis target in config.yaml->refinement (min_sharpe_delta=+0.5 missed; min_pnl_delta_pct=+2.0 missed; min_winrate_delta_pp=+2.0 missed; min_mdd_delta_pp=-1.0 missed). Plausible causes (declining priority, not verified): (a) the 10s OFI window aliases with the 30s oracle horizon and blocks entries during exactly the flow regimes the oracle is fading; (b) flow_threshold=2.0 was calibrated for aggressor-flow-gate's trade-tape signal, not quote-tick OFI which accumulates faster and reaches |2| in a noisier regime; (c) MES is thin top-of-book so most ticks add 0 or 1 to OFI and the deque is barely smoother than a single-tick view. Verdict robust to the missing 03-19 date: even at the extreme assumption that the algo would add 0 P&L on that day, delta-vs-baseline remains in the +5000% region; vs-iter-2 regression direction would also be unchanged. Trade count HIGH (56k+), not low-trade-count flagged. Do NOT snapshot as an improvement over iter-2 -- this is a PASS-vs-baseline-only entry that informs the structural takeaway (different signal CLASS does not auto-improve within this gate stack) for future iterations. Config: sigma=6, seed=42, horizon=30s; position_cap=1, flow_threshold=2.0, window_seconds=10.0, min_total_size=2.0.",
+    "timestamp": "2026-05-23T15:20:00Z",
+    "strategy_kwargs_hash": "sha256:1b19c8a8b93c",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null,
+      "train_dates_aggregated": 11,
+      "train_dates_configured": 12,
+      "missing_dates": [
+        "2026-03-19"
+      ],
+      "refinement_axes_vs_iter2": {
+        "parent_id": "position-tier-imbalance-ema-gate",
+        "pnl_delta_pct": -51.11,
+        "sharpe_delta": -8.9,
+        "winrate_delta_pp": -2.86,
+        "trade_count_delta_pct": -9.5,
+        "mdd_delta_pp": 0.05,
+        "all_targets_missed_except": "mdd_delta_pp (and even that misses the -1.0pp target)"
+      }
+    }
   }
 ]
