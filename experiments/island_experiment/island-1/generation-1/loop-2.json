@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-1",
+  "base_algo":           "aggressor-flow-gate",
+  "generation":          1,
+  "loop_in_generation":  2,
+  "algo_id":             "afg-isl-g1l2",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         990.0,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         4.200833621525238,
+    "max_drawdown_pct":     -0.04132478304488901,
+    "win_rate":             0.3546481257993047,
+    "trade_count":          111034,
+    "vs_base_pnl_pct":      -21.146156511350858,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         3187,
+  "context_tokens_estimated": 796,
+  "tokens_used":      null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed":    "Reverted g1l1's two-window persistence+reversal exception and returned to the base aggressor-flow-gate's single 10s signed-flow gate with a single addition: a min_trade_count=8 precondition that suppresses the gate (submits unconditionally) when the rolling window holds fewer than 8 prints, on the hypothesis that thin-window gate firings are noise-dominated false positives driving the base's IS regression.",
+    "outcome":    "pnl -21.15% vs aggressor-flow-gate base (990.0 vs 1255.5), sharpe 4.20 vs 5.59 (-24.9%), max_drawdown -0.0413 vs -0.0332 (worse by 24%), trade_count 111034 vs 107198 (+3.58%), is_weighted_bps 0.04267 vs 0.04724 (-9.67%, BETTER), slippage 0.0 on both sides; vs_baseline_is_bps improved from +21.50 to +9.74 — the gate change captures ~half the base's IS regression but PnL falls.",
+    "hypothesis": "Required >=8 prints in the 10s window before the adverse-flow gate may fire, expecting that thin-window gate-firings reject favorable-arrival entries (the base's documented IS regression source) and that admitting those would lift PnL while improving IS bps. Mechanism partially confirmed (IS bps improved, gate fires less in thin windows) but the secondary prediction (PnL improves) was falsified: the newly-admitted trades have similar win rate but worse loss-magnitude asymmetry, suggesting the base's gate captures path-risk beyond arrival-price quality.",
+    "next":       "DO NOT carry the min-count tightener forward as-is — it's a PnL regression. The headline finding for migration is the IS-vs-PnL dissonance: arrival-price quality and realized PnL moved in OPPOSITE directions, evidence that aggressor-flow-gate's gating contains path-risk information invisible to IS bps. Most promising next direction for island-1 g1l3: replace the population-only precondition with a price-confirmation rule (require mid to have moved >= X ticks favorably during a short sub-window) which addresses the IS-good/PnL-bad asymmetry directly. Secondary: combine min-count with a TIGHTER (not looser) flow_threshold to admit only thin-window trades that are strongly flow-favorable, not merely sub-threshold-adverse. Treat IS bps as a diagnostic, not the objective."
+  },
+  "timestamp": "2026-05-24T03:47:20Z"
+}

@@ -10,5 +10,17 @@
     "trade_count":          115099,
     "context_chars_in":     0,
     "timestamp":            "2026-05-24T02:52:20Z"
+  },
+  {
+    "generation":           1,
+    "loop_in_generation":   2,
+    "algo_id":              "afg-isl-g1l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -21.146156511350858,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.200833621525238,
+    "trade_count":          111034,
+    "context_chars_in":     3187,
+    "timestamp":            "2026-05-24T03:47:20Z"
   }
 ]
