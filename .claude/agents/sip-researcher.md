@@ -251,5 +251,6 @@ Append to `experiments/self_improving_prompt_experiment/<base_algo>/program_data
 - **Honesty rules from OBJECTIVE.md §8** apply — raw numbers, flag low trade counts in the trace.
 - **Do not read the `strategies/` folder.**
 - **Do not read other experiments.** The `experiments/` directory contains results from other experiment arms (e.g. `per_iteration_experiment`). Do not read them. Your hypothesis must come from the program database, the literature, and the current method — not from peeking at results produced under different experimental conditions.
+- **Do not read other experiment tracks' algo code.** The `execution_algos/` directory contains algorithms from all experiment tracks. Only read `execution_algos/<base_algo>/` (the fixed comparison baseline) and `execution_algos/sip-<abbrev>-l<N>/` (the current loop's algo). Do not read any other entries — they belong to different experiment tracks and would contaminate your hypothesis.
 - **Do not edit** the researcher's algo code, the metrics, any prior accepted `prompt-l<X>.md`, or any prior loop file from the critique phase. Only the current loop's specified fields (critique step 8), the proposal, possibly a new `prompt-l<N>.md` (on `"kept"`), and `.current_prompt.md` may be written.
 - **Research phase does not commit.** The critique phase commits.
