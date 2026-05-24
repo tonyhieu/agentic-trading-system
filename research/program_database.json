@@ -88,5 +88,29 @@
         "total": 48812
       }
     }
+  },
+  {
+    "id": "vrs-m-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 5 \u2014 built on vrs-m-l4 by raising the submission-probability floor min_prob 0.05 -> 0.10 while holding sensitivity=6.0. Metrics-only context across prior four loops showed PnL still rising (l1=+24.2% / l2=+41.7% / l3=+51.0% / l4=+76.2% vs base_algo) but the L3->L4 step inverted Sharpe (4.70 -> 4.45) with a 23x larger trade-count drop; raising the floor tests whether the Sharpe loss is recoverable by re-admitting some high-vol parents without further bumping sensitivity.",
+    "algorithm_path": "execution_algos/vrs-m-l5/",
+    "scores": {
+      "sharpe": 4.4917,
+      "realized_pnl": 1039.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2303.4682,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 100209,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l5 $1039.50/100209 trades vs simple $43.25/132228 trades; delta_pnl=+2303.47%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.4917 (vs L4 4.4472, +0.045). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+79.38%, trade_count +0.38% vs L4 (+376). Refinement of vrs-m-l4 (min_prob 0.05 -> 0.10, sensitivity held at 6.0). Step-curve on matched 11d: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2% / L5+79.4%. Sharpe recovery vs L4 modest (+0.045) -- min_prob floor binds rarely at this sensitivity. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T20:01:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
