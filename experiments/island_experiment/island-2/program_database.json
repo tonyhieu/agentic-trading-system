@@ -1,0 +1,14 @@
+[
+  {
+    "generation":            1,
+    "loop_in_generation":    1,
+    "algo_id":               "vrs-isl-g1l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       34.12653962462629,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          5.970163363956465,
+    "trade_count":           109424,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T03:30:00Z"
+  }
+]
