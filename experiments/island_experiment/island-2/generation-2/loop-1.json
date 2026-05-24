@@ -1,30 +1,36 @@
 {
-  "experiment":          "island_experiment",
-  "island_id":           "island-2",
-  "base_algo":           "vol-regime-sizer",
-  "generation":          2,
-  "loop_in_generation":  1,
-  "algo_id":             "vrs-isl-g2l1",
-  "status":              "completed",
+  "experiment": "island_experiment",
+  "island_id": "island-2",
+  "base_algo": "vol-regime-sizer",
+  "generation": 2,
+  "loop_in_generation": 1,
+  "algo_id": "vrs-isl-g2l1",
+  "status": "completed",
   "metrics": {
-    "realized_pnl":         2437.75,
-    "mean_slippage":        0.0,
-    "sharpe_ratio":         16.95151617405911,
-    "max_drawdown_pct":     -0.014849896050727644,
-    "win_rate":             0.35563770441693415,
-    "trade_count":          104688,
-    "vs_base_pnl_pct":      223.41625704279975,
+    "realized_pnl": 2437.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 16.95151617405911,
+    "max_drawdown_pct": -0.014849896050727644,
+    "win_rate": 0.35563770441693415,
+    "trade_count": 104688,
+    "vs_base_pnl_pct": 223.41625704279974,
     "vs_base_slippage_pct": 0.0
   },
-  "context_chars_in":         0,
+  "context_chars_in": 0,
   "context_tokens_estimated": 0,
-  "tokens_used":      null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 850,
+    "cache_creation": 249,
+    "cache_read": 40932,
+    "total": 42032
+  },
+  "duration_seconds": 154.6,
   "summary_out": {
-    "changed":    "Composed island-0's rolling-spread-quantile SKIP gate (60s window, q=0.75, min_samples=50) on top of vrs-isl-g1l1's chop gate with AND-skip semantics, and reverted g1l2's trend_boost to 0.0 to strip the ~zero-EV widening the gen-1 migration flagged.",
-    "outcome":    "pnl +223.42% vs vol-regime-sizer (2437.75 vs 753.75), slippage 0.0% (both sides zero, axis uninformative), sharpe 16.95 (vs 3.06 base, 5.74 g1l2), max_dd -1.48% (vs -4.13% g1l2 → ~64% tighter), trade_count 104688 (-6.5% vs g1l2), is_weighted_bps 0.0311 (-26% vs g1l2 — execution quality of surviving orders materially better).",
+    "changed": "Composed island-0's rolling-spread-quantile SKIP gate (60s window, q=0.75, min_samples=50) on top of vrs-isl-g1l1's chop gate with AND-skip semantics, and reverted g1l2's trend_boost to 0.0 to strip the ~zero-EV widening the gen-1 migration flagged.",
+    "outcome": "pnl +223.42% vs vol-regime-sizer (2437.75 vs 753.75), slippage 0.0% (both sides zero, axis uninformative), sharpe 16.95 (vs 3.06 base, 5.74 g1l2), max_dd -1.48% (vs -4.13% g1l2 \u2192 ~64% tighter), trade_count 104688 (-6.5% vs g1l2), is_weighted_bps 0.0311 (-26% vs g1l2 \u2014 execution quality of surviving orders materially better).",
     "hypothesis": "Chop (price-path) and spread (book-state) are near-orthogonal adverse-microstructure axes; composing both skip gates removes the union of two top-quartile cost slices while only modestly reducing trade count. Migration's headline `generalizable` finding (orthogonal-gate composition) predicted this would be the highest-leverage gen-2 move on island-2.",
-    "next":       "Read the per-skip instrumentation counters from per-date stdout logs to quantify chop-only-skip / spread-only-skip / both-skip cardinalities; if the spread gate's marginal kills are concentrated in a narrow band (e.g., quantile 0.75–0.85 ramp), tighten or replace the hard quantile with a soft probabilistic spread gate. Also worth probing a third orthogonal axis (e.g., directional order-flow imbalance or top-of-book size asymmetry) to test whether stacking continues to yield super-linear returns."
+    "next": "Read the per-skip instrumentation counters from per-date stdout logs to quantify chop-only-skip / spread-only-skip / both-skip cardinalities; if the spread gate's marginal kills are concentrated in a narrow band (e.g., quantile 0.75\u20130.85 ramp), tighten or replace the hard quantile with a soft probabilistic spread gate. Also worth probing a third orthogonal axis (e.g., directional order-flow imbalance or top-of-book size asymmetry) to test whether stacking continues to yield super-linear returns."
   },
   "timestamp": "2026-05-24T11:30:00Z"
 }
