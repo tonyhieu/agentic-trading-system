@@ -1,0 +1,79 @@
+{
+  "experiment": "island_experiment",
+  "generation": 2,
+  "timestamp":  "2026-05-24T14:30:00Z",
+  "contributing_islands": [
+    {
+      "island_id":       "island-0",
+      "base_algo":       "position-tier-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation":   2,
+          "algo_id":              "ptg-isl-g2l2",
+          "vs_base_pnl_pct":      -11.460410557184517,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":         21.012389386327904
+        },
+        {
+          "loop_in_generation":   1,
+          "algo_id":              "ptg-isl-g2l1",
+          "vs_base_pnl_pct":      -23.14516129032258,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":         17.859150881264625
+        }
+      ],
+      "island_summary": "Both loops attempted to add the choppiness-ratio (price-path) skip axis on top of g1l1's existing position-cap + rolling-spread-p75 composition, porting from island-2 g1l1's verbatim parameters. g2l1 used a hard boolean skip at chop_threshold=2.0 and regressed -23.15% vs base, losing 15.3k trades net of the lineage — the cut removed positive-EV trades because ptg's edge appears to include path-noisy periods that vol-regime-sizer's base did not depend on, AND because boolean semantics overshot island-2's actual probabilistic-decay form. g2l2 ported the correct probabilistic exponential decay (chop_neutral=1.5, sensitivity=1.0) and recovered ~75% of the sharpe loss (+15.2% PnL vs g2l1) but still regressed -11.46% vs base — only ~1.7k trades re-admitted, confirming chop is *partially* transferable to ptg but at lower marginal value than predicted and at a dosage that trades against the known-better chop-free g1l1 baseline (+26.55%). Island-0's best loop remains g1l1 (chop-free). Next direction: abandon chop on this base, build on g1l1's spread+cap composition by adding a book-flow / signed-volume imbalance gate as the third orthogonal axis (gen-1 migration's named alternative); if that also underperforms g1l1, the verdict is ptg's edge is saturated by spread+cap and the remaining headroom is in quantity modulation, not additional skip gates."
+    },
+    {
+      "island_id":       "island-1",
+      "base_algo":       "aggressor-flow-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation":   2,
+          "algo_id":              "afg-isl-g2l2",
+          "vs_base_pnl_pct":      173.95459976105136,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":         14.44518788948764
+        },
+        {
+          "loop_in_generation":   1,
+          "algo_id":              "afg-isl-g2l1",
+          "vs_base_pnl_pct":      70.29071285543608,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":         9.86136996267321
+        }
+      ],
+      "island_summary": "g2l1 reversed the gen-1 loosening regression by RESTORING the unmodified base aggressor-flow gate and STACKING island-0 g1l1's rolling-spread-p75 OPEN-gate (60s, q=0.75, min_samples=50) on top with OR-skip semantics — a single-loop +70.29% PnL move, the largest this island has produced, with sharpe nearly doubling, drawdown tightening 30.8%, and trade_count falling only 1.48%. g2l2 stacked a third orthogonal axis (island-2 g1l1's choppiness-ratio gate, verbatim window=30 / neutral=1.5, but converted to a binary hard-skip for clean AND-composition with the two binary skip gates) and amplified the result by a further 1.7x to +173.95% vs base, with drawdown tightening further (-0.0187 vs -0.0332 base), sharpe rising +4.58 absolute, win-rate up +0.85 pp, and trade-count cost only ~5% incremental — every pre-stated falsification criterion cleared. Mechanism: three structurally distinct skip axes (book-state via spread, trade-pressure via flow, price-path via chop) remained approximately independent on this base, so adding gates compounded rather than overlapped. Next direction: calibrate the chop gate (probabilistic vs binary; threshold sweep around chop_neutral) before adding a fourth axis — spread+flow+chop already covers the three structurally distinct microstructure regimes the gen-1 migration identified, and remaining candidate axes (volume bursts, queue imbalance, time-of-day) are likely correlated or second-order."
+    },
+    {
+      "island_id":       "island-2",
+      "base_algo":       "vol-regime-sizer",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation":   1,
+          "algo_id":              "vrs-isl-g2l1",
+          "vs_base_pnl_pct":      223.41625704279974,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":         16.95151617405911
+        },
+        {
+          "loop_in_generation":   2,
+          "algo_id":              "vrs-isl-g2l2",
+          "vs_base_pnl_pct":      125.73815738985715,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":         15.246218662936329
+        }
+      ],
+      "island_summary": "g2l1 composed island-0's rolling-spread-quantile SKIP gate (60s, q=0.75, min_samples=50) on top of vrs-isl-g1l1's chop gate with AND-skip semantics, and reverted g1l2's zero-EV trend_boost — delivering +223.42% vs base, sharpe 16.95 (vs 3.06 base), drawdown -1.48% (~64% tighter than g1l2), trade_count -6.5%, and is_weighted_bps -26% on surviving orders. Spread (book-state) and chop (price-path) proved near-orthogonal on this base, removing the union of two top-quartile cost slices with modest trade-count cost — confirmation that the gen-1 migration's `generalizable` finding (orthogonal-gate composition) transferred to this base. g2l2 attempted to stack a third orthogonal axis (the aggressor-flow gate, ported verbatim from afg with 10s window / 2-contract threshold) and regressed -30% vs g2l1 (still +125.74% vs base, but a clear drop from the g2l1 peak): trade_count fell 41.3% — far past the ~15% over-restrictive falsification line — and is_weighted_bps WORSENED +47%, evidence the surviving trades were not even higher-quality on execution cost. Failure mechanism mirrors island-0's symmetric g2l2 misfire: gate parameters tuned on one base do not transfer when composed onto a different base that is already pre-filtered (here chop+spread already removed wide-spread/aggressor-correlated bursts, so flow became partly redundant rather than orthogonal, AND the 2-contract / 10s threshold was too sensitive for MES tick cadence stacked on an already-aggressive composed pair). Next direction: g3l1 = retune flow_threshold to 5-8 contracts and/or shorten flow_window to 3-5s so the gate fires only on genuine pressure spikes; g3l2 = if retuned flow still regresses, pivot to top-of-book size asymmetry (bid_size vs ask_size ratio) as the structurally distinct third axis."
+    }
+  ],
+  "cross_island_insights": {
+    "what_worked":   "Stacking strictly orthogonal SKIP axes ON TOP of an unmodified base — never modifying base mechanics — was the highest-leverage move of generation 2 and produced the two largest single-loop gains in the experiment to date. Island-1 chained spread+flow+chop on the unmodified aggressor-flow base for +173.95% vs base (1.7x amplification when the third axis was added); island-2 chained chop+spread on the unmodified vol-regime-sizer base for +223.42% vs base. Mechanism: the oracle's 30s forward signal degrades disproportionately during three structurally distinct adverse-microstructure regimes (wide-spread liquidity vacuums, high-pressure aggressor flow, whipsaw price-path chop), and these regimes are near-independent — their union covers a larger top-cost slice than any single gate, while the multiplicative trade-count cost stays modest (≤7% incremental per axis) as long as each gate is hit-rate-tuned for its own base. Drawdown TIGHTENED on both islands as gates were stacked, confirming the filtered slice carries tail-loss trades rather than just mean execution cost. Critical sub-finding: composition rule matters — AND-skip across binary gates (island-1 g2l2) preserves orthogonality cleanly; converting a probabilistic gate (island-2's chop sizer) to a binary hard-skip for clean composition with other binary gates also worked.",
+    "what_failed":   "Two failure modes recurred across islands. (1) Copying gate parameters verbatim across base contexts WITHOUT retuning: island-0 g2l2 ported island-2's chop parameters (chop_neutral=1.5, sensitivity=1.0) onto ptg and regressed -11.46% even with the correct probabilistic-decay semantics — only ~1.7k trades re-admitted, indicating the threshold was tuned to vrs's filter distribution, not ptg's. Island-2 g2l2 ported afg's flow parameters (2-contract / 10s) onto vrs and regressed -30% vs g2l1, with trade_count dropping 41% — the threshold was too sensitive for vrs's already-aggressive composed-pair filter state. Same shape, same mechanism: the gate's MECHANISM transferred, but its OPERATING POINT was tuned against a different base's surviving-population distribution. (2) MODIFYING the base instead of layering on top: island-0 attempted to add chop as a hard skip ON its lineage (which already includes the position-cap mechanic of the base), and even at the correct semantics the cut removed positive-EV trades — when the new gate intersects a base whose edge depends on the regime being filtered, composition turns subtractive. The recovery path on island-0 (return to its chop-free g1l1) tracks the same finding island-1's gen-1 recovery did: trust the base, layer beside it, do not modify it.",
+    "generalizable": "(1) ADD orthogonal SKIP axes ON TOP of an unmodified base; never modify the base; never copy parameters across base contexts unretuned. The mechanism (spread = book-state, flow = trade-pressure, chop = price-path are near-independent adverse-microstructure axes) generalizes across all three bases AND across composition semantics (AND-skip with binaries, OR-skip with probabilistics); the operating point (specific thresholds, window lengths, decay shapes) is base-specific because each base presents a different surviving-population distribution to the next gate in the stack. (2) Stacking continues to compound until a gate becomes redundant with existing filters — diagnostic: trade_count drop disproportionate to the gate's standalone hit rate (island-2 g2l2's 41% drop on a flow gate that island-1 sustained at <5% incremental cost), and is_weighted_bps WORSENING on surviving trades signals over-restriction (lower-EV trades survived). (3) When porting a gate, port the MECHANISM and the COMPOSITION SEMANTICS but RETUNE the operating point against the new base's pre-filter population — a parameter sweep around the ported value is cheaper than discovering the misfire after a full backtest. (4) The three-axis ceiling: spread + flow + chop covers the structurally distinct regimes identified across generations 1-2; remaining candidate axes (queue imbalance, top-of-book size asymmetry, volume bursts, time-of-day) should be considered only after the existing three are calibrated, and only if they are demonstrably independent of the three already in the stack — assume otherwise until shown.",
+    "base_specific": "(1) position-tier-gate (island-0): the base already encodes position-bucket logic that interacts with downstream gates, so the surviving-trade population after position-cap+spread-p75 has a NARROWER chop_ratio distribution than vrs's surviving population — porting vrs's chop_neutral=1.5 cuts into the body of the distribution rather than its tail, removing positive-EV trades; on this base chop is partially transferable but at a HIGHER neutral threshold than vrs uses, AND ptg's chop-free g1l1 lineage remains the better foundation for further composition than any chop-augmented variant. (2) aggressor-flow-gate (island-1): the base's signed-flow gate is genuinely orthogonal to both spread and chop, so the three-axis stack compounded to +173.95% on this base specifically; the base's path-risk signal (gen-1 finding) means future modifications must stay layered and binary — converting any of the three composed gates to probabilistic on this base risks the IS-vs-PnL dissonance gen-1 documented. (3) vol-regime-sizer (island-2): the base operates on signed-magnitude axes and the chop+spread composition removes wide-spread/aggressor-correlated bursts as a side effect, so a verbatim aggressor-flow gate becomes PARTLY REDUNDANT on this base — the same flow axis that compounded cleanly on afg's base does not compound cleanly here even after retuning if the redundancy is mechanical rather than parametric. The right third axis for vrs is likely a STRUCTURALLY different one (top-of-book size asymmetry) rather than a retuned flow gate."
+  }
+}
