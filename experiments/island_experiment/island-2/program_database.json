@@ -22,5 +22,17 @@
     "trade_count":           111972,
     "context_chars_in":      0,
     "timestamp":             "2026-05-24T04:06:30Z"
+  },
+  {
+    "generation":            2,
+    "loop_in_generation":    1,
+    "algo_id":               "vrs-isl-g2l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       223.41625704279975,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          16.95151617405911,
+    "trade_count":           104688,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T11:30:00Z"
   }
 ]
