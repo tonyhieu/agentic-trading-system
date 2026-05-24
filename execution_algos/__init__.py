@@ -165,6 +165,14 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vrs-isl-g3l2",
         "get_execution_algorithm",
     ),
+    "ptg-isl-g4l1": (
+        "execution_algos.ptg-isl-g4l1",
+        "get_execution_algorithm",
+    ),
+    "sip-afg-l1": (
+        "execution_algos.sip-afg-l1",
+        "get_execution_algorithm",
+    ),
 }
 
 
