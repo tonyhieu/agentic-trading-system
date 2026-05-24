@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-0",
+  "base_algo":           "position-tier-gate",
+  "generation":          4,
+  "loop_in_generation":  2,
+  "algo_id":             "ptg-isl-g4l2",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         5559.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         25.078472653315004,
+    "max_drawdown_pct":     -0.005374916688791324,
+    "win_rate":             0.3813071139386929,
+    "trade_count":          86450,
+    "vs_base_pnl_pct":      30.419413235759424,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         34500,
+  "context_tokens_estimated": 8625,
+  "tokens_used":     null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Replaced g4l1's LINEAR probabilistic submit-decay across [p50, p75] with an EXPONENTIAL decay of the same band and same min_prob floor (0.05). decay_sensitivity = -ln(min_prob) ~ 2.996 chosen so band-edge values match g4l1 exactly (prob=1.0 at frac=0, prob=min_prob at frac=1), isolating the SHAPE-of-curve variable from EDGE-value. All other knobs held: spread_window_seconds=60, min_samples=50, position_cap=1, q_lower=0.50, q_upper=0.75, deterministic SHA-256 per-order draw. Cross-island reference: ports vrs-isl-g1l1's exponential functional form to this base.",
+    "outcome": "pnl 5559.25 (+30.42% vs base ptg 4262.50; -0.22% vs g4l1 5571.25 - LANDS INSIDE PRE-DECLARED NULL BAND [+28.5%, +32.5%]). sharpe 25.078 (g4l1 25.112, -0.034 abs; base 17.619, +7.46 abs). trade_count 86450 (g4l1 86377, +73 trades / +0.08% - essentially flat; mean admission rate within band identical to linear at this k). max_drawdown -0.54% (identical to g4l1). win_rate 0.38131 (identical to g4l1 to 5 dp). mean_slippage 0.0; is_weighted_bps 0.02606 (g4l1 0.02585, +0.8%). All g4l1 wins preserved; g4l2 delta is noise.",
+    "hypothesis": "NULL / SHAPE-FLAT confirmed. Pre-declared null falsification class triggered: the SHAPE of the decay curve in [p50, p75] does not matter at min_prob=0.05. EV-vs-rank-in-band is approximately linear inside this band - not meaningfully convex (would have triggered CONFIRM via exponential's front-loading of admission onto the cheap end), not meaningfully concave (would have triggered REJECT). The MECHANISM CLASS (quantity-modulation / probabilistic admission) that broke the island-0 saturation ceiling at g4l1 is the load-bearing lever; the CURVE SHAPE inside the band is a non-load-bearing detail. The vrs-isl-g1l1 exponential-shape cross-island parallel does NOT transfer to this band on this base.",
+    "next": "g4l1's LINEAR decay is the canonical island-0 lineage choice - same EV as exponential, strictly simpler (no exp() call, no decay_sensitivity parameter). Two remaining retunes from g4l1's ranking now stand: (1) BAND PLACEMENT shift [p50, p75] -> [p60, p80] - relocates the decay to the actually-expensive part of the spread distribution while preserving full admission below p60; highest leverage because g3l2 proved [p75, p80] is EV-negative under hard-cut and the decay might be able to salvage participation in that previously-discarded region. (2) min_prob FLOOR SWEEP (0.0 hard edge / 0.10 gentler floor) - smallest retune; reserve for after (1). The shape revisit is ruled out for this base+band; future loops should pick option (1)."
+  },
+  "timestamp": "2026-05-24T22:07:09Z"
+}

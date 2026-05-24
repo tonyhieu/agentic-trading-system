@@ -82,5 +82,17 @@
     "trade_count":           86377,
     "context_chars_in":      34000,
     "timestamp":             "2026-05-24T19:34:09Z"
+  },
+  {
+    "generation":            4,
+    "loop_in_generation":    2,
+    "algo_id":               "ptg-isl-g4l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       30.419413235759424,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          25.078472653315004,
+    "trade_count":           86450,
+    "context_chars_in":      34500,
+    "timestamp":             "2026-05-24T22:07:09Z"
   }
 ]
