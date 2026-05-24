@@ -1,0 +1,14 @@
+[
+  {
+    "generation":           1,
+    "loop_in_generation":   1,
+    "algo_id":              "afg-isl-g1l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -43.129032258064516,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         3.0567923750265296,
+    "trade_count":          115099,
+    "context_chars_in":     0,
+    "timestamp":            "2026-05-24T02:52:20Z"
+  }
+]
