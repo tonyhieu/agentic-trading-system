@@ -12,19 +12,12 @@ Which transcript is measured (issue #88). A SubagentStop hook receives
 `transcript_path` for the MAIN session transcript -- the parent conversation,
 which accumulates across every subagent invocation. Scanning it measured the
 orchestrator's compute, not the researcher's. Instead this hook derives the
-researcher-family subagent's OWN transcript: subagent transcripts live beside
-the main one at `<session>/subagents/agent-<id>.jsonl`, each with a sibling
+researcher subagent's OWN transcript: subagent transcripts live beside the
+main one at `<session>/subagents/agent-<id>.jsonl`, each with a sibling
 `agent-<id>.meta.json` carrying `{"agentType": ...}`. The hook picks the
-most-recently-modified `.jsonl` whose meta marks it one of the accepted agent
-types -- `researcher`, `per-iteration-researcher`, `sip-researcher`, or
-`sip-critic` -- the just-stopped run. If no matching transcript is found the
-hook is a no-op (the relevant `meta` fields stay null, which callers tolerate).
-
-For the self_improving_prompt_experiment, the same loop file is patched twice
-per loop: once by the sip-researcher's SubagentStop (fills `tokens_used` /
-`duration_seconds`), then by the sip-critic's SubagentStop (fills
-`critic_tokens_used` / `critic_duration_seconds`). The agentType detected on
-each invocation routes the backfill to the correct pair of fields.
+most-recently-modified `.jsonl` whose meta marks it `agentType == "researcher"`
+-- the just-stopped researcher run. If no researcher transcript is found the
+hook is a no-op (both `meta` fields stay null, which callers already tolerate).
 
 Per-iteration scoping. When the loop driver continues the same researcher
 subagent across iterations (SendMessage), one `agent-<id>.jsonl` keeps
@@ -75,23 +68,14 @@ def _parse_ts(raw: str | None) -> datetime | None:
         return None
 
 
-_ACCEPTED_AGENT_TYPES = (
-    "researcher",
-    "per-iteration-researcher",
-    "sip-researcher",
-    "sip-critic",
-)
-
-
-def _find_researcher_transcript(main_transcript: Path) -> tuple[Path, str] | None:
-    """Locate the just-stopped researcher-family subagent's own transcript.
+def _find_researcher_transcript(main_transcript: Path) -> Path | None:
+    """Locate the researcher subagent's own transcript.
 
     Subagent transcripts sit beside the main session transcript at
     `<main_transcript_stem>/subagents/agent-<id>.jsonl`, each paired with an
-    `agent-<id>.meta.json` holding `{"agentType": ...}`. Returns
-    `(path, agent_type)` for the most-recently-modified `.jsonl` whose meta
-    marks it one of the accepted agent types (the just-stopped run), or None
-    when no such transcript exists.
+    `agent-<id>.meta.json` holding `{"agentType": ...}`. Returns the
+    most-recently-modified `.jsonl` whose meta marks it the researcher (the
+    just-stopped run), or None when no such transcript exists.
     """
     subagents_dir = main_transcript.with_suffix("") / "subagents"
     if not subagents_dir.is_dir():
@@ -99,29 +83,21 @@ def _find_researcher_transcript(main_transcript: Path) -> tuple[Path, str] | Non
 
     newest: Path | None = None
     newest_mtime = -1.0
-    newest_type: str | None = None
     for jsonl in subagents_dir.glob("agent-*.jsonl"):
         meta_path = jsonl.parent / (jsonl.stem + ".meta.json")
         try:
             meta = json.loads(meta_path.read_text())
         except (OSError, json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(meta, dict):
-            continue
-        agent_type = meta.get("agentType")
-        if agent_type not in _ACCEPTED_AGENT_TYPES:
+        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher", "pc-researcher", "sip-researcher"):
             continue
         try:
             mtime = jsonl.stat().st_mtime
         except OSError:
             continue
         if mtime > newest_mtime:
-            newest_mtime = mtime
-            newest = jsonl
-            newest_type = agent_type
-    if newest is None or newest_type is None:
-        return None
-    return newest, newest_type
+            newest_mtime, newest = mtime, jsonl
+    return newest
 
 
 def _scan_transcript(
@@ -310,39 +286,30 @@ def main() -> None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Path 2: experiment loop file (per_iteration_experiment or
-    # self_improving_prompt_experiment agent). Triggered by a git-ignored
-    # pointer file the agent wrote before committing.
-    #
-    # For sip-* loops, the same loop file is patched twice (researcher fills
-    # tokens_used / duration_seconds; critic later fills critic_tokens_used /
-    # critic_duration_seconds), so the "should I patch?" check has to be
-    # agentType-aware. We defer the null-field check until after we know which
-    # agent type just stopped.
+    # Path 2: experiment loop file (per_iteration_experiment or pc-researcher agent).
+    # Triggered by a git-ignored pointer file the agent writes before committing.
     loop_file: Path | None = None
     loop_file_rel: str | None = None
-    loop_data: dict[str, Any] | None = None
-    pointer_paths = [
+    _pointer_candidates = [
         Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json",
+        Path(cwd) / "experiments" / "proposer_criticizer_experiment" / ".current_loop.json",
         Path(cwd) / "experiments" / "self_improving_prompt_experiment" / ".current_loop.json",
     ]
-    for pointer_path in pointer_paths:
-        if loop_file is not None:
-            break
-        if not pointer_path.exists():
-            continue
+    pointer_path = next((p for p in _pointer_candidates if p.exists()), None)
+    if pointer_path is not None:
         try:
             pointer = json.loads(pointer_path.read_text())
             rel = pointer.get("loop_file")
-            if not rel:
-                continue
-            candidate = Path(cwd) / rel
-            if not candidate.exists():
-                continue
-            candidate_data = json.loads(candidate.read_text())
-            loop_file = candidate
-            loop_file_rel = rel
-            loop_data = candidate_data
+            if rel:
+                candidate = Path(cwd) / rel
+                if candidate.exists():
+                    loop_data = json.loads(candidate.read_text())
+                    if loop_data.get("tokens_used") is None or (
+                        "critic_tokens_used" in loop_data
+                        and loop_data.get("critic_tokens_used") is None
+                    ):
+                        loop_file = candidate
+                        loop_file_rel = rel
         except (OSError, json.JSONDecodeError, KeyError, TypeError):
             pass
 
@@ -351,32 +318,15 @@ def main() -> None:
 
     # --- Find the subagent transcript to measure (issue #88) ---
     # Use the subagent's own transcript rather than the main session transcript
-    # so meta reflects the subagent's compute, not the orchestrator's. Accepted
-    # agent types: researcher, per-iteration-researcher, sip-researcher, sip-critic.
+    # so meta reflects the subagent's compute, not the orchestrator's.
+    # Both "researcher" and "per-iteration-researcher" agent types are supported.
     main_transcript = Path(transcript_path_s)
     if not main_transcript.exists():
         return
 
-    found = _find_researcher_transcript(main_transcript)
-    if found is None:
-        return  # No researcher-family transcript to measure; leave meta null.
-    sub_transcript, sub_agent_type = found
-
-    # Decide whether the loop file actually needs THIS agentType's backfill.
-    # For sip-critic, we patch the critic_* fields; for the others we patch
-    # tokens_used / duration_seconds. Skip when the relevant fields are already
-    # populated (idempotency: a re-fired SubagentStop must not double-count).
-    if loop_file is not None and loop_data is not None:
-        if sub_agent_type == "sip-critic":
-            needs_loop_patch = loop_data.get("critic_tokens_used") is None
-        else:
-            needs_loop_patch = loop_data.get("tokens_used") is None
-        if not needs_loop_patch:
-            loop_file = None
-            loop_file_rel = None
-            loop_data = None
-        if not db_needs_patch and loop_file is None:
-            return
+    sub_transcript = _find_researcher_transcript(main_transcript)
+    if sub_transcript is None:
+        return  # No researcher transcript to measure; leave meta null.
 
     # A continued subagent keeps appending to one transcript file. Scan only
     # the slice produced since the last backfill so each entry records its own
@@ -397,18 +347,16 @@ def main() -> None:
         return  # Empty slice / nothing useful; leave the cursor unadvanced.
 
     # --- Patch: experiment loop file ---
-    # sip-critic fills critic_* fields; all other accepted agentTypes fill
-    # the canonical tokens_used / duration_seconds pair.
     extra_files: list[str] = []
     if loop_file is not None and loop_file_rel is not None:
         try:
             loop_data = json.loads(loop_file.read_text())
-            if sub_agent_type == "sip-critic":
-                tokens_field = "critic_tokens_used"
-                duration_field = "critic_duration_seconds"
+            # For two-phase sip loops the same file is patched twice; route to
+            # critic_* fields when tokens_used is already populated.
+            if "critic_tokens_used" in loop_data and loop_data.get("tokens_used") is not None:
+                tokens_field, duration_field = "critic_tokens_used", "critic_duration_seconds"
             else:
-                tokens_field = "tokens_used"
-                duration_field = "duration_seconds"
+                tokens_field, duration_field = "tokens_used", "duration_seconds"
             if token_totals is not None:
                 loop_data[tokens_field] = token_totals
             if duration is not None:
@@ -429,8 +377,12 @@ def main() -> None:
         db_path.write_text(json.dumps(db, indent=2) + "\n")
         algo_id = str(last.get("id") or "unknown")
     elif loop_file_rel is not None:
-        # Derive a label for the commit message from the loop file path.
-        algo_id = Path(loop_file_rel).parent.parent.name  # <mode> dir name
+        # Prefer algo_id from the loop file itself; fall back to path-derived label.
+        try:
+            _ldata = json.loads((Path(cwd) / loop_file_rel).read_text())
+            algo_id = str(_ldata.get("algo_id") or Path(loop_file_rel).parent.parent.name)
+        except (OSError, json.JSONDecodeError, KeyError):
+            algo_id = Path(loop_file_rel).parent.parent.name
 
     # Advance the cursor only after a real backfill consumed this slice, and
     # before the git steps so a commit/push failure cannot lose the progress.
