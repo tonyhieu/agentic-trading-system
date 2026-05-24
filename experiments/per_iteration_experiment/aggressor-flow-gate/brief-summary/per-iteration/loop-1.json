@@ -17,8 +17,14 @@
   },
   "context_chars_in": 0,
   "context_tokens_estimated": 0,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1130,
+    "cache_creation": 227,
+    "cache_read": 47689,
+    "total": 49047
+  },
+  "duration_seconds": 202.4,
   "summary_out": {
     "changed": "Replaced the base aggressor-flow-gate's absolute imbalance gate (|net_flow| >= 2.0 over a 10s window) with a volume-normalized ratio gate (r = net_flow / max(abs_vol_window, min_abs_baseline=2.0); gate fires when |r| >= 0.35). Window length, anti-cascade flat-flag semantics, and reduce-only-always-submit semantics preserved exactly.",
     "outcome": "pnl +948.55% vs simple baseline ($453.50 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 2.09, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -53.25% pnl, +15.4% trade_count (+13,481 trades). Per-date pnl worse on 10 of 11 dates. Hypothesis CONTRADICTED.",
