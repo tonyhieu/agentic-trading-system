@@ -448,5 +448,29 @@
         "total": 87273
       }
     }
+  },
+  {
+    "id": "vrs-b-l1",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo vol-regime-sizer by gating the base's probabilistic vol skip on a signed mid-drift EWM (half-life 40 ticks, threshold 0.05). Intent: skip only when fast-vol is elevated AND recent mid drift is moving against the order side; submit at p=1.0 when drift aligns with order side. Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/vrs-b-l1/",
+    "scores": {
+      "sharpe": 0.1704,
+      "realized_pnl": 42.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": -1.7341,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 111488,
+      "passed": false
+    },
+    "notes": "FAIL -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l1 $42.50/111488 trades vs simple $43.25/111489 trades; delta_pnl_pct=-1.73 (below +5.0 PASS gate AND outside the +3-+5 CLOSE band). Sharpe 0.17 vs 0.17 (delta -1.88%). Slippage 0.0/0.0 (no regression, zero fill-cost model; see research/NOTES.md). Vs base_algo vol-regime-sizer on the same 11 dates ($579.50/104372 trades): delta_pnl=-92.67%, trade_count +6.82%. The drift gate fired on essentially one order out of 111,488: the chosen drift_threshold=0.05 with drift_halflife=40 is almost never crossed by the signed-mid EWM (most ticks are no quote change or one tick), so the algorithm collapses to the simple baseline and forfeits the base's ~$580 over-baseline gain. Hypothesis cannot be considered tested -- the drift gate did not meaningfully fire. Per_iteration_experiment loop -- NOT snapshotted (FAIL and per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside the docker subprocess during from_dbn_file decode; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-24T07:07:55Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

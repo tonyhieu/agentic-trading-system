@@ -1,0 +1,30 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "brief-summary",
+  "loop": 1,
+  "algo_id": "vrs-b-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 42.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 0.17035794975278176,
+    "max_drawdown_pct": -0.05289973550132249,
+    "win_rate": 0.3501542766934558,
+    "trade_count": 111488,
+    "vs_base_pnl_pct": -92.6661,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Gated the base vol-regime probabilistic skip on a signed mid-drift EWM (half-life 40 ticks, threshold 0.05) so the skip only fires when fast vol is elevated AND recent drift is adverse to the order side; aligned drift forces p=1.0.",
+    "outcome": "pnl -1.73% vs simple ($42.50 vs $43.25, 11-date apples-to-apples after 20260319 OOM-dropped from both sides), -92.67% vs base_algo vol-regime-sizer ($579.50 over same 11 dates), sharpe 0.17, slippage flat. Verdict FAIL; gate is +5.0% PASS, +3.0-+5.0 CLOSE.",
+    "hypothesis": "Adverse selection at high vol is directional: BUY orders arriving while mid drifts down (or SELL while mid drifts up) are the orders worth skipping; aligned-drift high-vol orders are good fills the base wrongly throws away. Conditioning on drift adversity should retain the loss-cutting half of the base's skips while recovering the participation lost on aligned-drift orders.",
+    "next": "Drift gate fired on essentially 1 of 111,488 orders -- threshold 0.05 with halflife-40 EWM on signed mid-increments is too high (most ticks contribute 0 or one-tick moves). Hypothesis was effectively untested. The highest-leverage next move is to recalibrate the drift signal so it triggers on a meaningful fraction of orders -- e.g. drop the threshold by ~10x (0.005-0.01) OR switch the drift signal from signed mid-increment EWM to signed trade flow / signed quote imbalance, OR invert the gate semantics (default: apply vol skip; override only on strongly aligned drift). Without firing, this directional hypothesis cannot be evaluated; the base algo's straight vol skip is still ahead by a wide margin."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-24T07:07:55Z"
+}
