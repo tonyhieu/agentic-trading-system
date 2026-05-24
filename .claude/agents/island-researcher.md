@@ -32,6 +32,25 @@ Prompt format:
 
 Any island can trigger migration. The migration step reads all islands and writes a single shared report.
 
+### Running a full generation
+
+To run one generation across all islands, invoke this agent **sequentially** — one island at a time, waiting for each to finish before starting the next. Do **not** launch multiple islands in parallel: concurrent `run_backtest()` calls contend on data downloads and disk I/O and will produce unreliable results.
+
+Example sequence for one generation (3 loops each):
+```
+# Loop 1
+island_id=island-0   → wait for completion
+island_id=island-1   → wait for completion
+island_id=island-2   → wait for completion
+
+# Loop 2
+island_id=island-0   → wait for completion
+...
+
+# After generation_size loops per island, run migration:
+island_id=island-0 action=migrate
+```
+
 ---
 
 ## Islands and Config

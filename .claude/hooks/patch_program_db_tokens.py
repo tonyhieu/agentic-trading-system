@@ -371,8 +371,12 @@ def main() -> None:
         db_path.write_text(json.dumps(db, indent=2) + "\n")
         algo_id = str(last.get("id") or "unknown")
     elif loop_file_rel is not None:
-        # Derive a label for the commit message from the loop file path.
-        algo_id = Path(loop_file_rel).parent.parent.name  # <mode> dir name
+        # Read algo_id from the loop file itself; fall back to the path component.
+        try:
+            _lf_data = json.loads((Path(cwd) / loop_file_rel).read_text())
+            algo_id = str(_lf_data.get("algo_id") or Path(loop_file_rel).parent.parent.name)
+        except (OSError, json.JSONDecodeError, TypeError):
+            algo_id = Path(loop_file_rel).parent.parent.name
 
     # Advance the cursor only after a real backfill consumed this slice, and
     # before the git steps so a commit/push failure cannot lose the progress.
