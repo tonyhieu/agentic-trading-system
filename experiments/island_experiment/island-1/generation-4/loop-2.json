@@ -1,30 +1,36 @@
 {
-  "experiment":          "island_experiment",
-  "island_id":           "island-1",
-  "base_algo":           "aggressor-flow-gate",
-  "generation":          4,
-  "loop_in_generation":  2,
-  "algo_id":             "afg-isl-g4l2",
-  "status":              "completed",
+  "experiment": "island_experiment",
+  "island_id": "island-1",
+  "base_algo": "aggressor-flow-gate",
+  "generation": 4,
+  "loop_in_generation": 2,
+  "algo_id": "afg-isl-g4l2",
+  "status": "completed",
   "metrics": {
-    "realized_pnl":         4155.5,
-    "mean_slippage":        0.0,
-    "sharpe_ratio":         17.683520556557777,
-    "max_drawdown_pct":     -0.015474922625386873,
-    "win_rate":             0.3699095375092176,
-    "trade_count":          96283,
-    "vs_base_pnl_pct":      231.00358422939467,
+    "realized_pnl": 4155.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.683520556557777,
+    "max_drawdown_pct": -0.015474922625386873,
+    "win_rate": 0.3699095375092176,
+    "trade_count": 96283,
+    "vs_base_pnl_pct": 231.00358422939468,
     "vs_base_slippage_pct": 0.0
   },
-  "context_chars_in":         5400,
+  "context_chars_in": 5400,
   "context_tokens_estimated": 1350,
-  "tokens_used":      null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1205,
+    "cache_creation": 881,
+    "cache_read": 42619,
+    "total": 44706
+  },
+  "duration_seconds": 148.6,
   "summary_out": {
-    "changed": "PIVOTED from g4l1's inert velocity axis to a recent-trade-side flow gate as the candidate 5th orthogonal SKIP axis on top of the afg-isl-g3l2 4-gate stack (spread + chop + base-flow + size-asymmetry). Started from g3l2 (NOT g4l1) so the velocity axis is cleanly dropped. New gate E: maintains a separate 1.5s rolling deque of trade-side codes (+1 buyer-aggressor / -1 seller-aggressor / 0 NO_AGGRESSOR) with O(1)-amortized prune via running per-side counts (_recent_buy_count, _recent_sell_count). recent_window_seconds=1.5, recent_min_trades=5, recent_dominance_ratio=0.70 — gate fires when (informative recent trades >= 5) AND (contra-side count / (buy+sell informative count) >= 0.70). Structurally distinct from base flow C along three simultaneous dimensions: window (1.5s vs 10s), aggregation mechanic (count vs net signed volume), threshold style (ratio vs absolute contracts). All four prior gate parameters frozen verbatim from g3l2 (flow_window=10s, flow_threshold=2.0, spread_window=60s, spread_quantile=0.75, min_samples=50, chop_window_ticks=30, chop_neutral=1.5, chop_min_ticks=40, size_asym_ratio=1.5). Composition: binary AND-skip across all five axes; quantity invariant preserved; anti-cascade contract preserved; per-gate counters extended with _skipped_recent_buy and _skipped_recent_sell.",
-    "outcome": "NULL with weak drawdown regression. pnl=4155.50 vs base afg 1255.50 (+231.00%) and vs prior g3l2 4182.00 (-0.63%, INSIDE the pre-stated +/-2% null band); sharpe=17.6835 vs g3l2 17.8049 (-0.121 abs); max_drawdown=-0.015475 vs g3l2 -0.015050 (WIDENED by 0.04pp, violating the pre-stated secondary 'drawdown does not widen' confirmation criterion); trade_count=96283 vs g3l2 96472 (-189, -0.20%) so gate E DID fire materially (vs g4l1's -9 near-zero fires); win_rate=0.36991 vs g3l2 0.37031 (unchanged within rounding); mean_slippage=0.0; is_weighted_bps=0.04422 vs g3l2 0.04406 (essentially unchanged). vs g4l1 (4180.25): pnl -0.59%. Trade slice removed by gate E carried near-zero net EV and a tiny drawdown footprint — exactly the axis E vs axis C redundancy pattern gen-3 migration warned about.",
-    "hypothesis": "Recent-trade-side flow at (1.5s window, 5 min trades, 0.70 dominance ratio) would extract residual EV-positive signal not captured by base flow C because the two axes differ on three structural dimensions simultaneously (window length, count vs volume aggregation, ratio vs absolute threshold). The hypothesis is FALSIFIED-AS-STATED on the 4-gate-conditioned surviving population: gate E fired meaningfully (189 trades removed, vs g4l1's 9) but the removed slice carried near-zero net EV. Combined with g4l1 (velocity axis null), TWO structurally distinct 5th-axis candidates have now failed to clear the +2% confirmation band — strong evidence that the afg island's g3l2 4-axis stack is at the empirical ceiling for binary AND-SKIP fifth-axis ADDITIONS on this base, regardless of mechanic class (price-native rate vs trade-derived count, signed vs ratio, quote-derived vs trade-derived).",
-    "next": "RETURN TO OPERATING-POINT RETUNING OF THE EXISTING 4 AXES — the highest-leverage direction is no longer fifth-axis exploration (two attempts at structurally distinct mechanic classes both failed). All four g3l2 thresholds were set at single-shot defaults at their respective introduction loops and have NEVER been swept; the marginal EV may live in tightening or loosening one existing axis on the 4-gate-conditioned population. RECOMMENDED PRIORITY: (A) size_asym_ratio sweep — axis D was introduced in g3l2 at ratio=1.5 (the additive winner) but no sweep was ever done; try ratio in {1.2, 1.8, 2.0} to bracket the operating point. (B) chop_neutral sweep — axis B at 1.5 ticks/30-tick-window is also single-shot; try {1.0, 2.0}. (C) flow_threshold sweep on axis C — currently 2.0 contracts on 10s; try {1.0, 3.0}. Cross-island signal for gen-4 migration: the afg lineage 5th-axis frontier appears CLOSED for binary AND-SKIP additions at this point in the search — two structurally distinct candidate mechanic classes (signed quote velocity in g4l1, recent-trade-side count in g4l2) both produced null/weak-regression vs g3l2. This is afg-base-conditional — it does NOT generalize to ptg or vrs lineages, which may still have axis-class headroom — but it IS the second island-1-specific 'axis-class is closed' finding (after g3l1's reordering null), and the migration synthesis should flag that further loops on island-1 should pivot from 'add axes' to 'tune existing axes' regardless of which axis class is proposed next."
+    "changed": "PIVOTED from g4l1's inert velocity axis to a recent-trade-side flow gate as the candidate 5th orthogonal SKIP axis on top of the afg-isl-g3l2 4-gate stack (spread + chop + base-flow + size-asymmetry). Started from g3l2 (NOT g4l1) so the velocity axis is cleanly dropped. New gate E: maintains a separate 1.5s rolling deque of trade-side codes (+1 buyer-aggressor / -1 seller-aggressor / 0 NO_AGGRESSOR) with O(1)-amortized prune via running per-side counts (_recent_buy_count, _recent_sell_count). recent_window_seconds=1.5, recent_min_trades=5, recent_dominance_ratio=0.70 \u2014 gate fires when (informative recent trades >= 5) AND (contra-side count / (buy+sell informative count) >= 0.70). Structurally distinct from base flow C along three simultaneous dimensions: window (1.5s vs 10s), aggregation mechanic (count vs net signed volume), threshold style (ratio vs absolute contracts). All four prior gate parameters frozen verbatim from g3l2 (flow_window=10s, flow_threshold=2.0, spread_window=60s, spread_quantile=0.75, min_samples=50, chop_window_ticks=30, chop_neutral=1.5, chop_min_ticks=40, size_asym_ratio=1.5). Composition: binary AND-skip across all five axes; quantity invariant preserved; anti-cascade contract preserved; per-gate counters extended with _skipped_recent_buy and _skipped_recent_sell.",
+    "outcome": "NULL with weak drawdown regression. pnl=4155.50 vs base afg 1255.50 (+231.00%) and vs prior g3l2 4182.00 (-0.63%, INSIDE the pre-stated +/-2% null band); sharpe=17.6835 vs g3l2 17.8049 (-0.121 abs); max_drawdown=-0.015475 vs g3l2 -0.015050 (WIDENED by 0.04pp, violating the pre-stated secondary 'drawdown does not widen' confirmation criterion); trade_count=96283 vs g3l2 96472 (-189, -0.20%) so gate E DID fire materially (vs g4l1's -9 near-zero fires); win_rate=0.36991 vs g3l2 0.37031 (unchanged within rounding); mean_slippage=0.0; is_weighted_bps=0.04422 vs g3l2 0.04406 (essentially unchanged). vs g4l1 (4180.25): pnl -0.59%. Trade slice removed by gate E carried near-zero net EV and a tiny drawdown footprint \u2014 exactly the axis E vs axis C redundancy pattern gen-3 migration warned about.",
+    "hypothesis": "Recent-trade-side flow at (1.5s window, 5 min trades, 0.70 dominance ratio) would extract residual EV-positive signal not captured by base flow C because the two axes differ on three structural dimensions simultaneously (window length, count vs volume aggregation, ratio vs absolute threshold). The hypothesis is FALSIFIED-AS-STATED on the 4-gate-conditioned surviving population: gate E fired meaningfully (189 trades removed, vs g4l1's 9) but the removed slice carried near-zero net EV. Combined with g4l1 (velocity axis null), TWO structurally distinct 5th-axis candidates have now failed to clear the +2% confirmation band \u2014 strong evidence that the afg island's g3l2 4-axis stack is at the empirical ceiling for binary AND-SKIP fifth-axis ADDITIONS on this base, regardless of mechanic class (price-native rate vs trade-derived count, signed vs ratio, quote-derived vs trade-derived).",
+    "next": "RETURN TO OPERATING-POINT RETUNING OF THE EXISTING 4 AXES \u2014 the highest-leverage direction is no longer fifth-axis exploration (two attempts at structurally distinct mechanic classes both failed). All four g3l2 thresholds were set at single-shot defaults at their respective introduction loops and have NEVER been swept; the marginal EV may live in tightening or loosening one existing axis on the 4-gate-conditioned population. RECOMMENDED PRIORITY: (A) size_asym_ratio sweep \u2014 axis D was introduced in g3l2 at ratio=1.5 (the additive winner) but no sweep was ever done; try ratio in {1.2, 1.8, 2.0} to bracket the operating point. (B) chop_neutral sweep \u2014 axis B at 1.5 ticks/30-tick-window is also single-shot; try {1.0, 2.0}. (C) flow_threshold sweep on axis C \u2014 currently 2.0 contracts on 10s; try {1.0, 3.0}. Cross-island signal for gen-4 migration: the afg lineage 5th-axis frontier appears CLOSED for binary AND-SKIP additions at this point in the search \u2014 two structurally distinct candidate mechanic classes (signed quote velocity in g4l1, recent-trade-side count in g4l2) both produced null/weak-regression vs g3l2. This is afg-base-conditional \u2014 it does NOT generalize to ptg or vrs lineages, which may still have axis-class headroom \u2014 but it IS the second island-1-specific 'axis-class is closed' finding (after g3l1's reordering null), and the migration synthesis should flag that further loops on island-1 should pivot from 'add axes' to 'tune existing axes' regardless of which axis class is proposed next."
   },
   "timestamp": "2026-05-24T23:00:21Z"
 }
