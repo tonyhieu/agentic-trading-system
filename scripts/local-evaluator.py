@@ -151,7 +151,45 @@ def download_in_sample_data(num_days: int) -> List[str]:
             continue
 
     if not downloaded_dates:
-        log_error("No in-sample data could be downloaded")
+        log_warning("No direct per-symbol .zst files found under the expected key pattern; attempting to sync and filter DBN partitions...")
+
+        # Try partition sync + filtering path used by the backtest loader
+        try:
+            from scripts.data_retriever import DataRetriever
+            from backtest_engine.dbn_filter import filter_dbn_partition
+
+            # Use DataRetriever to sync the partition directory, then filter to symbol
+            retriever = DataRetriever(S3_BUCKET, AWS_REGION, LOCAL_CACHE_DIR)
+            for date in IN_SAMPLE_DATES[:num_days]:
+                try:
+                    log_info(f"  Syncing partition for {date}...")
+                    retriever.sync_partition("glbx-mdp3-market-data", "v1.0.0", f"date={date}")
+
+                    partition_dir = Path(LOCAL_CACHE_DIR) / "glbx-mdp3-market-data" / "v1.0.0" / "partitions" / f"date={date}"
+                    src = partition_dir / "data.dbn.zst"
+                    if not src.exists():
+                        log_warning(f"    Partition file not found for {date}: {src}")
+                        continue
+
+                    local_file = cache_path / f"{date}_{SYMBOL}.zst"
+                    log_info(f"  Filtering partition to symbol {SYMBOL} -> {local_file}")
+                    try:
+                        kept = filter_dbn_partition(src, local_file, SYMBOL)
+                        log_success(f"    Filtered {date}: kept {kept} records")
+                        downloaded_dates.append(date)
+                    except Exception as e:
+                        log_warning(f"    Filtering failed for {date}: {e}")
+                        continue
+
+                except Exception as e:
+                    log_warning(f"  Sync failed for {date}: {e}")
+                    continue
+
+        except Exception as e:
+            log_error(f"Partition sync path failed: {e}")
+
+    if not downloaded_dates:
+        log_error("No in-sample data could be downloaded or generated from partitions")
         raise RuntimeError("Unable to download in-sample data from S3")
 
     return downloaded_dates
@@ -455,7 +493,27 @@ def main():
     parser.add_argument("num_days", nargs="?", type=int, default=2)
     parser.add_argument("--report-s3-key", dest="report_s3_key", default=None)
     parser.add_argument("--report-s3-bucket", dest="report_s3_bucket", default=None)
+    parser.add_argument("--dry-run", dest="dry_run", action="store_true", default=False,
+                        help="Run a lightweight fake evaluation (no S3) for CI smoke tests")
     args = parser.parse_args()
+
+    # Support a CI-friendly dry-run mode that skips S3/data and returns a minimal
+    # successful evaluation. This is useful for validating CI wiring without
+    # requiring large market-data downloads or Nautilus decoding.
+    if args.dry_run:
+        log_info("Dry-run mode: creating synthetic evaluation report")
+        fake_metrics = {
+            "slippage_bps": {"mean": 1.23, "min": 1.0, "max": 1.5, "count": 1},
+            "execution_time_ms": {"mean": 10.0, "min": 10.0, "max": 10.0, "count": 1},
+            "fill_accuracy_pct": {"mean": 100.0, "min": 100.0, "max": 100.0, "count": 1},
+        }
+        report_path = save_evaluation_report(
+            args.algorithm_name, fake_metrics, ["dry-run"], metadata={"dry_run": True},
+            report_s3_bucket=args.report_s3_bucket, report_s3_key=args.report_s3_key,
+        )
+        log_success(f"Dry-run evaluation saved to: {report_path}")
+        print(json.dumps({"status": "success", "algorithm_name": args.algorithm_name, "report_path": report_path}, indent=2))
+        sys.exit(0)
 
     algorithm_name = args.algorithm_name
     num_days = args.num_days
