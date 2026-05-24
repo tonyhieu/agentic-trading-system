@@ -1,0 +1,30 @@
+{
+  "experiment": "island_experiment",
+  "island_id": "island-1",
+  "base_algo": "aggressor-flow-gate",
+  "generation": 2,
+  "loop_in_generation": 2,
+  "algo_id": "afg-isl-g2l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3439.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 14.44518788948764,
+    "max_drawdown_pct": -0.018674892619367438,
+    "win_rate": 0.3633458177278402,
+    "trade_count": 100125,
+    "vs_base_pnl_pct": 173.95459976105136,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 5400,
+  "context_tokens_estimated": 1350,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Stacked a third orthogonal SKIP gate on top of g2l1's spread+flow composition: island-2 g1l1's choppiness-ratio gate, verbatim parameters (window=30 quote ticks, neutral=1.5, min_ticks=40), converted to a binary hard-skip above the neutral threshold so it composes cleanly with the two existing binary AND-skip gates. Composition rule: skip iff ANY of {spread > rolling-p75, chop_ratio > 1.5, |net_flow| past threshold against trade direction}. Base aggressor-flow gate left untouched; no parameters retuned. Quote-tick callback now feeds both the spread deque and the chop window (rolling mids + incremental path_sum).",
+    "outcome": "pnl=3439.50 vs base 1255.50 (+173.95%) and vs g2l1 2138.00 (+60.87%); sharpe=14.45 vs base 5.59 and vs g2l1 9.86 (+4.58 abs); max_drawdown=-0.0187 vs base -0.0332 and vs g2l1 -0.0230 (tighter on both axes); trade_count=100125 vs base 107198 (-6.60%, well under the 15% over-restrictive falsification line); win_rate=0.3633 vs base 0.3549 (+0.85 pp) and vs g2l1 0.3595 (+0.39 pp); mean_slippage=0.0 on both sides; is_weighted_bps=0.03970 vs base 0.04724 (-15.97%) and vs g2l1 0.04196 (-5.39%). All five pre-stated hypothesis predictions hit; all four falsification criteria cleared.",
+    "hypothesis": "Gen-1 migration's `generalizable` finding said spread-quantile (book-state, island-0 winner) and chop-ratio (price-path, island-2 winner) skip gates target near-orthogonal adverse-microstructure regimes and should compose across bases. g2l1 confirmed the spread+flow pair on this base (+70.29% vs base). This loop tested whether ADDING a third structurally distinct skip axis (chop, the price-path axis) on top of an unmodified spread+flow stack continues to compound, or whether marginal axes are redundant past two. Verdict: CONFIRMED with strong magnitude. The three-gate stack delivered a 1.7x amplification of the spread+flow improvement for an incremental ~5% trade_count cost, with drawdown TIGHTENING further and sharpe rising +4.58 absolute — evidence that the chop-skip set is approximately independent of (spread-skip ∪ flow-skip), i.e. the three axes are genuinely orthogonal on this base.",
+    "next": "Calibrate the chop gate before adding a fourth orthogonal axis. (a) Probabilistic-vs-binary: this loop converted island-2 g1l1's probabilistic chop sizer to a binary hard-skip at chop_neutral=1.5; the probabilistic form may capture more 'almost choppy' windows without paying the full skip cost. (b) Threshold sweep around chop_neutral (1.3, 1.5, 1.7, 2.0) on this base — the optimum is unlikely to be identical to vol-regime-sizer's optimum because the base filter distributions differ. Do NOT add a fourth gate yet: spread+flow+chop already covers book-state, trade-pressure, and price-path, and the remaining structurally distinct microstructure axes (volume-bursts, queue imbalance, time-of-day) are either correlated with one of the three or second-order. Falsification: if a probabilistic chop gate at the same neutral threshold does NOT beat this binary baseline, the binary form is the conservative optimum and the lineage should pivot to a different axis (e.g. queue imbalance) for g3l2. Do not retune the base flow gate; do not modify the spread gate."
+  },
+  "timestamp": "2026-05-24T13:00:26Z"
+}
