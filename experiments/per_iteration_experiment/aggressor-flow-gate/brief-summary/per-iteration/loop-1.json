@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 1,
+  "algo_id": "afg-b-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 453.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 2.0907791868319876,
+    "max_drawdown_pct": -0.04412476834496619,
+    "win_rate": 0.3512707302377495,
+    "trade_count": 101241,
+    "vs_base_pnl_pct": -53.2474,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Replaced the base aggressor-flow-gate's absolute imbalance gate (|net_flow| >= 2.0 over a 10s window) with a volume-normalized ratio gate (r = net_flow / max(abs_vol_window, min_abs_baseline=2.0); gate fires when |r| >= 0.35). Window length, anti-cascade flat-flag semantics, and reduce-only-always-submit semantics preserved exactly.",
+    "outcome": "pnl +948.55% vs simple baseline ($453.50 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 2.09, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -53.25% pnl, +15.4% trade_count (+13,481 trades). Per-date pnl worse on 10 of 11 dates. Hypothesis CONTRADICTED.",
+    "hypothesis": "I expected a volume-normalized ratio gate to be a strict improvement over the base's absolute threshold: same calibration in quiet windows (floor at 2.0 contracts), but better selectivity in busy windows where 2 contracts is statistical noise. The data shows the opposite: in busy windows the absolute gate IS the strict filter (any 2-contract imbalance clears it but most don't matter directionally), while the ratio gate (35% imbalance) is RELAXED in those same windows because the absolute imbalance test is implicitly stricter than 35% imbalance once abs_vol_window is moderate. The base's absolute threshold encodes a 'minimum information per skip decision' floor that the ratio reformulation removes; the +13.5k extra admitted orders are systematically money-losing.",
+    "brief_summary": "afg-b-l1 (aggressor-flow-gate brief-summary loop 1) replaced the base's absolute |net_flow| >= 2.0 gate with a volume-normalized ratio gate (|net_flow / abs_vol_window| >= 0.35, with a 2.0-contract denominator floor). Result: PASS vs simple (+948.55% pnl) but materially WORSE than the base on the same 11 dates (-53.25% pnl, +15.4% trades, worse on 10/11 dates). The ratio gate is RELAXED relative to the absolute gate in busy windows (where the absolute test of 2 contracts is implicitly stricter than 35% of, say, 100 contracts), and the +13,481 extra admitted orders drag pnl by ~$47 per 1k extra trades. Hypothesis contradicted: the absolute threshold is not noisy in busy regimes -- it is, in practice, the binding selectivity floor. The ratio reformulation alone is not viable.",
+    "next": "Try a COMBINED gate -- require BOTH |net_flow| >= 2.0 (preserve the base's busy-window selectivity floor) AND |r| >= 0.35 (add ratio confirmation as a quiet-window denoiser). This should give trade_count slightly below base (extra skips on quiet windows where 2 contracts happens to be ~balanced) and pnl >= base. Alternative direction worth keeping in reserve: tighten the BASE's absolute threshold (e.g., 2 -> 3 contracts) -- the loop-1 data suggests the base under-skips, not over-skips. Avoid: pure-ratio gates; any change that increases admitted-trade count vs the base on this oracle, since the loop-1 data shows extra admits map ~1:1 to pnl destruction (~$47 per 1k extra trades)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-24T08:50:00Z"
+}

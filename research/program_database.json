@@ -208,5 +208,29 @@
         "total": 52752
       }
     }
+  },
+  {
+    "id": "afg-b-l1",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo aggressor-flow-gate by replacing the base's absolute imbalance gate (|net_flow| >= 2.0 over a 10s window) with a volume-normalized ratio gate (r = net_flow / max(abs_vol_window, min_abs_baseline=2.0); fires when |r| >= 0.35). Window length, anti-cascade flat-flag semantics, and reduce-only-always-submit semantics preserved. Intent: improve gate selectivity in busy windows (where 2 absolute contracts is noise) while keeping behavior in quiet windows. Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/afg-b-l1/",
+    "scores": {
+      "sharpe": 2.0907791868319876,
+      "realized_pnl": 453.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 948.5549132947976,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 101241,
+      "passed": true
+    },
+    "notes": "PASS vs simple gate -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed during DBN decode and dropped from BOTH sides by the runner): afg-b-l1 $453.50/101,241 trades vs simple $43.25/111,489 trades; delta_pnl_pct=+948.55 (well above +5.0 PASS gate). Sharpe 2.091. Slippage 0.0/0.0 (no regression; zero fill-cost model, see research/NOTES.md). Win rate 35.13%. Max DD -4.41%. is_weighted_bps 0.053 vs simple 0.673 (delta_is_bps=+24.42, better arrival-mid capture). However, vs base_algo aggressor-flow-gate on the same 11 dates ($970.00/87,760 trades): delta_pnl=-53.25%, trade_count +15.4% (+13,481 trades). Per-date pnl is WORSE than the base on 10 of 11 dates (only 20260308 is marginally +$7; largest drags 20260320 -$118.25 and 20260316 -$108.75). The ratio gate is RELAXED relative to the absolute gate in busy windows (35% imbalance is easier to clear there than the absolute 2-contract test), and the extra admitted orders are systematically money-losing (~$47 pnl drag per 1k extra trades). Hypothesis CONTRADICTED -- the absolute threshold is, in practice, the binding selectivity floor; the ratio reformulation alone is not viable. PASS verdict applies only to the simple baseline gate; vs base_algo refinement comparison (informational here, since this is loop 1 of the arm) is materially worse. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T08:50:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
