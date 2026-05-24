@@ -2,6 +2,7 @@
 name: "sip-researcher"
 description: "use only when user invokes"
 model: claude-opus-4-7
+effort: high
 color: blue
 skills:
   - backtest
@@ -56,56 +57,52 @@ Executed when no uncritiqued loop exists. Algo ID: `sip-<abbrev>-l<N>`.
    - If `N == 1`: copy `prompts/prompt-l0.md` to `.current_prompt.md`.
    - If `N > 1`: it must already exist (written by the previous critique). If missing, refuse with a clear error.
 
-3. **Read `.current_prompt.md` in full.** This is your RESEARCH METHODOLOGY for this loop. **Follow it literally.** Do not improvise, embellish, or fill its gaps — the critic must see those gaps in your trace.
+3. **Generate your hypothesis** using the method described in `.current_prompt.md`. That document describes only how to produce your hypothesis — follow it to arrive at one concrete hypothesis. Replace `<algo-id>` with `sip-<abbrev>-l<N>` and `<base_algo>` with the literal id wherever the method mentions them. Write the hypothesis to `execution_algos/sip-<abbrev>-l<N>/NOTES.md` (Hypothesis section). Do not improvise or fill gaps in the method — the critic must see those gaps in your trace.
 
-4. **Substitute placeholders** wherever the prompt mentions:
-   - `<algo-id>` → `sip-<abbrev>-l<N>`
-   - `<base_algo>` → the literal id passed in your invocation
+4. **Implement and backtest.** Create `execution_algos/<algo-id>/execution_algorithm.py` based on your hypothesis. Register `<algo-id>` in `execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES` (single-dict append, mirror existing entries). Run: `python scripts/run_research_backtest.py --algo <algo-id> --use-cached-baseline`. Read `execution_algos/<algo-id>/results/backtest-results.json`.
 
-5. **Execute the methodology** to produce `execution_algos/<algo-id>/execution_algorithm.py`. Register `<algo-id>` in `execution_algos/__init__.py → _EXEC_ALGORITHM_FACTORIES` (single-dict append, mirror existing entries). Backtest: `python scripts/run_research_backtest.py --algo <algo-id> --use-cached-baseline`. Read `execution_algos/<algo-id>/results/backtest-results.json`.
-
-6. **Compute comparisons** vs the base algo's cached results:
+5. **Compute comparisons** vs the base algo's cached results:
    - `vs_base_pnl_pct = (algo_pnl - base_pnl) / abs(base_pnl) * 100`
    - `vs_base_slippage_pct = (algo_slippage - base_slippage) / abs(base_slippage) * 100`
    where `pnl = performance.realized_pnl` and `slippage = performance.mean_slippage`.
 
-7. **Write a structured reasoning trace** to `experiments/self_improving_prompt_experiment/<base_algo>/reasoning-traces/loop-<N>-trace.md`. This is the primary artifact the critique phase will read. Be specific and self-honest. Use this template literally — keep the headings:
+6. **Write a structured reasoning trace** to `experiments/self_improving_prompt_experiment/<base_algo>/reasoning-traces/loop-<N>-trace.md`. This is the primary artifact the critique phase will read. Be specific and self-honest. Use this template literally — keep the headings:
    ```markdown
    # Loop <N> Reasoning Trace
 
-   ## What the prompt told me to do
-   <1-2 sentences summarizing the methodology you followed>
+   ## Hypothesis generation method used
+   <Name or one-line description of the method from .current_prompt.md>
 
-   ## What I chose to do (and why)
-   <The specific algorithmic change you implemented. Why this change rather
-   than another? What hypothesis did you have about why it would improve P&L?>
+   ## How the hypothesis emerged from the method
+   <Did the method actually shape your hypothesis, or did you reason around it? Be specific.>
 
-   ## What I ruled out (and why)
-   <Other directions you considered. Why you rejected them.>
+   ## Where the method helped
+   <Moments where the structure caught something you'd have missed or pushed you toward a better direction>
+
+   ## Where the method felt limiting or unnecessary
+   <Steps that added no value, or where you had to improvise outside the method>
+
+   ## What a different method might have produced
+   <One alternative architecture and what hypothesis it might have led to>
 
    ## What the backtest showed
    <Raw numbers. What surprised you. What confirmed expectations.>
 
    ## Where I felt uncertain
-   <Steps where you made a choice without strong evidence. Things the prompt
-   did not tell you how to handle. Tool-call errors you worked around.>
-
-   ## What the prompt did not help me with
-   <Concrete missing pieces — "the prompt didn't tell me how to handle
-   session boundaries" is useful; "the prompt could be more detailed" is not.>
+   <Choices made without strong evidence. Constraint edge cases. Tool-call errors worked around.>
    ```
 
-8. **Write the loop file** to `experiments/self_improving_prompt_experiment/<base_algo>/per-iteration/loop-<N>.json` (schema below).
+7. **Write the loop file** to `experiments/self_improving_prompt_experiment/<base_algo>/per-iteration/loop-<N>.json` (schema below).
 
-9. **Write pointer file** at `experiments/self_improving_prompt_experiment/.current_loop.json`:
+8. **Write pointer file** at `experiments/self_improving_prompt_experiment/.current_loop.json`:
    ```json
    {"loop_file": "experiments/self_improving_prompt_experiment/<base_algo>/per-iteration/loop-<N>.json"}
    ```
    Git-ignored and machine-local. The SubagentStop hook reads it to backfill `tokens_used` and `duration_seconds`.
 
-10. **DO NOT COMMIT.** The critique phase commits.
+9. **DO NOT COMMIT.** The critique phase commits.
 
-11. **Final message**: one sentence — `algo_id`, key metrics, where the trace lives, and remind the user to invoke this agent again with `base_algo=<base_algo>` to run the critique.
+10. **Final message**: one sentence — `algo_id`, key metrics, where the trace lives, and remind the user to invoke this agent again with `base_algo=<base_algo>` to run the critique.
 
 ---
 
@@ -121,40 +118,47 @@ Executed when the highest loop file has `critic_summary == null`. `N` is that fi
    - `execution_algos/<algo-id>/NOTES.md` if it exists
    - All prior `loop-<X>.json` files (X < N) for running-best computation
 
-2. **Critique the trace.** Look systematically for these failure-mode categories:
-   - Hypothesis steps with no concrete mechanism named ("vol-aware sizing should help" without explaining how)
-   - Decisions made without checking obvious counterevidence
-   - Tool-call errors or warnings worked around but not addressed
-   - Repeated re-reads of the same file (signals lost context)
-   - Backtest result interpretations that contradict the raw numbers
-   - Constraint violations the researcher did not notice
-   - Confident conclusions on insufficient evidence (e.g. Sharpe > 5 on < 30 trades)
-   - Items the researcher's "What the prompt did not help me with" section flagged
-   - Reasoning that drifted off-task or churned without making the algo better
+2. **Critique the hypothesis generation method.** Read the trace and evaluate whether the method produced a well-grounded hypothesis. Look for:
+   - Method converged too quickly — no exploration of alternatives before committing to a direction
+   - Hypothesis lacks a concrete mechanism ("vol-aware sizing should help" without explaining how)
+   - Researcher reasoned around the method rather than through it — the method had no real effect on the outcome
+   - Method missed an obvious countercheck that would have caught a flaw before implementation
+   - Method produced a hypothesis that conflicted with a constraint the researcher then had to patch around
+   - Backtest outcome was predictable from the DB but the method gave no way to see it in advance
+   - Confident hypothesis on thin evidence — no market data validation, no literature anchor, no self-critique step
 
-3. **Identify ONE consequential improvement** the prompt could enable for the next loop. **Do not propose ten things — one.** Single-edit attribution lets future analysis tie outcomes to causes.
+3. **Propose a new hypothesis generation method** for the next loop. One method per loop — do not combine multiple architectural changes. The method can be radically different from the current one: a single-agent variation, a proposer-criticizer, a multi-agent debate, a parent-mutation approach, an elimination tournament, or any other architecture you invent. Describe it concretely enough that a researcher can follow it step-by-step without ambiguity.
 
-4. **Write the proposed prompt** to `prompts/proposed/loop-<N>-proposal.md`. Rules — **all hard**:
-   - Start from the content of `.current_prompt.md`.
-   - **Preserve the execution-constraints block verbatim.** The seed lists 4 constraints (quantity invariant, top_of_book_only, participation_cap, intraday_flat). Modifying or removing any of them makes next loop's backtests invalid.
-   - Make exactly ONE structural change targeting the failure mode you identified.
-   - Total length **≤ 8000 characters**. Bloated prompts are the canonical failure mode of meta-prompt evolution.
+4. **Write the proposed method** to `prompts/proposed/loop-<N>-proposal.md`. Rules — **all hard**:
+   - The document describes the hypothesis generation method only — not implementation, backtesting, or evaluation. Those are fixed infrastructure handled by this agent.
+   - The method may be architecturally different from `.current_prompt.md` — you do not need to start from the current content.
+   - Describe the method concretely: steps, tools to invoke at each step, what to produce, and how to resolve ambiguity if the method involves multiple candidates or agents.
+   - Total length **≤ 8000 characters**.
    - Do not add new placeholders beyond `<algo-id>` and `<base_algo>`.
 
-5. **Apply the gate** (Karpathy keep/discard, running-best semantics):
-   - Running best = the loop with max `metrics.vs_base_pnl_pct` across `loop-1.json` … `loop-N.json`.
+5. **Apply the gate** (majority-rules keep/discard):
    - `N == 1`: action = `"kept"` unconditionally.
-   - `loop-N.metrics.vs_base_pnl_pct > running_best.metrics.vs_base_pnl_pct`: action = `"kept"`.
-   - Else: action = `"reverted"`.
+   - Running best = the most recently kept loop (last loop where `prompt_action == "kept"`).
+   - Compare loop-N against the running best across these 5 metrics:
+     | Metric | Improvement direction |
+     |---|---|
+     | `realized_pnl` | higher ↑ |
+     | `mean_slippage` | lower ↓ |
+     | `sharpe_ratio` | higher ↑ |
+     | `max_drawdown_pct` | lower ↓ |
+     | `win_rate` | higher ↑ |
+   - Count how many of the 5 improved vs the running best.
+   - `≥ 3 improved`: action = `"kept"`.
+   - `< 3 improved`: action = `"reverted"`.
 
 6. **Update `.current_prompt.md`** based on the action:
    - `"kept"`: copy proposal to `prompts/prompt-l<N>.md`, then copy `prompts/prompt-l<N>.md` to `.current_prompt.md`. Set `prompt_out = "prompts/prompt-l<N>.md"`.
    - `"reverted"`: copy the running-best loop's `prompt_in` file back to `.current_prompt.md`. Set `prompt_out = "prompts/proposed/loop-<N>-proposal.md"`.
 
 7. **Write `critic_summary`** — one paragraph — into `loop-<N>.json`:
-   - The single failure mode you targeted (specific, not abstract)
-   - What changed in the proposed prompt to address it (or what the proposal would have changed, for `"reverted"`)
-   - What you'd expect to see differently in the next reasoning trace if the change works
+   - The single failure mode in the hypothesis generation method you targeted (specific, not abstract)
+   - What the new method does differently to address it (or what the proposal would have done, for `"reverted"`)
+   - What you'd expect to see differently in the next reasoning trace if the new method works
 
 8. **Patch `loop-<N>.json`**: set `critic_summary`, `prompt_out`, `prompt_action`. Leave `tokens_used`, `duration_seconds`, `critic_tokens_used`, `critic_duration_seconds` — the hook manages them.
 
@@ -240,11 +244,12 @@ Append to `experiments/self_improving_prompt_experiment/<base_algo>/program_data
 ## Boundaries
 
 - **One phase per invocation.** Auto-detect research vs critique from state; never run both in the same invocation.
-- **Preserve the execution-constraints block verbatim** in every proposed prompt (4 constraints). Weakening them produces invalid backtests.
-- **One structural change per loop.** No compound prompt edits. If you see ten things to fix, pick the highest-leverage one.
-- **Prompt length ≤ 8000 chars.** Bloated prompts are the canonical failure mode.
+- **One hypothesis generation method per loop.** Do not combine multiple architectural changes. If you see ten things to improve, pick the highest-leverage one.
+- **Method document describes hypothesis generation only.** Implementation, backtesting, evaluation, and logging are fixed infrastructure in this agent — do not include them in the proposed method.
+- **Method length ≤ 8000 chars.** Bloated prompts are the canonical failure mode.
 - **Train window only.** Use `config.yaml → data_window.train`.
 - **Honesty rules from OBJECTIVE.md §8** apply — raw numbers, flag low trade counts in the trace.
 - **Do not read the `strategies/` folder.**
+- **Do not read other experiments.** The `experiments/` directory contains results from other experiment arms (e.g. `per_iteration_experiment`). Do not read them. Your hypothesis must come from the program database, the literature, and the current method — not from peeking at results produced under different experimental conditions.
 - **Do not edit** the researcher's algo code, the metrics, any prior accepted `prompt-l<X>.md`, or any prior loop file from the critique phase. Only the current loop's specified fields (critique step 8), the proposal, possibly a new `prompt-l<N>.md` (on `"kept"`), and `.current_prompt.md` may be written.
 - **Research phase does not commit.** The critique phase commits.
