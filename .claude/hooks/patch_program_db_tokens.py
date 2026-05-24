@@ -89,7 +89,7 @@ def _find_researcher_transcript(main_transcript: Path) -> Path | None:
             meta = json.loads(meta_path.read_text())
         except (OSError, json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher"):
+        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher", "pc-researcher"):
             continue
         try:
             mtime = jsonl.stat().st_mtime
@@ -286,12 +286,16 @@ def main() -> None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Path 2: experiment loop file (per_iteration_experiment agent).
+    # Path 2: experiment loop file (per_iteration_experiment or pc-researcher agent).
     # Triggered by a git-ignored pointer file the agent writes before committing.
     loop_file: Path | None = None
     loop_file_rel: str | None = None
-    pointer_path = Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json"
-    if pointer_path.exists():
+    _pointer_candidates = [
+        Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json",
+        Path(cwd) / "experiments" / "proposer_criticizer_experiment" / ".current_loop.json",
+    ]
+    pointer_path = next((p for p in _pointer_candidates if p.exists()), None)
+    if pointer_path is not None:
         try:
             pointer = json.loads(pointer_path.read_text())
             rel = pointer.get("loop_file")
@@ -363,8 +367,12 @@ def main() -> None:
         db_path.write_text(json.dumps(db, indent=2) + "\n")
         algo_id = str(last.get("id") or "unknown")
     elif loop_file_rel is not None:
-        # Derive a label for the commit message from the loop file path.
-        algo_id = Path(loop_file_rel).parent.parent.name  # <mode> dir name
+        # Prefer algo_id from the loop file itself; fall back to path-derived label.
+        try:
+            _ldata = json.loads((Path(cwd) / loop_file_rel).read_text())
+            algo_id = str(_ldata.get("algo_id") or Path(loop_file_rel).parent.parent.name)
+        except (OSError, json.JSONDecodeError, KeyError):
+            algo_id = Path(loop_file_rel).parent.parent.name
 
     # Advance the cursor only after a real backfill consumed this slice, and
     # before the git steps so a commit/push failure cannot lose the progress.
