@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-2",
+  "base_algo":           "vol-regime-sizer",
+  "generation":          3,
+  "loop_in_generation":  1,
+  "algo_id":             "vrs-isl-g3l1",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         2040.0,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         15.897192803684781,
+    "max_drawdown_pct":     -0.012174933037868292,
+    "win_rate":             0.35059937072574565,
+    "trade_count":          76914,
+    "vs_base_pnl_pct":      170.6468305675074,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Retuned the aggressor-flow SKIP gate's operating point on top of vrs-isl-g2l2's chop+spread+flow stack: flow_threshold 2.0→6.0 contracts, flow_window_seconds 10.0→4.0; all other parameters (chop, spread, OR-skip composition, reduce-only bypass) held identical to g2l2 for a clean retune-only ablation.",
+    "outcome":    "pnl 2040.00 (+170.65% vs base vol-regime-sizer 753.75; -16.32% vs g2l1 best 2437.75 — STILL A REGRESSION vs the chop+spread two-gate; +19.89% vs prior g2l2 1701.5 — partial recovery), sharpe 15.90 (vs 16.95 g2l1, 15.25 g2l2, 3.06 base), max_dd -1.22% (vs -1.48% g2l1, -0.70% g2l2), trade_count 76,914 (-26.53% vs g2l1, +25.23% vs g2l2 — still well outside the 94k–100k+ band declared in NOTES as the PASS bar), is_weighted_bps 0.0404 (vs 0.0311 g2l1, 0.0459 g2l2 — retune did NOT recover g2l1's surviving-trade execution quality).",
+    "hypothesis": "PARTIAL outcome against pre-declared falsification thresholds, but the *interpretive* verdict is FAILURE of the operating-point hypothesis. A 3× threshold and 2.5× window retune (midpoints of the cited bands) closed only ~14 of the 30 percentage points g2l2 lost versus g2l1, and survivor trade quality (is_weighted_bps) worsened relative to g2l1 instead of improving. The mechanical reading is that the flow axis is substantially REDUNDANT with chop+spread on the vrs base — wide-spread bursts and high-aggressor-flow events overlap heavily on MES, so adding a flow gate on top of an already-aggressive chop+spread stack removes informative trades faster than adverse ones. This falsifies the gen-2 migration's 'retune the operating point on port' prescription FOR THIS SPECIFIC PORT (afg flow → vrs chop+spread base); it does not falsify the migration's general guidance, only confirms the gen-2 base_specific #3 forecast that vrs's flow redundancy is mechanical, not parametric.",
+    "next":       "Pivot to option (b) from g2l2's next-list: implement a top-of-book size-asymmetry SKIP gate (bid_size vs ask_size ratio over a short rolling window, side-aware) on top of g2l1's chop+spread two-gate. This axis reads BOOK STATE, structurally different from the trade-tape pressure axis that flow reads, so its redundancy with chop+spread is not pre-determined by the same correlation chain that defeated flow here. Implementation should start from vrs-isl-g2l1/execution_algorithm.py (NOT g2l2 or g3l1 — their flow gates are the falsified mechanism) and add the size-asymmetry gate with conservative defaults (ratio threshold ~2.0–3.0, window 5–10s, OR-skip composition consistent with the other gates). Fallback for g4 if (b) also regresses below g2l1: declare g2l1 the durable island-2 lineage tip and turn to a sizing-side change rather than a fourth gate (e.g., participation cap or per-tier max-orders cap differentiation), since three independent skip-gate attempts will have established that gate-stacking yields diminishing returns past chop+spread on vrs. Also: surface per-skip-combination co-occurrence counters from per-date stdout for g3l2's NOTES to formally distinguish redundancy vs mis-tuning — still missing as of this loop and called out by gen-1 migration generalizable (3)."
+  },
+  "timestamp": "2026-05-24T16:30:00Z"
+}

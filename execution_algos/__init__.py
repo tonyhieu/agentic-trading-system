@@ -149,6 +149,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vrs-isl-g2l2",
         "get_execution_algorithm",
     ),
+    "vrs-isl-g3l1": (
+        "execution_algos.vrs-isl-g3l1",
+        "get_execution_algorithm",
+    ),
 }
 
 
