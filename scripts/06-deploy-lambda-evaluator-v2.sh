@@ -272,7 +272,6 @@ def run_backtest_for_day(algorithm_dir, algorithm_name, date, symbol="MESM6"):
         os.environ["DATA_CACHE_DIR"] = DATA_CACHE_DIR
         os.environ["S3_BUCKET_NAME"] = S3_BUCKET
         os.environ["AWS_REGION"] = AWS_REGION
-        os.environ["TICK_SUBSAMPLE_RATE"] = "10"  # Keep every 10th tick to reduce memory footprint in Lambda
         
         # Import backtest engine
         from backtest_engine.backtest_low_level import run_backtest
