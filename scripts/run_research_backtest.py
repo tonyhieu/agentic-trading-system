@@ -51,7 +51,10 @@ import json
 import math
 import os
 import random
-import resource
+try:
+    import resource  # POSIX only — not available on Windows
+except ImportError:
+    resource = None  # type: ignore[assignment]
 import subprocess
 import sys
 import time
@@ -125,6 +128,16 @@ def _apply_memory_cap() -> None:
         )
         return
     if cap_gb <= 0:
+        return
+    if resource is None:
+        # Windows: no setrlimit equivalent reachable from std-lib here.
+        # Memory cap is best-effort; failure mode is identical to other
+        # platforms where setrlimit refuses (we log a warning and continue).
+        print(
+            f"WARN: RLIMIT_AS unavailable on this platform; "
+            f"continuing without {cap_gb} GB cap",
+            file=sys.stderr,
+        )
         return
     cap_bytes = int(cap_gb * 1024 * 1024 * 1024)
     try:
