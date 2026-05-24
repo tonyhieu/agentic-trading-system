@@ -1,30 +1,36 @@
 {
-  "experiment":          "island_experiment",
-  "island_id":           "island-2",
-  "base_algo":           "vol-regime-sizer",
-  "generation":          4,
-  "loop_in_generation":  1,
-  "algo_id":             "vrs-isl-g4l1",
-  "status":              "completed",
+  "experiment": "island_experiment",
+  "island_id": "island-2",
+  "base_algo": "vol-regime-sizer",
+  "generation": 4,
+  "loop_in_generation": 1,
+  "algo_id": "vrs-isl-g4l1",
+  "status": "completed",
   "metrics": {
-    "realized_pnl":         4454.5,
-    "mean_slippage":        0.0,
-    "sharpe_ratio":         19.663796741110065,
-    "max_drawdown_pct":     -0.003924911689486986,
-    "win_rate":             0.3833300029973024,
-    "trade_count":          80072,
-    "vs_base_pnl_pct":      490.97844113560674,
+    "realized_pnl": 4454.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 19.663796741110065,
+    "max_drawdown_pct": -0.003924911689486986,
+    "win_rate": 0.3833300029973024,
+    "trade_count": 80072,
+    "vs_base_pnl_pct": 490.9784411356067,
     "vs_base_slippage_pct": 0.0
   },
-  "context_chars_in":        36826,
+  "context_chars_in": 36826,
   "context_tokens_estimated": 9206,
-  "tokens_used":     null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1203,
+    "cache_creation": 194,
+    "cache_read": 52112,
+    "total": 53510
+  },
+  "duration_seconds": 234.6,
   "summary_out": {
     "changed": "Single-knob retune of the top-of-book size-asymmetry threshold on vrs-isl-g3l2's chop+spread+size-asym three-gate stack: size_asym_ratio loosened from 1.5 -> 2.0 (gate now skips only when contra-side depth is >= 2.0x this side, instead of >= 1.5x). All other parameters frozen verbatim from g3l2 (probabilistic chop window_ticks=30/chop_neutral=1.5/sensitivity=1.0, rolling-spread-quantile 60s/q=0.75/min_samples=50, latest-quote-only side-aware contract, AND-skip-on-submit, reduce-only bypass, instrumentation).",
-    "outcome": "pnl 4454.50 (+490.98% vs vol-regime-sizer base 753.75; -5.04% vs lineage parent g3l2 4690.75 — REGRESSION inside the pre-declared >2% regression band; -5.84% from the g3l2 PnL high), sharpe 19.66 (+0.554 vs g3l2; essentially flat), max_dd -0.39% (unchanged from g3l2 -0.40%), win_rate 0.3833 (-0.57pp vs g3l2 0.3890), trade_count 80,072 (+6.60% vs g3l2 75,115; loosening admitted 4957 additional orders), is_weighted_bps 0.0550 (-5.89% vs g3l2 0.0585 — the predicted bps narrowing did materialize on surviving orders, but did not translate into PnL because the [1.5, 2.0] band trades carry net-negative EV). Hypothesis option (a) FALSIFIED: 1.5 was on or near the size-asym EV peak, not over-restrictive as the gen-3 migration's base_specific (3) reading suggested.",
-    "hypothesis": "vrs's chop+spread two-gate base has substantial headroom (per the gen-3 migration base_specific (3) finding), and the 1.5 size-asymmetry threshold was ported from a four-gate composition with less headroom — so the marginal gate fires harder on vrs and 1.5 is likely over-restrictive here. Loosening to 2.0 (top of the recommended [1.25, 2.0] band) should give back trade count and bps quality while preserving most of the PnL gain, because [1.5, 2.0]-band trades sit closer to the body of the depth-asymmetry distribution than to the tail.",
-    "next": "Two strong primary candidates for g4l2 on island-2, in priority order. (a) PRIMARY: tighten size_asym_ratio to 1.25 — the OPPOSITE direction from g4l1. The regression at 2.0 combined with the bps-narrowing-without-PnL-gain pattern indicates 1.5 sits near the EV peak; the more informative falsification is now on the tight flank. A regression at 1.25 confirms 1.5 is a peak; a confirmation at 1.25 reveals the peak is actually tighter and g3l2 itself was loose. Either outcome maps the local EV curvature with the highest information per loop. (b) SECONDARY: add a 4th orthogonal axis with a CALIBRATED-not-ported threshold — specifically a flow gate with a stricter threshold than g3l1's 6/4s (which failed on vrs); recommended z >= 9 or 10 imbalance over 4s. The gen-3 migration's generalizable (2) noted weak-threshold flow gates tend to fail, but a high-z flow threshold is structurally distant from chop/spread/size-asym and remains untested on vrs. Island-1 g4l1 just demonstrated that adding orthogonal axes on top of heavy stacks tends to inert at thresholds ported from other islands (null result on velocity), so any 4th-axis attempt needs a calibrated rather than ported threshold. AVOID: 1.75 (the migration-suggested next-after-regression value) — it bisects [1.5, 2.0] and likely produces a noisy near-null with low information; tightening to 1.25 gives a wider sweep of the ratio axis with the same number of loops. DO: surface co-skip counters from g4l1 stdout for the bps-vs-PnL diagnostic — if size-asym is firing alone (not stacked with chop/spread), the marginal trades it admits are exactly the high-cost wide-spread / heavy-chop slice that the other two gates would have caught anyway, which would explain why loosening is net negative."
+    "outcome": "pnl 4454.50 (+490.98% vs vol-regime-sizer base 753.75; -5.04% vs lineage parent g3l2 4690.75 \u2014 REGRESSION inside the pre-declared >2% regression band; -5.84% from the g3l2 PnL high), sharpe 19.66 (+0.554 vs g3l2; essentially flat), max_dd -0.39% (unchanged from g3l2 -0.40%), win_rate 0.3833 (-0.57pp vs g3l2 0.3890), trade_count 80,072 (+6.60% vs g3l2 75,115; loosening admitted 4957 additional orders), is_weighted_bps 0.0550 (-5.89% vs g3l2 0.0585 \u2014 the predicted bps narrowing did materialize on surviving orders, but did not translate into PnL because the [1.5, 2.0] band trades carry net-negative EV). Hypothesis option (a) FALSIFIED: 1.5 was on or near the size-asym EV peak, not over-restrictive as the gen-3 migration's base_specific (3) reading suggested.",
+    "hypothesis": "vrs's chop+spread two-gate base has substantial headroom (per the gen-3 migration base_specific (3) finding), and the 1.5 size-asymmetry threshold was ported from a four-gate composition with less headroom \u2014 so the marginal gate fires harder on vrs and 1.5 is likely over-restrictive here. Loosening to 2.0 (top of the recommended [1.25, 2.0] band) should give back trade count and bps quality while preserving most of the PnL gain, because [1.5, 2.0]-band trades sit closer to the body of the depth-asymmetry distribution than to the tail.",
+    "next": "Two strong primary candidates for g4l2 on island-2, in priority order. (a) PRIMARY: tighten size_asym_ratio to 1.25 \u2014 the OPPOSITE direction from g4l1. The regression at 2.0 combined with the bps-narrowing-without-PnL-gain pattern indicates 1.5 sits near the EV peak; the more informative falsification is now on the tight flank. A regression at 1.25 confirms 1.5 is a peak; a confirmation at 1.25 reveals the peak is actually tighter and g3l2 itself was loose. Either outcome maps the local EV curvature with the highest information per loop. (b) SECONDARY: add a 4th orthogonal axis with a CALIBRATED-not-ported threshold \u2014 specifically a flow gate with a stricter threshold than g3l1's 6/4s (which failed on vrs); recommended z >= 9 or 10 imbalance over 4s. The gen-3 migration's generalizable (2) noted weak-threshold flow gates tend to fail, but a high-z flow threshold is structurally distant from chop/spread/size-asym and remains untested on vrs. Island-1 g4l1 just demonstrated that adding orthogonal axes on top of heavy stacks tends to inert at thresholds ported from other islands (null result on velocity), so any 4th-axis attempt needs a calibrated rather than ported threshold. AVOID: 1.75 (the migration-suggested next-after-regression value) \u2014 it bisects [1.5, 2.0] and likely produces a noisy near-null with low information; tightening to 1.25 gives a wider sweep of the ratio axis with the same number of loops. DO: surface co-skip counters from g4l1 stdout for the bps-vs-PnL diagnostic \u2014 if size-asym is firing alone (not stacked with chop/spread), the marginal trades it admits are exactly the high-cost wide-spread / heavy-chop slice that the other two gates would have caught anyway, which would explain why loosening is net negative."
   },
   "timestamp": "2026-05-24T21:30:00Z"
 }
