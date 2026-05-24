@@ -17,8 +17,14 @@
   },
   "context_chars_in": 0,
   "context_tokens_estimated": 0,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 184,
+    "cache_creation": 1218,
+    "cache_read": 50773,
+    "total": 52176
+  },
+  "duration_seconds": 213.5,
   "summary_out": {
     "changed": "Added a 5-second position-age override to the base position-tier-gate: when the cap is hit by a reversal OPEN, allow it through if the currently held position is at least 5s old; otherwise preserve the base's blanket skip. Reduce-only orders always submit.",
     "outcome": "pnl +1932.95% vs simple baseline ($879.25 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 4.30, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo position-tier-gate on the same 11 dates ($3,564.25 / 73,802 trades): -75.33% pnl, +13.25% trade_count -- the age override admits ~9.8k extra reversal opens that are systematically money-losing across all 11 dates. Hypothesis CONTRADICTED.",
