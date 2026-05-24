@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "metrics-only",
+  "loop": 4,
+  "algo_id": "vrs-m-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1021.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.447181864172553,
+    "max_drawdown_pct": -0.036224809819748446,
+    "win_rate": 0.35439183436338684,
+    "trade_count": 99833,
+    "vs_base_pnl_pct": 76.2295,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 239,
+  "context_tokens_estimated": 59,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": null,
+  "timestamp": "2026-05-24T19:11:28Z"
+}

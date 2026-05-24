@@ -58,5 +58,29 @@
         "total": 97714
       }
     }
+  },
+  {
+    "id": "vrs-m-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 4 \u2014 built on vrs-m-l3 by tightening the vol-regime probability filter one more notch (sensitivity 5.0 -> 6.0). Metrics-only context across prior three loops (l1=+24.2%, l2=+41.7%, l3=+51.0% vs base_algo) showed monotonic but decelerating PnL improvement with no slippage regression; the hypothesis tests whether one more single-step tightening continues the convex region or turns it over.",
+    "algorithm_path": "execution_algos/vrs-m-l4/",
+    "scores": {
+      "sharpe": 4.4472,
+      "realized_pnl": 1021.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2261.2717,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99833,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l4 $1021.25/99833 trades vs simple $43.25/132,228 trades; delta_pnl=+2261.27%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.45 (vs base_algo 4.70 on its own 12 dates). Vs base_algo vol-regime-sizer on the matched 11 dates ($579.50): delta_pnl=+76.23%, trade_count -19.1% (-23,624). Refinement of vrs-m-l3 (sensitivity 5.0 -> 6.0). Mechanical step-curve on matched 11-date basis: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2%. PnL still rising but Sharpe trend inverted for first time (4.70 -> 4.45). Per_iteration_experiment loop \u2014 NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T19:11:28Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
