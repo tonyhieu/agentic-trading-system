@@ -153,7 +153,7 @@
     "id": "vrs-m-l7",
     "status": "pass",
     "baseline": "simple",
-    "hypothesis": "per_iteration_experiment / metrics-only / loop 7 — built on vrs-m-l6 by probing the OTHER side of the apparent local maximum: min_prob 0.20 -> 0.07 (between L4's 0.05 and L5's 0.10), holding sensitivity=6.0. Metrics-only context across prior six loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% with L5 the apparent apex; L7 tests the rising flank to refine the peak's location.",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 7 \u2014 built on vrs-m-l6 by probing the OTHER side of the apparent local maximum: min_prob 0.20 -> 0.07 (between L4's 0.05 and L5's 0.10), holding sensitivity=6.0. Metrics-only context across prior six loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% with L5 the apparent apex; L7 tests the rising flank to refine the peak's location.",
     "algorithm_path": "execution_algos/vrs-m-l7/",
     "scores": {
       "sharpe": 4.3858,
@@ -169,8 +169,14 @@
     "strategy_kwargs_hash": "sha256:35e971933feb",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 315.5,
+      "tokens_used": {
+        "input": 1,
+        "output": 20,
+        "cache_creation": 482,
+        "cache_read": 71466,
+        "total": 71969
+      }
     }
   }
 ]
