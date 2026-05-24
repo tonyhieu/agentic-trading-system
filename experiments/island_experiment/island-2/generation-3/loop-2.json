@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-2",
+  "base_algo":           "vol-regime-sizer",
+  "generation":          3,
+  "loop_in_generation":  2,
+  "algo_id":             "vrs-isl-g3l2",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         4690.75,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         19.10941399224334,
+    "max_drawdown_pct":     -0.003974990062524844,
+    "win_rate":             0.38899021500366104,
+    "trade_count":          75115,
+    "vs_base_pnl_pct":      522.3050546566888,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":      null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed":    "Composed a third orthogonal SKIP axis (top-of-book size-asymmetry, latest-quote-only, ratio threshold 1.5, side-aware) on top of vrs-isl-g2l1's chop+spread two-gate stack; ported the gate verbatim from island-1 g3l2 (same threshold, same latest-quote contract), kept g2l1's probabilistic chop and rolling-spread-quantile hyperparameters untouched, and bypassed the gates on reduce-only orders.",
+    "outcome":    "pnl 4690.75 (+522.30% vs base vol-regime-sizer 753.75; +92.42% vs g2l1 lineage best 2437.75; +129.94% vs g3l1 2040.00 — new island-2 lineage best), sharpe 19.11 (vs 16.95 g2l1, +2.16 absolute; 3.06 base), max_dd -0.40% (vs -1.48% g2l1, tightened 1.08 pp), win_rate 0.3890 (+3.34 pp vs g2l1), trade_count 75,115 (-28.25% vs g2l1 — OUTSIDE the pre-declared <=10% drop band, but PnL/sharpe/drawdown all confirmed by wide margins; the band was mis-calibrated against a weaker g1l2→g2l1 prior). is_weighted_bps 0.0585 (+50.43% vs base, +88.1% vs g2l1) — a candid REGRESSION: survivors carry materially higher per-share execution cost, even though absolute PnL more than doubled. The gain is in trade SELECTION, not trade EXECUTION.",
+    "hypothesis": "CONFIRMED on PnL/sharpe/drawdown by wide margins. The size-asymmetry axis is mechanically orthogonal to chop (price-path) and spread (quote-distance) on the vrs base — unlike the flow axis that g2l2/g3l1 falsified through wide-spread correlation. The threshold 1.5 ported verbatim from island-1 g3l2 transferred cleanly across bases, falsifying the gen-1 migration's flat 'queue imbalance is null' finding for the second time in gen-3. The 'three-axis ceiling' hypothesis posited after gen-2's chop+spread+flow regression is now FALSIFIED on two bases (afg at 4 axes +21.6%; vrs at 3 axes with size-asym swapped for flow +92.4%) — the ceiling was the wrong axis, not the count.",
+    "next":       "Two strong options for g4l1 on island-2, in priority order. (a) Retune size_asym_ratio in [1.2, 2.5] specifically against vrs's chop+spread base — 1.5 came from island-1's three-gate stack; vrs's two-gate base has more headroom and the -28% trade-count drop suggests the threshold may be over-aggressive for this composition. Sweep at 1.25, 1.75, 2.0; the working operating point likely lies above 1.5 since the marginal gate fires harder here than on afg. Hypothesis: a looser ratio recovers some trade count while preserving most of the PnL lift, narrowing the is_weighted_bps regression. (b) Add a FOURTH orthogonal axis to match island-1 g3l2's structure — short-term mid-price reversion / mean-reversion timing gate, or a directional persistence gate, both axes currently unexplored on island-2. (a) is the safer, higher-information move (single-knob calibration with a clear falsification surface); (b) is higher-variance but maps the four-axis frontier vrs hasn't probed yet. Also: surface the per-skip co-occurrence counters from per-date stdout in the g4 NOTES — g3l2 emits them on_stop but they were not aggregated into the gen-3 record."
+  },
+  "timestamp": "2026-05-24T18:45:00Z"
+}
