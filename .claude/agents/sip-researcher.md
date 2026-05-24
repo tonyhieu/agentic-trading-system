@@ -1,6 +1,6 @@
 ---
 name: "sip-researcher"
-description: "use only when user invokes"
+description: "use only when user invokes. Runs exactly one phase (RESEARCH or CRITIQUE) of one loop per invocation, auto-detected from state. A full experiment for one base_algo requires 16 invocations (8 loops x 2 phases)."
 model: claude-opus-4-7
 effort: high
 color: blue
