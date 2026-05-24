@@ -101,10 +101,6 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-isl-g1l2",
         "get_execution_algorithm",
     ),
-    "ptg-isl-g1l3": (
-        "execution_algos.ptg-isl-g1l3",
-        "get_execution_algorithm",
-    ),
     "afg-isl-g1l1": (
         "execution_algos.afg-isl-g1l1",
         "get_execution_algorithm",
@@ -113,20 +109,12 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.afg-isl-g1l2",
         "get_execution_algorithm",
     ),
-    "afg-isl-g1l3": (
-        "execution_algos.afg-isl-g1l3",
-        "get_execution_algorithm",
-    ),
     "vrs-isl-g1l1": (
         "execution_algos.vrs-isl-g1l1",
         "get_execution_algorithm",
     ),
     "vrs-isl-g1l2": (
         "execution_algos.vrs-isl-g1l2",
-        "get_execution_algorithm",
-    ),
-    "vrs-isl-g1l3": (
-        "execution_algos.vrs-isl-g1l3",
         "get_execution_algorithm",
     ),
 }
