@@ -1,0 +1,30 @@
+{
+  "experiment": "island_experiment",
+  "island_id": "island-2",
+  "base_algo": "vol-regime-sizer",
+  "generation": 2,
+  "loop_in_generation": 2,
+  "algo_id": "vrs-isl-g2l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1701.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 15.246218662936329,
+    "max_drawdown_pct": -0.006999923000846991,
+    "win_rate": 0.3546354488912045,
+    "trade_count": 61418,
+    "vs_base_pnl_pct": 125.73815738985715,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Stacked a third orthogonal SKIP gate (aggressor-flow-gate, 10s window, 2-contract net-flow threshold, side-aware) on top of vrs-isl-g2l1's chop+spread composition, ported verbatim from aggressor-flow-gate/execution_algorithm.py with no parameter retuning.",
+    "outcome": "pnl 1701.50 (+125.74% vs base vol-regime-sizer 753.75; -30.21% vs prior g2l1 2437.75 — REGRESSION), slippage 0.0% (axis uninformative on both sides), sharpe 15.25 (vs 16.95 g2l1, 3.06 base), max_dd -0.70% (vs -1.48% g2l1, ~53% tighter), trade_count 61418 (-41.3% vs g2l1, far past the ~15% falsification line declared in NOTES.md), is_weighted_bps 0.0459 (+47% vs g2l1 — surviving trades are not even higher-quality on execution-cost).",
+    "hypothesis": "FALSIFIED at default parameters. The 'third orthogonal skip gate adds super-linear PnL' hypothesis was disconfirmed for the canonical aggressor-flow-gate parameters: stacking did not improve on chop+spread — it destroyed ~30% of the g2l1 PnL gain. Failure mechanism mirrors island-0's g2l2 chop misfire: gate parameters tuned for one base (aggressor-flow-gate as a standalone gate) do not transfer cleanly when composed onto a different base (vol-regime-sizer already pre-filtered by chop+spread). The 2-contract / 10s threshold is too sensitive for MES tick cadence stacked on an already-aggressive composed pair; the flow axis also appears partly redundant with chop+spread (wide-spread bursts correlate with directional aggressor pressure), so the union of the three gates was larger than the orthogonality hypothesis assumed.",
+    "next": "Two viable g3 directions, in order of expected leverage. (1) RETUNE flow threshold only: raise flow_threshold to 5.0-8.0 contracts and/or shorten flow_window_seconds to 3-5s so the gate fires only on genuine pressure spikes, not ordinary directional drift. This is the parameter-side fix to the verbatim-port failure that island-0 g2l2 documented (chop ported vrs→ptg lost; here flow ported afg→vrs lost — same shape, mechanism generalizable but parameters base-specific). (2) If retuned flow still regresses, the verdict is 'flow axis is fundamentally redundant on vrs base' — pivot to a structurally different third axis: top-of-book size asymmetry (bid_size vs ask_size ratio), which was the alternative explicitly named in the gen-1 migration alongside flow imbalance and remains untested. Recommended g3l1: option (1); g3l2: option (2) if g3l1 regresses. Also: extract per-skip-combination instrumentation counters from per-date stdout into structured analysis before g3 — the redundancy-vs-wrong-threshold question cannot be settled empirically without them, and both hypotheses currently fit the data."
+  },
+  "timestamp": "2026-05-24T13:50:00Z"
+}
