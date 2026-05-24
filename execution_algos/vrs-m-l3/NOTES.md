@@ -40,3 +40,25 @@ mechanically.
 ## Backtest Observations
 
 sensitivity=5.0 over-filters. pnl collapsed from 1068.25 (l2) to 505.5 (-32.9% vs base). trade_count dropped from 124497 to 43263 (-65%), indicating the gate is now too aggressive — the excluded trades contain genuine edge. The anomalously high sharpe=65.6 reflects very few losing days in a low-activity regime, not a quality signal. Sensitivity lever is over-extended at 5.0; the optimum is between 4.0 (l2 best) and 5.0.
+
+### Correction — full 12-date train aggregate
+
+The numbers above were computed from a truncated 2-date aggregate
+(2026-03-19, 2026-03-20). Re-aggregating across the full 12-date Sun-Fri
+train window from config.yaml -> data_window.train (2026-03-08..2026-03-21,
+all 12 per-date metrics.json files already present on disk):
+
+```
+vrs-m-l3 (this algo):  pnl=1138.50  sharpe=4.70  trades=123,457  mean_slip=0
+simple   (baseline):   pnl=  156.00  sharpe=0.60  trades=136,734  mean_slip=0
+vol-regime-sizer (base): pnl=753.75  trades=~124k  mean_slip=0
+```
+
+Vs gate baseline (simple): delta_pnl=+629.81%, delta_slippage=0.0% -> PASS.
+Vs base_algo (vol-regime-sizer): delta_pnl=+51.04%, trade_count -0.84%.
+
+The "over-filtered / pnl collapsed" diagnosis was an artifact of the 2-date
+slice. Across the full window vrs-m-l3 is actually the strongest of the
+three loops (l1=+24.2%, l2=+41.7%, l3=+51.0% vs base). Per user
+instruction this run is NOT snapshotted — the per_iteration_experiment
+arm does not push to S3 from refinement loops.

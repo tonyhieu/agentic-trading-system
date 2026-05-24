@@ -28,5 +28,29 @@
         "total": 2758349
       }
     }
+  },
+  {
+    "id": "vrs-m-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 3 \u2014 built on vrs-m-l2 by tightening the vol-regime probability filter (sensitivity 4.0 -> 5.0). Hypothesis: prior loops (l1=+24.2%, l2=+41.7% vs base_algo) showed monotonic improvement from reducing submission probability when vol_ratio > 1; a further single-step tightening tests whether the curve is still convex.",
+    "algorithm_path": "execution_algos/vrs-m-l3/",
+    "scores": {
+      "sharpe": 4.7034,
+      "realized_pnl": 1138.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 629.8077,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 123457,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date Sun-Fri train window (2026-03-08..2026-03-20): vrs-m-l3 $1138.50/123457 trades vs simple $156.00/136,734 trades; delta_pnl=+629.81%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.70 vs 0.60. IS bps 363.77e-4 vs baseline (delta_is_bps=-6.44%). Vs base_algo vol-regime-sizer ($753.75): delta_pnl=+51.04%, trade_count -0.84%. Refinement of vrs-m-l2 (sensitivity 4.0 -> 5.0). Slippage zero on both sides (zero fill-cost model, see research/NOTES.md). Per_iteration_experiment loop \u2014 NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T05:16:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

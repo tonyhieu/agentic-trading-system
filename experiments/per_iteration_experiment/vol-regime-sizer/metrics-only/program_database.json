@@ -25,11 +25,11 @@
     "loop":                 3,
     "algo_id":              "vrs-m-l3",
     "status":               "completed",
-    "vs_base_pnl_pct":      -32.9353,
+    "vs_base_pnl_pct":      51.0448,
     "vs_base_slippage_pct": 0.0,
-    "sharpe_ratio":         65.598,
-    "trade_count":          43263,
+    "sharpe_ratio":         4.703422386752132,
+    "trade_count":          123457,
     "context_chars_in":     159,
-    "timestamp":            "2026-05-23T23:30:00Z"
+    "timestamp":            "2026-05-24T05:12:28Z"
   }
 ]

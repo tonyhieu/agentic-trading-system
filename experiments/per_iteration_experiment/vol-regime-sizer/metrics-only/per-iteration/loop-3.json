@@ -6,13 +6,13 @@
   "algo_id": "vrs-m-l3",
   "status": "completed",
   "metrics": {
-    "realized_pnl": 505.5,
+    "realized_pnl": 1138.5,
     "mean_slippage": 0.0,
-    "sharpe_ratio": 65.598,
-    "max_drawdown_pct": -0.013874927156632428,
-    "win_rate": 0.3591752767954141,
-    "trade_count": 43263,
-    "vs_base_pnl_pct": -32.9353,
+    "sharpe_ratio": 4.703422386752132,
+    "max_drawdown_pct": -0.03999979000110249,
+    "win_rate": 0.3543662975772941,
+    "trade_count": 123457,
+    "vs_base_pnl_pct": 51.0448,
     "vs_base_slippage_pct": 0.0
   },
   "context_chars_in": 159,
@@ -21,5 +21,5 @@
   "duration_seconds": null,
   "summary_out": null,
   "full_reasoning": null,
-  "timestamp": "2026-05-23T23:30:00Z"
+  "timestamp": "2026-05-24T05:12:28Z"
 }
