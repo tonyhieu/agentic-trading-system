@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-2",
+  "base_algo":           "vol-regime-sizer",
+  "generation":          4,
+  "loop_in_generation":  2,
+  "algo_id":             "vrs-isl-g4l2",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         4717.75,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         19.09503126276296,
+    "max_drawdown_pct":     -0.00339999150002125,
+    "win_rate":             0.3921760527934679,
+    "trade_count":          71524,
+    "vs_base_pnl_pct":      525.8202122596084,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":        38150,
+  "context_tokens_estimated": 9537,
+  "tokens_used":     null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Single-knob retune of the top-of-book size-asymmetry threshold on vrs-isl-g3l2's chop+spread+size-asym three-gate stack: size_asym_ratio tightened from 1.5 -> 1.25 (gate now skips BUYs when ask_size >= 1.25 * bid_size and SELLs when bid_size >= 1.25 * ask_size). The tight-flank counterpart to g4l1's loose flank (2.0). All other parameters frozen verbatim from g3l2 (probabilistic chop window_ticks=30 / chop_neutral=1.5 / sensitivity=1.0, rolling-spread-quantile 60s/q=0.75/min_samples=50, AND-skip-on-submit, reduce-only bypass, instrumentation).",
+    "outcome": "pnl 4717.75 (+525.82% vs vol-regime-sizer base 753.75; +0.58% vs lineage parent g3l2 4690.75 — NULL within pre-declared ±2% band), sharpe 19.0950 (-0.0144 absolute vs g3l2 19.1094; essentially identical), max_dd -0.00340 (vs g3l2 -0.00400, marginally tighter), win_rate 0.3922 (+0.32pp vs g3l2 0.3890), trade_count 71,524 (-4.78% vs g3l2 75,115; tighter, as expected). is_weighted_bps 0.0611 (vs g3l2 0.0585, +4.44%; small wash on surviving orders). Hypothesis option (1) CONFIRMED: g3l2's size_asym_ratio=1.5 is the EV peak on the vrs three-gate composition — BOTH flanks of [1.25, 2.0] (g4l1 at 2.0: -5.04%; g4l2 at 1.25: null) are bounded as suboptimal. The gen-3 migration's generalizable (2) prediction (working axis transfers at the same threshold) is empirically confirmed on the vrs base, in the OPPOSITE direction from its base_specific (3) reading.",
+    "hypothesis": "g4l1's regression at 2.0 combined with bps-narrowing-without-PnL-gain places 1.5 at or below the local size-asym EV peak — opposite the gen-3 migration's base_specific (3) prediction. Tightening to 1.25 is the symmetric tight-flank probe; the two informative outcomes pre-declared were (1) regression vs g3l2 confirms 1.5 is the peak, or (2) confirmation reveals 1.5 was loose and the peak sits at or below 1.25. Either outcome maximally maps the local EV curvature.",
+    "next": "The vrs lineage is at its 3-axis (chop + rolling-spread + size-asym) ceiling — both flanks of the size-asym sweep produced flat-or-worse results, so further size_asym tuning is exhausted. Two productive directions for g5+ in priority order. (a) PRIMARY: retune a DIFFERENT existing axis's operating point rather than adding a new axis. chop_neutral_threshold (currently 1.5) and rolling_spread_quantile (currently 0.75) are both pinned at gen-2 / gen-3 best-of-sweep values that have not been re-probed since the three-gate composition stabilized. A chop_neutral sweep (e.g. 1.25 / 1.75) or a spread_quantile sweep (e.g. 0.65 / 0.85) on the locked three-gate stack would surface whether composition shifted the per-axis optimum. Spread_quantile is the higher-information probe because gen-2 established it as the highest-leverage knob on this base. (b) SECONDARY: a calibrated (not ported) 4th axis. Island-1 g4l1's null velocity-axis result warns that ported thresholds inert at 4th-axis depth; structurally distant axes (recent-trade-side flow imbalance with z >= 9 or 10 over 4s, or microprice-vs-mid skew) need their own calibration sweep before they can be evaluated. AVOID: another size_asym setting (peak confirmed broad and centered at 1.5; further bisection adds no information). AVOID: a ported flow-gate threshold (gen-3 migration showed 6/4s failed on vrs)."
+  },
+  "timestamp": "2026-05-24T23:55:00Z"
+}
