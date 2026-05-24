@@ -123,7 +123,7 @@
     "id": "vrs-m-l6",
     "status": "pass",
     "baseline": "simple",
-    "hypothesis": "per_iteration_experiment / metrics-only / loop 6 — built on vrs-m-l5 by doubling the submission-probability floor min_prob 0.10 -> 0.20 while holding sensitivity=6.0. Metrics-only context across prior five loops showed PnL still rising (l1=+24.2% / l2=+41.7% / l3=+51.0% / l4=+76.2% / l5=+79.4% vs base_algo); L4->L5 confirmed the floor lever direction but trade_count barely moved (+376). L6 doubles the floor again to determine whether the floor lever is mechanically inert at this sensitivity or genuinely useful.",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 6 \u2014 built on vrs-m-l5 by doubling the submission-probability floor min_prob 0.10 -> 0.20 while holding sensitivity=6.0. Metrics-only context across prior five loops showed PnL still rising (l1=+24.2% / l2=+41.7% / l3=+51.0% / l4=+76.2% / l5=+79.4% vs base_algo); L4->L5 confirmed the floor lever direction but trade_count barely moved (+376). L6 doubles the floor again to determine whether the floor lever is mechanically inert at this sensitivity or genuinely useful.",
     "algorithm_path": "execution_algos/vrs-m-l6/",
     "scores": {
       "sharpe": 4.3277,
@@ -139,8 +139,14 @@
     "strategy_kwargs_hash": "sha256:35e971933feb",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 359.8,
+      "tokens_used": {
+        "input": 1,
+        "output": 1,
+        "cache_creation": 459,
+        "cache_read": 70371,
+        "total": 70832
+      }
     }
   }
 ]
