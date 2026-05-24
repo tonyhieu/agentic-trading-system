@@ -1,0 +1,79 @@
+{
+  "experiment": "island_experiment",
+  "generation": 1,
+  "timestamp":  "2026-05-24T08:21:26Z",
+  "contributing_islands": [
+    {
+      "island_id":       "island-0",
+      "base_algo":       "position-tier-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation":  1,
+          "algo_id":             "ptg-isl-g1l1",
+          "vs_base_pnl_pct":     26.551320046946274,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":        23.168155462598747
+        },
+        {
+          "loop_in_generation":  2,
+          "algo_id":             "ptg-isl-g1l2",
+          "vs_base_pnl_pct":     26.551320046946274,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":        23.168155462598747
+        }
+      ],
+      "island_summary": "g1l1 layered a rolling-spread-p75 OPEN-gate on top of the position-tier-gate base, skipping new entries during the upper quartile of recent top-of-book spreads. Mechanism: wide-spread moments coincide with liquidity vacuums and elevated adverse-selection on the oracle's 30s forward signal; filtering them removed the highest-cost slice while preserving most entries (pnl +26.55%, sharpe 23.17 vs 17.62, drawdown tightened to -0.0061 vs -0.0173, is_weighted_bps -26.8%). g1l2 stacked a side-dependent queue-imbalance gate (skip BUY OPENs when q<0.30, SELL when q>0.70) on top of g1l1 and produced bit-for-bit identical metrics — a null-effect result, meaning the imbalance axis added zero residual signal once spread was already gated (or fired so rarely it was undetectable, since no instrumentation counters exist). Next direction for island-0: instrument gate-firing counts before adding more gates, then either tighten imbalance toward [0.40, 0.60] or pivot to a genuinely orthogonal axis (short-horizon realized vol or trade-intensity bursts) since imbalance appears redundant with the spread gate on this base."
+    },
+    {
+      "island_id":       "island-1",
+      "base_algo":       "aggressor-flow-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation":  2,
+          "algo_id":             "afg-isl-g1l2",
+          "vs_base_pnl_pct":     -21.146156511350858,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":        4.200833621525238
+        },
+        {
+          "loop_in_generation":  1,
+          "algo_id":             "afg-isl-g1l1",
+          "vs_base_pnl_pct":     -43.129032258064516,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":        3.0567923750265296
+        }
+      ],
+      "island_summary": "Both loops loosened the base aggressor-flow-gate and both regressed on PnL. g1l1 replaced the base single-window adverse-flow threshold with a two-window persistence+reversal exception (3s short + 10s full window, submit when short flips favorable while full is still adverse) and lost 43.13% of base PnL with sharpe collapsing to 3.06 — flow-flip is NOT equivalent to price reversal, so 'reversal exception' entries fired at moments where mid was still mid-adverse. g1l2 reverted to the base single-window gate and added only a min_trade_count=8 precondition that disables the gate in thin-print windows; PnL was less bad (-21.15%) but the headline finding is an IS-vs-PnL dissonance: is_weighted_bps IMPROVED from base's +21.50 to +9.74 (better arrival-price quality) while realized PnL fell, evidence that the base's gate carries path-risk information invisible to IS bps. Next direction for island-1: replace population/count proxies with a direct price-confirmation rule (require mid to have moved >= X ticks favorably during a short sub-window before admitting a flagged trade); treat IS bps as a diagnostic, not the objective."
+    },
+    {
+      "island_id":       "island-2",
+      "base_algo":       "vol-regime-sizer",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation":  1,
+          "algo_id":             "vrs-isl-g1l1",
+          "vs_base_pnl_pct":     34.12653962462629,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":        5.970163363956465
+        },
+        {
+          "loop_in_generation":  2,
+          "algo_id":             "vrs-isl-g1l2",
+          "vs_base_pnl_pct":     33.69850746268657,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio":        5.741744630052873
+        }
+      ],
+      "island_summary": "g1l1 replaced the base vol-regime-sizer's magnitude-only fast/slow volatility-ratio with a choppiness ratio (path_length / displacement on a 30-tick window) and an exponential skip-probability decay above chop_ratio=1.5 — this distinguishes whipsaw regimes from clean trending breakouts that the magnitude-only base treats identically. Result: pnl +34.13%, sharpe 5.97 vs 3.06, drawdown tightened, trade_count -14.5% (gains come from smarter skip selection, not per-trade execution quality). g1l2 added a directional-efficiency reinforcer on top: signed_sum / path_length widens the neutral threshold as |trend| grows so chop spikes inside trends no longer gate participation. Mechanically it worked (≈2548 incremental orders recovered, +2.33% trade_count) but those marginal orders had near-zero per-trade EV, so total PnL drifted -0.32% vs g1l1 — early-reversal noise inside trends cancels residual directional EV. Next direction for island-2: compose the chop gate with island-0's spread-quantile gate (orthogonal whipsaw-frequency vs liquidity-vacuum axes), and try inverting trend_boost to TIGHTEN the gate in noisy-trend windows rather than loosen it."
+    }
+  ],
+  "cross_island_insights": {
+    "what_worked":   "Selectively SKIPPING entries during structurally bad microstructure regimes — not modifying execution mechanics — was the only direction that produced positive PnL movement this generation. Two distinct skip axes both lifted PnL meaningfully on different bases: rolling-spread-p75 (liquidity-vacuum regime) on island-0 (+26.55%) and choppiness-ratio (whipsaw regime) on island-2 (+34.13%). Common mechanism: oracle's 30s forward signal degrades disproportionately during identifiable adverse-microstructure windows, and filtering the top-quartile slice removes the highest-cost trades while preserving most of the entry population. Both islands also saw drawdown TIGHTEN alongside PnL gains, suggesting the filtered slice contained tail-loss trades.",
+    "what_failed":   "LOOSENING an existing skip gate to recover supposedly rejected high-EV entries failed on both islands that tried it. Island-1 g1l1 admitted entries via a flow-flip 'reversal exception' (-43.13% PnL); island-1 g1l2 admitted thin-window entries via min_trade_count=8 (-21.15% PnL); island-2 g1l2 admitted chop-during-trend entries via a trend-magnitude neutral-zone widener (-0.32% vs parent, ~zero marginal EV). Common mechanism: the recovered/admitted population is not a hidden cache of high-EV entries — it is mostly noise or path-risk-laden trades the original gate was correctly filtering. Also failed: stacking a second gate on an orthogonal axis WITHOUT instrumentation (island-0 g1l2's queue-imbalance gate produced bit-for-bit identical metrics — undiagnosable null result).",
+    "generalizable": "(1) Skip-based gating on adverse-microstructure regimes generalizes across base algos: spread-quantile and choppiness-ratio both worked on different bases and target near-orthogonal axes (book-state vs price-path), so a composed spread+chop+(third axis) stack is the highest-leverage generation-2 direction across all islands. (2) The IS-vs-PnL dissonance discovered on island-1 g1l2 generalizes: arrival-price quality (is_weighted_bps) can improve while realized PnL degrades because gates encode path-risk information beyond execution-cost quality — every island should treat IS bps as a diagnostic, not the objective. (3) Gate additions MUST ship with instrumentation counters (skipped_count, evaluated_count, gate_firing_rate per direction) or null-effect results are undiagnosable — island-0 g1l2 lost a loop to this and other islands risk repeating it.",
+    "base_specific": "(1) position-tier-gate (island-0) already encodes position-bucket logic, so additional orthogonal gates that condition on book-state (spread, depth) compose cleanly without re-deriving sizing; the queue-imbalance axis appears redundant on this specific base, possibly because position-tier already correlates with order-flow state. (2) aggressor-flow-gate (island-1) carries path-risk information that is invisible to is_weighted_bps — any modification to its gating logic must be evaluated on PnL directly, not on execution-quality proxies. (3) vol-regime-sizer (island-2) operates on signed-magnitude axes, so the choppiness-ratio replacement is a natural fit; the trend-magnitude lifter failing suggests chop-during-trend is mostly noise on this strategy's signal cadence — a finding that may not transfer to bases that gate differently."
+  }
+}
