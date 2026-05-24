@@ -183,7 +183,7 @@
     "id": "vrs-m-l8",
     "status": "pass",
     "baseline": "simple",
-    "hypothesis": "per_iteration_experiment / metrics-only / loop 8 (FINAL) — built on vrs-m-l7 by pushing sensitivity 6.0 -> 7.0 and adopting L5's apex min_prob=0.10 (vs L7's 0.07). Metrics-only context across prior seven loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8%. The sensitivity ramp historically delivered ~17pp/unit (L1->L4); min_prob sweep showed concave curve apex near 0.10. L8 tests whether sensitivity has headroom past 6.0 with min_prob held at the known-best 0.10.",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 8 (FINAL) \u2014 built on vrs-m-l7 by pushing sensitivity 6.0 -> 7.0 and adopting L5's apex min_prob=0.10 (vs L7's 0.07). Metrics-only context across prior seven loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8%. The sensitivity ramp historically delivered ~17pp/unit (L1->L4); min_prob sweep showed concave curve apex near 0.10. L8 tests whether sensitivity has headroom past 6.0 with min_prob held at the known-best 0.10.",
     "algorithm_path": "execution_algos/vrs-m-l8/",
     "scores": {
       "sharpe": 4.5441,
@@ -199,8 +199,14 @@
     "strategy_kwargs_hash": "sha256:35e971933feb",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 289.9,
+      "tokens_used": {
+        "input": 1,
+        "output": 2,
+        "cache_creation": 902,
+        "cache_read": 51847,
+        "total": 52752
+      }
     }
   }
 ]
