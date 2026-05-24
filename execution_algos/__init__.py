@@ -113,6 +113,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-isl-g3l1",
         "get_execution_algorithm",
     ),
+    "ptg-isl-g3l2": (
+        "execution_algos.ptg-isl-g3l2",
+        "get_execution_algorithm",
+    ),
     "afg-isl-g1l1": (
         "execution_algos.afg-isl-g1l1",
         "get_execution_algorithm",
