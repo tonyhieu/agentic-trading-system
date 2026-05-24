@@ -98,6 +98,6 @@ island_experiment:
     - id: island-2
       base_algo: vol-regime-sizer
       abbrev: vrs
-  generation_size: 3      # loops per island per generation before migration is due
-  max_generations: 4      # refuse new research loops beyond this generation
+  generation_size: 4      # loops per island per generation before migration is due
+  max_generations: 2      # refuse new research loops beyond this generation (2 × 4 = 8 loops per island, comparable to per_iteration_experiment)
   migration_top_k: 2      # best loops each island highlights in the migration summary
