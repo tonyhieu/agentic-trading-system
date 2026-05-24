@@ -682,5 +682,29 @@
         "total": 95431
       }
     }
+  },
+  {
+    "id": "ptg-b-l1",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo position-tier-gate by adding a 5-second position-age override: when the position cap is hit by a reversal OPEN, admit it if the currently held position is at least 5s old; otherwise preserve the base's blanket skip. Reduce-only orders always submit. Intent: distinguish noisy 1-tick flip-flops (still gated) from matured genuine reversals (now executed). Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/ptg-b-l1/",
+    "scores": {
+      "sharpe": 4.299371377784174,
+      "realized_pnl": 879.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 1932.9479768786125,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 83581,
+      "passed": true
+    },
+    "notes": "PASS vs simple gate -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): ptg-b-l1 $879.25/83581 trades vs simple $43.25/111489 trades; delta_pnl_pct=+1932.95 (well above +5.0 PASS gate). Sharpe 4.30. Slippage 0.0/0.0 (no regression, zero fill-cost model; see research/NOTES.md). Win rate 35.6%. Max DD -3.89%. is_weighted_bps 0.043 vs simple 0.673 (delta_is_bps=+0.673, better arrival-mid capture). However, vs base_algo position-tier-gate on the same 11 dates ($3,564.25/73,802 trades): delta_pnl=-75.33%, trade_count +13.25%. Per-date pnls are WORSE than the base on all 11 dates (range -$32 to -$450). The 5s age override admits ~9,779 extra reversal opens that are systematically money-losing -- with a 30s oracle horizon, a 5s position is still mid-forecast and flipping it realizes a worse entry than holding. Hypothesis CONTRADICTED. PASS verdict applies only to the simple baseline gate; vs base_algo refinement comparison (informational here, since this is loop 1 of the arm) is materially worse. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T07:47:48Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

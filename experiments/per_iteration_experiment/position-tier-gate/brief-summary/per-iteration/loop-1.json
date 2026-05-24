@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 1,
+  "algo_id": "ptg-b-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 879.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.299371377784174,
+    "max_drawdown_pct": -0.03887483478195218,
+    "win_rate": 0.35648053983560857,
+    "trade_count": 83581,
+    "vs_base_pnl_pct": -75.3314,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Added a 5-second position-age override to the base position-tier-gate: when the cap is hit by a reversal OPEN, allow it through if the currently held position is at least 5s old; otherwise preserve the base's blanket skip. Reduce-only orders always submit.",
+    "outcome": "pnl +1932.95% vs simple baseline ($879.25 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 4.30, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo position-tier-gate on the same 11 dates ($3,564.25 / 73,802 trades): -75.33% pnl, +13.25% trade_count -- the age override admits ~9.8k extra reversal opens that are systematically money-losing across all 11 dates. Hypothesis CONTRADICTED.",
+    "hypothesis": "The base unconditionally gates every reversal OPEN because CLOSE+OPEN share the same ts_init. I expected that a position held >= 5s had absorbed enough oracle signals on its original side that a flip represented genuine sustained signal change rather than noise; admitting those matured flips should improve pnl. The data says otherwise -- with a 30s oracle horizon, a 5s-old position is still mid-forecast, so flipping it realizes a worse entry than holding. Matured reversals here are not better than blanket-skipped ones; the age dimension alone is information-poor on this oracle.",
+    "brief_summary": "ptg-b-l1 (position-tier-gate brief-summary loop 1) extended the base by allowing reversal OPENs through the position cap when the existing position is at least 5s old. Result: PASS vs simple (+1932.95% pnl) but materially WORSE than the base on the same 11 dates (-75.33% pnl, +13.25% trades). All 11 per-date pnls are worse than the base in absolute dollars; the +9,779 additional admitted orders are systematically money-losing because at a 30s oracle horizon a 5s position is still mid-forecast and flips realize bad entries. Hypothesis contradicted: the age dimension alone is not a useful filter on this oracle. The base's blanket reversal-skip is correct because matured flips are not meaningfully better than fresh flips at this cadence.",
+    "next": "Drop the age-override semantics entirely -- the age dimension is not a useful filter. The two highest-leverage directions are (a) keep the base's blanket reversal-skip and instead try a signal-strength override -- admit a reversal OPEN only when the *new* oracle edge magnitude exceeds the *previous* edge by a multiplier (e.g. 1.5x), since signal-strength change is a more direct test of 'genuine reversal' than time; or (b) go the other direction -- harden the base by also enforcing a minimum hold time on reduce-only orders (reject CLOSE if position younger than ~5s), since today's data shows positions improve with more time, not less. Avoid: any further age-only filters; the +13.25% trade_count delta from this loop maps 1:1 to pnl destruction."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-24T07:47:48Z"
+}
