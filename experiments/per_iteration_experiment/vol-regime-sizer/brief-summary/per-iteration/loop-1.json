@@ -17,8 +17,14 @@
   },
   "context_chars_in": 0,
   "context_tokens_estimated": 0,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 4,
+    "cache_creation": 372,
+    "cache_read": 180086,
+    "total": 180463
+  },
+  "duration_seconds": 2821.5,
   "summary_out": {
     "changed": "Gated the base vol-regime probabilistic skip on a signed mid-drift EWM (half-life 40 ticks, threshold 0.05) so the skip only fires when fast vol is elevated AND recent drift is adverse to the order side; aligned drift forces p=1.0.",
     "outcome": "pnl -1.73% vs simple ($42.50 vs $43.25, 11-date apples-to-apples after 20260319 OOM-dropped from both sides), -92.67% vs base_algo vol-regime-sizer ($579.50 over same 11 dates), sharpe 0.17, slippage flat. Verdict FAIL; gate is +5.0% PASS, +3.0-+5.0 CLOSE.",
