@@ -118,5 +118,29 @@
         "total": 73557
       }
     }
+  },
+  {
+    "id": "vrs-m-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 6 — built on vrs-m-l5 by doubling the submission-probability floor min_prob 0.10 -> 0.20 while holding sensitivity=6.0. Metrics-only context across prior five loops showed PnL still rising (l1=+24.2% / l2=+41.7% / l3=+51.0% / l4=+76.2% / l5=+79.4% vs base_algo); L4->L5 confirmed the floor lever direction but trade_count barely moved (+376). L6 doubles the floor again to determine whether the floor lever is mechanically inert at this sensitivity or genuinely useful.",
+    "algorithm_path": "execution_algos/vrs-m-l6/",
+    "scores": {
+      "sharpe": 4.3277,
+      "realized_pnl": 996.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2202.8902,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 101021,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l6 $996.00/101021 trades vs simple $43.25/132228 trades; delta_pnl=+2202.89%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.3277 (vs L5 4.4917, -0.164). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+71.87%, trade_count +0.81% vs L5 (+812). Refinement of vrs-m-l5 (min_prob 0.10 -> 0.20, sensitivity held at 6.0). Step-curve on matched 11d: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2% / L5+79.4% / L6+71.9%. Floor lever direction now confirmed: raising past 0.10 hurts both PnL and Sharpe. PnL curve appears to peak near min_prob=0.10. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T20:38:19Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
