@@ -164,7 +164,7 @@ jobs:
 
   evaluate-on-ec2:
     needs: create-snapshot
-    runs-on: [self-hosted, linux, x64, ec2-evaluator]
+    runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       PYTHONUNBUFFERED: "1"
