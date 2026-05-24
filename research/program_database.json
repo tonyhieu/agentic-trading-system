@@ -148,5 +148,29 @@
         "total": 70832
       }
     }
+  },
+  {
+    "id": "vrs-m-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 7 — built on vrs-m-l6 by probing the OTHER side of the apparent local maximum: min_prob 0.20 -> 0.07 (between L4's 0.05 and L5's 0.10), holding sensitivity=6.0. Metrics-only context across prior six loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% with L5 the apparent apex; L7 tests the rising flank to refine the peak's location.",
+    "algorithm_path": "execution_algos/vrs-m-l7/",
+    "scores": {
+      "sharpe": 4.3858,
+      "realized_pnl": 1013.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2242.1965,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99979,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l7 $1013.00/99979 trades vs simple $43.25/132228 trades; delta_pnl=+2242.20%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.3858 (vs L5 4.4917, -0.106 / vs L6 4.3277, +0.058). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+74.81%, trade_count -0.23% vs L5 (-230). Refinement of vrs-m-l6 (min_prob 0.20 -> 0.07, sensitivity held at 6.0). Step-curve on matched 11d: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8%. L7 at 0.07 lands between L4 (0.05, +76.2%) and L5 (0.10, +79.4%), slightly below L4. Confirms apex is near min_prob=0.10 NOT below 0.07; curve is concave with sharper drop above 0.10 than below. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T21:12:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
