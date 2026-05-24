@@ -1,30 +1,36 @@
 {
-  "experiment":          "island_experiment",
-  "island_id":           "island-1",
-  "base_algo":           "aggressor-flow-gate",
-  "generation":          2,
-  "loop_in_generation":  1,
-  "algo_id":             "afg-isl-g2l1",
-  "status":              "completed",
+  "experiment": "island_experiment",
+  "island_id": "island-1",
+  "base_algo": "aggressor-flow-gate",
+  "generation": 2,
+  "loop_in_generation": 1,
+  "algo_id": "afg-isl-g2l1",
+  "status": "completed",
   "metrics": {
-    "realized_pnl":         2138.0,
-    "mean_slippage":        0.0,
-    "sharpe_ratio":         9.86136996267321,
-    "max_drawdown_pct":     -0.023024879119384622,
-    "win_rate":             0.3594769385184975,
-    "trade_count":          105609,
-    "vs_base_pnl_pct":      70.29071285543608,
+    "realized_pnl": 2138.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 9.86136996267321,
+    "max_drawdown_pct": -0.023024879119384622,
+    "win_rate": 0.3594769385184975,
+    "trade_count": 105609,
+    "vs_base_pnl_pct": 70.29071285543608,
     "vs_base_slippage_pct": 0.0
   },
-  "context_chars_in":         5400,
+  "context_chars_in": 5400,
   "context_tokens_estimated": 1350,
-  "tokens_used":      null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1,
+    "cache_creation": 117,
+    "cache_read": 48522,
+    "total": 48641
+  },
+  "duration_seconds": 159.2,
   "summary_out": {
-    "changed":    "Restored the base aggressor-flow-gate's single 10s signed-flow gate UNMODIFIED (dropped all g1l1/g1l2 tweaks) and stacked island-0 g1l1's rolling-spread-p75 OPEN-gate (60s window, p75 quantile, min_samples=50) on top — composition rule: skip the order if EITHER gate votes skip. Quote-tick callback activated to feed the spread deque; anti-cascade (_position_flat=True after any skip) preserved; quantity never modified.",
-    "outcome":    "pnl=2138.00 vs base 1255.50 (+70.29%), sharpe=9.86 vs 5.59 (+76.3%), trade_count=105609 vs 107198 (-1.48%), mean_slippage=0.0 on both sides (0.0%), max_drawdown=-0.0230 vs -0.0332 (tighter by 30.8% in absolute terms), win_rate=0.3595 vs 0.3549 (+0.46 pp), is_weighted_bps=0.04196 vs 0.04724 (-11.2%). PnL and IS moved together (both better), drawdown tightened, trade count fell — all five pre-stated hypothesis predictions hit.",
-    "hypothesis": "Two-loop loosening regression (g1l1 -43.13%, g1l2 -21.15%) proved the base gate carries path-risk information PnL-improving tweaks must not destroy. The cross-island migration's `generalizable` finding said spread-quantile (island-0 winner +26.55%) and chop-ratio (island-2 winner +34.13%) skip gates target orthogonal adverse regimes and should compose across bases. Verdict: CONFIRMED. Adding a strictly orthogonal SKIP axis (book-state) on top of an unmodified base gate (trade-flow) gave the largest single-loop PnL move this island has produced, and resolved the g1l2 IS-vs-PnL dissonance — by ADDING gates instead of MODIFYING them, both the base's path-risk signal and the new gate's book-state signal compound cleanly.",
-    "next":       "Stack a THIRD orthogonal skip axis in g2l2: the choppiness-ratio gate (island-2 g1l1's winner, +34.13% on vol-regime-sizer). Spread (book-state) and flow (trade-pressure) are now confirmed orthogonal on this base; adding chop-ratio (price-path) covers the three structurally-distinct adverse regimes the migration identified. Calibration: keep all g2l1 parameters fixed (no retuning); use island-2 g1l1's known-good chop window and threshold verbatim for clean cross-island transfer. Falsification: if PnL rises but drawdown widens, chop-skip is anti-correlated with spread-skip on this base — stop layering. If trade_count drops more than ~15% vs base (currently -1.48%), gates are over-restrictive — relax chop quantile. Do NOT retune the base flow gate; composition not modification."
+    "changed": "Restored the base aggressor-flow-gate's single 10s signed-flow gate UNMODIFIED (dropped all g1l1/g1l2 tweaks) and stacked island-0 g1l1's rolling-spread-p75 OPEN-gate (60s window, p75 quantile, min_samples=50) on top \u2014 composition rule: skip the order if EITHER gate votes skip. Quote-tick callback activated to feed the spread deque; anti-cascade (_position_flat=True after any skip) preserved; quantity never modified.",
+    "outcome": "pnl=2138.00 vs base 1255.50 (+70.29%), sharpe=9.86 vs 5.59 (+76.3%), trade_count=105609 vs 107198 (-1.48%), mean_slippage=0.0 on both sides (0.0%), max_drawdown=-0.0230 vs -0.0332 (tighter by 30.8% in absolute terms), win_rate=0.3595 vs 0.3549 (+0.46 pp), is_weighted_bps=0.04196 vs 0.04724 (-11.2%). PnL and IS moved together (both better), drawdown tightened, trade count fell \u2014 all five pre-stated hypothesis predictions hit.",
+    "hypothesis": "Two-loop loosening regression (g1l1 -43.13%, g1l2 -21.15%) proved the base gate carries path-risk information PnL-improving tweaks must not destroy. The cross-island migration's `generalizable` finding said spread-quantile (island-0 winner +26.55%) and chop-ratio (island-2 winner +34.13%) skip gates target orthogonal adverse regimes and should compose across bases. Verdict: CONFIRMED. Adding a strictly orthogonal SKIP axis (book-state) on top of an unmodified base gate (trade-flow) gave the largest single-loop PnL move this island has produced, and resolved the g1l2 IS-vs-PnL dissonance \u2014 by ADDING gates instead of MODIFYING them, both the base's path-risk signal and the new gate's book-state signal compound cleanly.",
+    "next": "Stack a THIRD orthogonal skip axis in g2l2: the choppiness-ratio gate (island-2 g1l1's winner, +34.13% on vol-regime-sizer). Spread (book-state) and flow (trade-pressure) are now confirmed orthogonal on this base; adding chop-ratio (price-path) covers the three structurally-distinct adverse regimes the migration identified. Calibration: keep all g2l1 parameters fixed (no retuning); use island-2 g1l1's known-good chop window and threshold verbatim for clean cross-island transfer. Falsification: if PnL rises but drawdown widens, chop-skip is anti-correlated with spread-skip on this base \u2014 stop layering. If trade_count drops more than ~15% vs base (currently -1.48%), gates are over-restrictive \u2014 relax chop quantile. Do NOT retune the base flow gate; composition not modification."
   },
   "timestamp": "2026-05-24T10:31:16Z"
 }
