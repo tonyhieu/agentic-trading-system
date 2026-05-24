@@ -13,13 +13,19 @@
     "max_drawdown_pct": -0.005374916688791324,
     "win_rate": 0.3813052085624645,
     "trade_count": 86377,
-    "vs_base_pnl_pct": 30.703812316715543,
+    "vs_base_pnl_pct": 30.703812316715542,
     "vs_base_slippage_pct": 0.0
   },
   "context_chars_in": 34000,
   "context_tokens_estimated": 8500,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 913,
+    "cache_creation": 1095,
+    "cache_read": 42352,
+    "total": 44361
+  },
+  "duration_seconds": 143.1,
   "summary_out": {
     "changed": "Replaced ptg-isl-g1l1's BINARY spread-p75 hard-cut with a PROBABILISTIC submit-decay across the [p50, p75] band: spread <= p50 admits at p=1.0 (full size), p50 < spread <= p75 admits at p in [0.05, 1.0] decaying linearly with rank-in-band, spread > p75 hard-skip (g3l2 confirmed [p75, p80] EV-negative; not relaxed). Per-order draw is deterministic SHA-256 of client_order_id. Single-knob discipline: only the gate semantics changed (binary -> probabilistic); spread_window_seconds=60, min_samples=50, position_cap=1, q_upper=0.75 all unchanged from g1l1. Decision triggered by gen-3 migration base_specific(1) directive to switch from skip-axis stacking to quantity-modulation on this base.",
     "outcome": "pnl 5571.25 (+30.70% vs base position-tier-gate 4262.50 - BEATS BASE AND BREAKS THE TWO-AXIS SATURATION CEILING that pinned the island-0 lineage since g1l1); +3.28% vs g1l1 lineage best (5394.25); +5.35% vs g3l2 prior (5288.50). sharpe 25.112 (g1l1 23.168, +1.94; base 17.619). trade_count 86377 (-1.08% vs g1l1 87319, -942 trades) - consistent with construction (decay only REDUCES admission within [p50, p75]; upper hard-cut unchanged); inside the 10% falsification budget. max_drawdown -0.54% (g1l1 -0.61%; tighter, indicating the decay preferentially removes the high-cost edge of the admitted population). win_rate 0.3813 (g1l1 0.3806, ~flat). mean_slippage 0.0; is_weighted_bps 0.0258 (g1l1 0.0285, -9.5%).",
