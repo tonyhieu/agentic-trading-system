@@ -178,5 +178,29 @@
         "total": 71969
       }
     }
+  },
+  {
+    "id": "vrs-m-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 8 (FINAL) — built on vrs-m-l7 by pushing sensitivity 6.0 -> 7.0 and adopting L5's apex min_prob=0.10 (vs L7's 0.07). Metrics-only context across prior seven loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8%. The sensitivity ramp historically delivered ~17pp/unit (L1->L4); min_prob sweep showed concave curve apex near 0.10. L8 tests whether sensitivity has headroom past 6.0 with min_prob held at the known-best 0.10.",
+    "algorithm_path": "execution_algos/vrs-m-l8/",
+    "scores": {
+      "sharpe": 4.5441,
+      "realized_pnl": 1028.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2278.6127,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99797,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l8 $1028.75/99797 trades vs simple $43.25/132228 trades; delta_pnl=+2278.61%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.5441 (arm-best; vs L5 4.4917, +0.052 / vs L7 4.3858, +0.158). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+77.52%, trade_count -412 vs L5. Two-parameter change vs L7 (sensitivity 6.0->7.0, min_prob 0.07->0.10). Step-curve on matched 11d: L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8% / L8+77.5%. Sensitivity ramp confirmed saturated: L4->L8 (sens 6->7) net +1.3pp on PnL vs L1->L4 (sens 3->6) average ~17pp/unit. Best arm point on PnL remains L5 (sens=6.0, min_prob=0.10) at +79.4%; L8 is Sharpe leader but trails L5 on PnL. Final loop in the 8-loop arm. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T21:46:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
