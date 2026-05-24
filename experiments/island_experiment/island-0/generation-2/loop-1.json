@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-0",
+  "base_algo":           "position-tier-gate",
+  "generation":          2,
+  "loop_in_generation":  1,
+  "algo_id":             "ptg-isl-g2l1",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         3276.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         17.859150881264625,
+    "max_drawdown_pct":     -0.0047249350321433075,
+    "win_rate":             0.3712739383846794,
+    "trade_count":          72060,
+    "vs_base_pnl_pct":      -23.14516129032258,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         13397,
+  "context_tokens_estimated": 3349,
+  "tokens_used":     null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed":    "Dropped null-effect queue-imbalance gate from g1l2 and added a price-path choppiness gate (boolean skip when chop_ratio over a 30-tick mid-path window exceeds chop_skip_threshold=2.0) on top of position-cap + rolling-spread-p75, plus per-gate instrumentation counters.",
+    "outcome":    "pnl 3276.25 (-23.14% vs base position-tier-gate 4262.5; -39.26% vs prior g1l2 5394.25); sharpe 17.86 (base 17.62, g1l2 23.17); trade_count 72060 (-20.3% vs base, -17.5% vs g1l2); max_drawdown -0.47% (improved vs base -1.73%, vs g1l2 -0.61%); slippage 0.0 on both sides.",
+    "hypothesis": "FALSIFIED. The migration-recommended composition (spread-p75 + choppiness, on position-tier-gate's boolean-skip semantics) cut 15.3k trades net of prior lineage and removed *positive-EV* trades on net — sharpe and pnl both fell sharply while drawdown only modestly improved. The orthogonality argument did not survive contact with this base: ptg's edge appears to include path-noisy periods that island-2's vol-regime-sizer base did not depend on. The boolean-skip semantics (vs island-2's probabilistic decay) likely also overshot the cut depth.",
+    "next":       "Re-port choppiness as a probabilistic submission-decay (chop_neutral=1.5 → chop_steep=3.0, exponential decay) instead of a hard boolean skip — that is island-2's actual semantics and the threshold port was the gap. If probabilistic chop *also* underperforms vs g1l2, declare path-noise non-transferable to ptg and pivot the next gate to a book-flow axis (signed-volume imbalance, or recent-trade-side flow) which is orthogonal to BOTH spread and chop."
+  },
+  "timestamp": "2026-05-24T09:41:37Z"
+}
