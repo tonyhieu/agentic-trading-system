@@ -1,0 +1,14 @@
+[
+  {
+    "loop":                 1,
+    "algo_id":              "sip-vrs-l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      40.92926824677289,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.185193246517971,
+    "trade_count":          127923,
+    "prompt_chars_in":      1485,
+    "prompt_action":        "kept",
+    "timestamp":            "2026-05-24T23:33:20Z"
+  }
+]
