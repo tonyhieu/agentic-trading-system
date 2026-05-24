@@ -120,47 +120,6 @@ jobs:
           aws s3 sync "$ROOT/" "$S3" --storage-class STANDARD --no-progress
           echo "Upload complete"
 
-      - name: Invoke evaluator (best-effort)
-        env:
-          EVALUATOR_FUNCTION_NAME: execution-algorithm-evaluator-container
-          LAMBDA_REGION: us-east-1
-          ALGO_NAME: ${{ steps.meta.outputs.name }}
-        run: |
-          PAYLOAD_FILE="$(mktemp)"
-          RESPONSE_FILE="$(mktemp)"
-          printf '{"execution_algorithm_name":"%s"}' "$ALGO_NAME" > "$PAYLOAD_FILE"
-          echo "Invoking ${EVALUATOR_FUNCTION_NAME} in ${LAMBDA_REGION} for ${ALGO_NAME}"
-          set +e
-          aws lambda invoke \
-            --function-name "${EVALUATOR_FUNCTION_NAME}" \
-            --region "${LAMBDA_REGION}" \
-            --cli-binary-format raw-in-base64-out \
-            --cli-connect-timeout 30 \
-            --cli-read-timeout 1200 \
-            --payload "file://${PAYLOAD_FILE}" \
-            "$RESPONSE_FILE" \
-            >/tmp/evaluator-invoke-metadata.json 2>/tmp/evaluator-invoke-stderr.txt
-          INV_EXIT=$?
-          set -e
-          if [ $INV_EXIT -ne 0 ]; then
-            echo "Warning: lambda invoke failed (exit=$INV_EXIT). See /tmp/evaluator-invoke-stderr.txt"
-            cat /tmp/evaluator-invoke-stderr.txt || true
-            echo "Continuing without lambda report"
-          else
-            cat "$RESPONSE_FILE" || true
-            STATUS_CODE=$(jq -r '.statusCode' "$RESPONSE_FILE" 2>/dev/null || echo "")
-            if [ "$STATUS_CODE" != "200" ]; then
-              echo "Warning: Lambda returned non-200 statusCode: $STATUS_CODE"
-            else
-              REPORT_KEY=$(jq -r '.body | fromjson | .report_key' "$RESPONSE_FILE" 2>/dev/null || echo "")
-              if [ -z "$REPORT_KEY" ] || [ "$REPORT_KEY" = "null" ]; then
-                echo "Warning: Lambda response did not include report_key"
-              else
-                echo "Lambda report key: ${REPORT_KEY}"
-                aws s3 ls "s3://${{ secrets.S3_BUCKET_NAME }}/${REPORT_KEY}" --region "${{ secrets.AWS_REGION }}" || true
-              fi
-            fi
-          fi
 
   evaluate-on-ec2:
     needs: create-snapshot
