@@ -320,6 +320,7 @@ Append one entry to `experiments/proposer_criticizer_experiment/<base_algo>/prog
 - **Debate is pre-implementation only.** No code is written until the debate concludes.
 - **Honesty rules from OBJECTIVE.md §8 apply in full** — raw numbers, flag low trade counts.
 - **Do not read the `strategies/` folder.**
+- **Do not modify `research/config.yaml`** or any other shared infrastructure file (`backtest_engine/`, `scripts/`, `execution_algos/__init__.py` registry entries other than appending the current `<algo-id>` factory, `.claude/`, `docs/`). Read-only access to config is fine — but the hyperparameters, train window, pass gate, and strategy kwargs are the experiment's controlled variables and may not be tuned by the agent.
 - **Cross-experiment isolation.** To prevent contamination of the hypothesis from prior unrelated work, the Proposer and Criticizer may read ONLY the following directories under `execution_algos/` and `experiments/`:
   - `execution_algos/<base_algo>/` — the fixed reference algorithm (full read: code, NOTES.md, results).
   - `execution_algos/<algo-id>/` — the current run's own directory (write + read).
