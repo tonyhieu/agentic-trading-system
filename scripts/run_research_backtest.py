@@ -51,7 +51,10 @@ import json
 import math
 import os
 import random
-import resource
+try:
+    import resource  # Unix-only; not available on native Windows.
+except ImportError:  # pragma: no cover - Windows-only branch
+    resource = None  # type: ignore[assignment]
 import subprocess
 import sys
 import time
@@ -125,6 +128,10 @@ def _apply_memory_cap() -> None:
         )
         return
     if cap_gb <= 0:
+        return
+    if resource is None:
+        # Windows: no RLIMIT_AS available. Skip silently — original failure
+        # mode (OS-level memory pressure) is no worse than not having the cap.
         return
     cap_bytes = int(cap_gb * 1024 * 1024 * 1024)
     try:
