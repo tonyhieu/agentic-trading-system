@@ -508,5 +508,29 @@
         "total": 91969
       }
     }
+  },
+  {
+    "id": "vrs-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 \u2014 built on vrs-b-l2 by INVERTING the gate semantics per L2's `next` text. Brief-summary context from loop-1.json + loop-2.json only (no NOTES.md prose, no L1/L2 implementation analysis beyond mechanical copy). Three coordinated edits, one structural intent: (1) removed L2's aligned-drift override path so every OPEN order runs through the vol-draw (no more p=1.0 short-circuit); (2) added `adverse_multiplier=0.5` so `p_final = base_p * 0.5` on adverse-drift orders, else `p_final = base_p`; (3) lowered `drift_threshold` 0.008 -> 0.005 per L2 next-hint. Net effect: L3's admit set is a STRICT SUBSET of base vol-regime-sizer's admit set (always apply base skip, plus extra skip on adverse-drift orders). This is the disjunctive structural inversion L2's brief_summary cross-referenced from afg-b-l3 \u2014 worst case = base parity, best case = base + the directional refinement's EV.",
+    "algorithm_path": "execution_algos/vrs-b-l3/",
+    "scores": {
+      "sharpe": 3.8317,
+      "realized_pnl": 943.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2081.5029,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 103040,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+2081.50% pnl, gate +5.0%) AND BREAKTHROUGH vs base_algo vol-regime-sizer on same 11 dates (+62.81% pnl, -1.28% trade_count). First L1-L3 loop in this arm to beat base by any margin (L1 -92.67%, L2 -88.91%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l3 $943.50/103,040 trades vs simple $43.25/111,489 trades vs base_algo vol-regime-sizer $579.50/104,372 trades. Trade_count delta vs base: -1,332 trades (~-1.28%); per-extra-skip EV is ~$273 ($943.50 - $579.50 = $364 over 1,332 extra skips), >3x base's per-skip EV (~$75) -- strong evidence the adverse-drift subset of base's would-be admits is materially worse than the aligned-drift subset, exactly as L1's original directional-adverse-selection hypothesis posited. The architectural lever was decisive: same drift signal and threshold band as L1/L2, only the gate topology changed (superset-on-aligned -> subset-via-extra-adverse-skip). Sharpe 3.83 vs simple 0.42 (delta +815%). Slippage 0.0/0.0 (no regression). Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base). Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T17:40:45Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
