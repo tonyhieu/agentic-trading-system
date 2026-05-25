@@ -1,13 +1,24 @@
 [
   {
-    "loop":                 1,
-    "algo_id":              "afg-b-l1",
-    "status":               "completed",
-    "vs_base_pnl_pct":      -53.2474,
+    "loop": 1,
+    "algo_id": "afg-b-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -53.2474,
     "vs_base_slippage_pct": 0.0,
-    "sharpe_ratio":         2.0907791868319876,
-    "trade_count":          101241,
-    "context_chars_in":     0,
-    "timestamp":            "2026-05-24T08:50:00Z"
+    "sharpe_ratio": 2.0907791868319876,
+    "trade_count": 101241,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-24T08:50:00Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "afg-b-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -52.1392,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 2.058159480661388,
+    "trade_count": 102005,
+    "context_chars_in": 2313,
+    "timestamp": "2026-05-24T18:00:00Z"
   }
 ]

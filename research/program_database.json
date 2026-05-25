@@ -238,5 +238,29 @@
         "total": 49047
       }
     }
+  },
+  {
+    "id": "afg-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 -- built on afg-b-l1 by replacing the pure-ratio gate with a CONJUNCTION: skip iff (|net_flow| >= 2.0) AND (|net_flow|/max(2.0, abs_vol_window) >= 0.35). Brief-summary context across prior loop (l1=-53.25% vs base) indicated absolute threshold is the binding selectivity floor in busy windows; conjunction was intended as a strict intersection that could not regress on either operand. Result: contradicted -- asymmetric gate means ANDing the ratio onto base RELAXES busy-window selectivity rather than tightening.",
+    "algorithm_path": "execution_algos/afg-b-l2/",
+    "scores": {
+      "sharpe": 2.058159480661388,
+      "realized_pnl": 464.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 973.4104046242775,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 102005,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+973.41% pnl gate, +5.0% threshold) BUT WORSE than base_algo aggressor-flow-gate on the matched 11 dates (-52.14% pnl, +16.2% trade_count). 11-date train window (20260319 OOM-dropped on both sides). Brief-summary loop 2; uses only afg-b-l1's summary_out block as prior context plus mechanical inspection of afg-b-l1 source. Conjunction asymmetry: ANDing a ratio test on top of base's absolute gate RELAXES rather than tightens because the ratio condition is the binding one in busy windows; +14.2k extra admits drove the deficit (consistent with L1's $47/1k extra admit destruction). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-24T18:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
