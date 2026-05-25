@@ -1,0 +1,34 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 6,
+  "algo_id": "sip-afg-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 984.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.834627317489331,
+    "max_drawdown_pct": -0.029574881700473198,
+    "win_rate": 0.353489547148361,
+    "trade_count": 79165,
+    "vs_base_pnl_pct": 1.4690721649484535,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l5.md",
+  "prompt_chars_in": 7689,
+  "trace_path": "reasoning-traces/loop-6-trace.md",
+  "critic_summary": null,
+  "prompt_out": null,
+  "prompt_action": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 822,
+    "cache_creation": 235,
+    "cache_read": 63803,
+    "total": 64861
+  },
+  "duration_seconds": 8149.9,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T08:05:36Z"
+}
