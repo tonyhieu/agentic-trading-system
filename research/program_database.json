@@ -358,5 +358,29 @@
         "total": 84944
       }
     }
+  },
+  {
+    "id": "afg-b-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 6 -- built on afg-b-l5 (effective L4) by LOOSENING the absolute threshold from 1.0 -> 3.0 contracts (one integer step BEYOND base's 2.0 in the loose direction; 10s window, ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved). Brief-summary context across L1+L2+L3+L4+L5 plus the L5 integer-resolution finding established the threshold lever has integer resolution; only integer steps are informative. L5's 'next' explicitly prescribed threshold=3.0 to test whether the L1 monotone-yield rule extrapolates to the loose side. Hypothesis CONFIRMED: pnl dropped to $832 (vs base $970, vs L4 $1088), trade count rose to 89,157 (+1,397 vs base), giving ~$98.8 per 1k newly admitted near-margin orders -- same sign and similar magnitude to L1's $47/1k and L4's $70.6/1k inverse readings. The absolute-threshold axis is now fully bracketed (1.0:1088, 2.0:970, 3.0:832) and confirmed monotone with integer optimum at L4=1.0.",
+    "algorithm_path": "execution_algos/afg-b-l6/",
+    "scores": {
+      "sharpe": 3.827320152939977,
+      "realized_pnl": 832.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 1823.699421965318,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 89157,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+1823.70% pnl, +5.0% gate cleared by ~365x; slippage tied at 0.0) but REGRESSED vs base_algo aggressor-flow-gate on the matched 11 dates (-14.23% pnl: $832.00 vs $970.00; +1,397 trades / +1.59%; sharpe 3.83 vs 4.58) and vs the in-arm leaders L4=L5 (-23.5% pnl, -28.6% sharpe, +3,068 trades vs $1088/86,089/5.36). Refinement targets vs L4: ALL FAIL. 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 6; uses only afg-b-l1/l2/l3/l4/l5 summary_out blocks as prior context plus mechanical inspection of L4/L5 source for class shape. Mechanism: orders with |net_flow|=2 (which base would skip) are newly ADMITTED under threshold=3.0; those marginal-imbalance orders are weakly anti-informative, costing ~$98.8 per 1k extra admits (consistent with L1's $47/1k and L4's $70.6/1k inverse readings -- the L1 monotone-yield rule extrapolates to the loose side). Absolute-threshold axis is now bracketed and exhausted (smooth monotone curve, integer optimum at L4=1.0). Next loop should pivot to the orthogonal window_seconds axis (10s -> 5s at flow_threshold=1.0). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND a regression vs L4 is not a snapshot candidate anyway.",
+    "timestamp": "2026-05-25T04:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
