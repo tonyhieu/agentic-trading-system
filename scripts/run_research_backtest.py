@@ -51,7 +51,10 @@ import json
 import math
 import os
 import random
-import resource
+try:
+    import resource
+except ImportError:
+    resource = None
 import subprocess
 import sys
 import time
@@ -125,6 +128,8 @@ def _apply_memory_cap() -> None:
         )
         return
     if cap_gb <= 0:
+        return
+    if resource is None:
         return
     cap_bytes = int(cap_gb * 1024 * 1024 * 1024)
     try:

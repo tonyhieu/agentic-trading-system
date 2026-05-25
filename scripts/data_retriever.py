@@ -136,6 +136,7 @@ class DataRetriever:
         base = f"datasets/{dataset_name}/{version}"
         candidates = [
             f"{base}/partitions/{partition_path}",
+            f"{base}/in-sample/{partition_path}",
             f"{base}/oos/partitions/{partition_path}",
             f"{base}/oos/{partition_path}",
         ]
