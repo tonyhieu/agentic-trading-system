@@ -10,5 +10,17 @@
     "prompt_chars_in": 1487,
     "prompt_action": "kept",
     "timestamp": "2026-05-25T18:44:37Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "sip-ptg-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -11.460410557184751,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 19.21487648861719,
+    "trade_count": 81557,
+    "prompt_chars_in": 6478,
+    "prompt_action": "kept",
+    "timestamp": "2026-05-25T20:22:26Z"
   }
 ]
