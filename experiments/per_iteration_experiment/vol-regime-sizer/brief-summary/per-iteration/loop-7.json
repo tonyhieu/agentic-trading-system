@@ -17,8 +17,14 @@
   },
   "context_chars_in": 16527,
   "context_tokens_estimated": 4131,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 38,
+    "cache_creation": 652,
+    "cache_read": 100124,
+    "total": 100815
+  },
+  "duration_seconds": 513.4,
   "summary_out": {
     "changed": "Single config-default edit vs L6: drift_threshold 0.005 -> 0.003 (one-knob WIDENING of the adverse-drift subset per L6's `next` text). adverse_multiplier held at L6's 0.025; all other mechanics preserved verbatim from L6: same gate topology (always apply base vol-skip + multiplicative skip on adverse-drift), drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.00125 on adverse-drift floor cases, same as L6). Mechanical structural copy from L6; class names VrsBL6* -> VrsBL7*. This is the first knob change OFF the multiplier-depth dimension since L3 -- a fresh orthogonal lever (subset width vs subset depth).",
     "outcome": "Continued breakthrough; new arm leader by the LARGEST single-step margin since L3 -> L4. Pnl $1403.25 on 11 dates: +3144.51% vs simple ($43.25), +142.15% vs base_algo vol-regime-sizer ($579.50), +14.95% vs L6 ($1220.75). Sharpe 6.06 (vs L6 5.05, L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best, with the largest sharpe jump in the lineage (+1.01 vs L6's +0.24 over L5). Trade_count 99,059 = -5.09% vs base (-5,313 trades), -2.41% vs L6 (-2,446 marginal extra skips at borderline drift). Marginal per-borderline-skip EV vs L6: $182.50 / 2,446 = $0.0746/skip -- landed inside L6's predicted weak-subset band of $0.04-0.08/skip, but the borderline subset turned out ~10x LARGER than L6's full-mult-deepening subset (2,446 vs 242 marginal skips), so total pnl contribution +$182.50 exceeded L6's predicted best-case band ($1,230-1,310) by ~$93. L7 beat L6 on 8/11 dates, lost on 3 (20260308 -$12.50, 20260309 -$14.00, 20260318 -$16.00) -- losses scattered/small. Max drawdown improved to -3.61% (vs L6 -3.90%). Slippage 0.0/0.0 (no regression). PASS by both formal gate (vs simple) and arm-level objective (vs base); improvement-on-improvement vs L6.",
