@@ -17,8 +17,14 @@
   },
   "context_chars_in": 13380,
   "context_tokens_estimated": 3345,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 29,
+    "cache_creation": 638,
+    "cache_read": 95837,
+    "total": 96505
+  },
+  "duration_seconds": 393.6,
   "summary_out": {
     "changed": "Single config-default edit vs L5: adverse_multiplier 0.10 -> 0.025 (one-knob deepening per L5's `next` text, ~2 geometric halvings from L5). All other mechanics preserved verbatim from L5: same gate topology (always apply base vol-skip + multiplicative skip on adverse-drift), drift_threshold=0.005, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.00125 on adverse-drift floor cases vs 0.005 in L5). Mechanical structural copy from L5; class names VrsBL5* -> VrsBL6*.",
     "outcome": "Continued breakthrough; new arm leader by a thin margin. Pnl $1220.75 on 11 dates: +2722.54% vs simple ($43.25), +110.66% vs base_algo vol-regime-sizer ($579.50), +2.37% vs L5 ($1192.50). Sharpe 5.05 (vs L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best. Trade_count 101,505 = -2.75% vs base (-2,867 trades), -0.24% vs L5 (-242 marginal extra skips). Marginal per-skip EV vs L5: $28.25 / 242 = $0.117/skip -- BELOW L5's marginal $0.21/skip and BELOW L4's marginal $0.18/skip; the diminishing-returns slope L4 predicted and L5 didn't see finally bent on this halving. L6 beat L5 on 7/11 dates, tied on 2, lost on 2 (20260309 -$8.50, 20260310 -$25.25 -- mid-week strong-base dates where the newly-skipped tail at u in (0.025*base_p, 0.10*base_p) had marginally positive-EV admits). Max drawdown -3.90% (slight tightening). Slippage 0.0/0.0 (no regression). PASS by both formal gate (vs simple) and arm-level objective (vs base); improvement-on-improvement vs L5.",
