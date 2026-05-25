@@ -17,8 +17,14 @@
   },
   "context_chars_in": 7532,
   "context_tokens_estimated": 1883,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 43,
+    "cache_creation": 833,
+    "cache_read": 75523,
+    "total": 76400
+  },
+  "duration_seconds": 371.2,
   "summary_out": {
     "changed": "Removed the ratio leg entirely from afg-b-l3 and TIGHTENED the absolute threshold from 2.0 -> 1.0 contracts (10s window unchanged). The gate is now simply: skip iff |net_flow_window| >= 1.0. Anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly.",
     "outcome": "pnl +2415.61% vs simple baseline ($1088.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 5.36, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by very wide margin. AND vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): +12.16% pnl ($1088.00 vs $970.00), -1,671 trades (-1.90%), sharpe 5.36 vs 4.58. This is the FIRST loop in the afg-b lineage to GENUINELY BEAT the base. Hypothesis CONFIRMED.",
