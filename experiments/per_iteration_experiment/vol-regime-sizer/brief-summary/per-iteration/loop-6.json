@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "brief-summary",
+  "loop": 6,
+  "algo_id": "vrs-b-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1220.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.051417740994172,
+    "max_drawdown_pct": -0.038974844100623594,
+    "win_rate": 0.35337175508595636,
+    "trade_count": 101505,
+    "vs_base_pnl_pct": 110.6557,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 13380,
+  "context_tokens_estimated": 3345,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Single config-default edit vs L5: adverse_multiplier 0.10 -> 0.025 (one-knob deepening per L5's `next` text, ~2 geometric halvings from L5). All other mechanics preserved verbatim from L5: same gate topology (always apply base vol-skip + multiplicative skip on adverse-drift), drift_threshold=0.005, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.00125 on adverse-drift floor cases vs 0.005 in L5). Mechanical structural copy from L5; class names VrsBL5* -> VrsBL6*.",
+    "outcome": "Continued breakthrough; new arm leader by a thin margin. Pnl $1220.75 on 11 dates: +2722.54% vs simple ($43.25), +110.66% vs base_algo vol-regime-sizer ($579.50), +2.37% vs L5 ($1192.50). Sharpe 5.05 (vs L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best. Trade_count 101,505 = -2.75% vs base (-2,867 trades), -0.24% vs L5 (-242 marginal extra skips). Marginal per-skip EV vs L5: $28.25 / 242 = $0.117/skip -- BELOW L5's marginal $0.21/skip and BELOW L4's marginal $0.18/skip; the diminishing-returns slope L4 predicted and L5 didn't see finally bent on this halving. L6 beat L5 on 7/11 dates, tied on 2, lost on 2 (20260309 -$8.50, 20260310 -$25.25 -- mid-week strong-base dates where the newly-skipped tail at u in (0.025*base_p, 0.10*base_p) had marginally positive-EV admits). Max drawdown -3.90% (slight tightening). Slippage 0.0/0.0 (no regression). PASS by both formal gate (vs simple) and arm-level objective (vs base); improvement-on-improvement vs L5.",
+    "hypothesis": "L5's `next` explicitly prescribed continuing to deepen the multiplier 0.10 -> 0.025 (one halving 0.10 -> 0.05 would also work but 0.025 better tests whether the slope finally flattens), AVOIDING the corner case mult=0.0 (premature -- one more data point on the slope is more informative). L5's predictions: (i) best case marginal EV $0.08-0.18/skip on the new admits -> incremental pnl ~$40-100 -> total ~$1,230-1,290; (ii) failure case per-skip EV inverts on the new tail at u in (0.025*base_p, 0.10*base_p) -> pnl regresses toward $1192. Outcome landed in band (i) at the lower edge: $1,220.75 just below L5's lower bound by ~$10, marginal EV $0.117/skip mid-band. The slope L4 predicted and L5 didn't see finally bent -- per-mult-halving marginal EV dropped roughly in half from 0.21 to 0.117 $/skip. The breakthrough architecture L3 established (always apply base skip + multiplicative skip on adverse-drift, strict subset of base admits) continues to hold; the same lever is now approaching saturation but has not yet inverted.",
+    "brief_summary": "vrs-b-l6 (vol-regime-sizer brief-summary loop 6) made a single-knob deepening per L5's `next`: adverse_multiplier 0.10 -> 0.025, nothing else changed. Result is PASS and new arm leader by a thin margin: $1220.75 over 11 dates = +2722.54% vs simple ($43.25), +110.66% vs base ($579.50), +2.37% vs L5 ($1192.50). Sharpe 5.05 (vs L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best. Max drawdown a hair tighter at -3.90% (vs L5 -3.94%). Trade_count 101,505 (-242 vs L5, -2,867 vs base) -- marginal per-skip EV vs L5 is $0.117/skip, BELOW L5's marginal $0.21/skip and BELOW L4's marginal $0.18/skip -- the diminishing-returns slope L4 originally predicted and L5 didn't see has now finally bent. L6 beat L5 on 7/11 dates, tied on 2, lost on 2 (20260309 -$8.50, 20260310 -$25.25, both mid-week strong-base days where the newly-skipped tail at u in (0.025*base_p, 0.10*base_p) was marginally positive-EV). The structural breakthrough architecture from L3 (always apply base skip + multiplicative skip on adverse-drift, strict subset of base admits) continues to hold; the same lever is now approaching saturation -- still positive marginal but the slope clearly bent.",
+    "next": "L5's alternative path is now activated: WIDEN the adverse subset by lowering drift_threshold 0.005 -> 0.003 in L7, holding adverse_multiplier=0.025 (L6's value). Reasoning: per-mult-halving marginal EV has now bent (L5: 0.21 -> L6: 0.117 $/skip); pushing the same knob again (0.025 -> ~0.006) risks crossing into negative marginal EV and the strict-subset cap doesn't help vs L6 (only vs base). A drift_threshold widening brings NEW borderline-drift orders into the multiplier zone -- a different subset of admits than the saturated mult-deepening dimension. Predicted L7 marginal-per-borderline-skip EV: comparable to L6's $0.117/skip if borderline-drift admits are similarly negative-EV; $0.04-0.08/skip if the borderline subset is materially weaker (drift_ewm magnitude in [0.003, 0.005] carries less directional information than [>0.005]). Predicted L7 pnl: $1,230-1,310 best case, $1,170-1,220 weak-subset case (could regress vs L6 modestly). Avoid: changing multiple knobs at once (loses signal on which lever moved the result); further mult deepening (saturation risk); changing vol EWM halflives (orthogonal lever, save for a future arm). Less attractive: vol_ratio-conditional multipliers (apply mult only when vol_ratio > 2.0) -- adds complexity, harder to interpret marginal pnl attribution."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T20:00:00Z"
+}
