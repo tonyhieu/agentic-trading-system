@@ -17,8 +17,14 @@
   },
   "context_chars_in": 11783,
   "context_tokens_estimated": 2945,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 24,
+    "cache_creation": 197,
+    "cache_read": 86161,
+    "total": 86383
+  },
+  "duration_seconds": 428.1,
   "summary_out": {
     "changed": "Single-parameter change vs L5 (effective L4): LOOSENED the absolute threshold from 1.0 -> 3.0 contracts (one integer step BEYOND base's 2.0 in the loose direction; 10s window, ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly). Admit set is a strict superset of base's: orders with |net_flow|=2 (which base would skip) are now ADMITTED.",
     "outcome": "pnl +1823.70% vs simple baseline ($832.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 3.83, slippage 0.0/0.0. Gate vs simple: PASS by very wide margin. BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -14.23% pnl ($832 vs $970), +1,397 trades (+1.59%), sharpe 3.83 vs 4.58. AND vs L4=L5 (the in-arm leaders, $1088 / 86,089 / sharpe 5.36): regressed -23.5% pnl, +3,068 trades, -28.6% sharpe. Refinement targets vs L4: ALL FAIL.",
