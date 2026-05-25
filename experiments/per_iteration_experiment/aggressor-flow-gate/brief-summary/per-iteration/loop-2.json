@@ -17,8 +17,14 @@
   },
   "context_chars_in": 2313,
   "context_tokens_estimated": 578,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 4,
+    "cache_creation": 683,
+    "cache_read": 75652,
+    "total": 76340
+  },
+  "duration_seconds": 376.1,
   "summary_out": {
     "changed": "Replaced the pure-ratio gate from afg-b-l1 with a CONJUNCTION: skip iff (|net_flow| >= 2.0 contracts) AND (|net_flow| / max(2.0, abs_vol_window) >= 0.35), 10s window. Intent: strict intersection of base + L1 admitted-order sets. Anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly.",
     "outcome": "pnl +973.41% vs simple baseline ($464.25 vs $43.25 over 11 apples-to-apples dates), sharpe 2.06, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -52.14% pnl, +16.2% trade_count (+14,245). Hypothesis CONTRADICTED.",
