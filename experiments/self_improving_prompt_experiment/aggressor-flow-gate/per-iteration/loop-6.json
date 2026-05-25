@@ -1,0 +1,40 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 6,
+  "algo_id": "sip-afg-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 984.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.834627317489331,
+    "max_drawdown_pct": -0.029574881700473198,
+    "win_rate": 0.353489547148361,
+    "trade_count": 79165,
+    "vs_base_pnl_pct": 1.4690721649484535,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l5.md",
+  "prompt_chars_in": 7689,
+  "trace_path": "reasoning-traces/loop-6-trace.md",
+  "critic_summary": "The single failure mode targeted: the single-axis sibling calibration method (prompt-l5.md) instructed the researcher to calibrate a parameter from offline DBN replay, but the replay used worst-case adverse side at every arrival while the live algorithm picks oracle-driven sides. The offline firing-rate measurement (0.604 at threshold=3.0) was thus an upper bound on the live firing rate, and the offline-to-live transfer broke: trade_count moved +0.92% vs the predicted [82k, 86k] band (the pre-committed falsifier triggered), and realized_pnl regressed from 1002 to 984. The trace explicitly identifies this as the unguarded gap (Concerns section and 'What a different method might have produced'): the method had no protocol to measure firing rate AS THE ALGORITHM EXPERIENCES IT. The proposed method (live-instrumentation calibration) replaces offline DBN replay with counters embedded inside the actual on_order() branch the parameter controls. The probe algorithm is a behaviorally-identical copy of the kept algorithm with only +=1 increments and end-of-run log lines added; the firing rate is read back from grep'd backtest logs across the full 12-date train window; the trade_count delta prediction uses the same denominator the counter recorded (no scaling, no extrapolation). Two terminal escalation branches: (a) parameter already live-calibrated within 10% \u2192 null run; (b) denominator < 1000 across all 12 dates \u2192 branch fires too rarely to refine. Gate action this loop: 0 of 5 metrics improved vs L5 (realized_pnl, sharpe_ratio, max_drawdown_pct, win_rate all worse; mean_slippage tied at 0.0) \u2192 reverted; .current_prompt.md restored to prompt-l0.md per spec (L5's prompt_in). If this method works in the next loop, I'd expect the reasoning trace to (a) cite a live-counter firing rate that differs measurably from any offline projection, (b) derive the trade_count prediction directly as (\u0394firing_rate \u00d7 live_denominator) with no cross-protocol scaling, and (c) report a backtest in which the trade_count delta falls within the live-counter-projected band rather than tripping the falsifier.",
+  "prompt_out": "prompts/proposed/loop-6-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": {
+    "input": 1,
+    "output": 822,
+    "cache_creation": 235,
+    "cache_read": 63803,
+    "total": 64861
+  },
+  "duration_seconds": 8149.9,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 625,
+    "cache_creation": 1325,
+    "cache_read": 60112,
+    "total": 62063
+  },
+  "critic_duration_seconds": 214.7,
+  "timestamp": "2026-05-25T08:05:36Z"
+}

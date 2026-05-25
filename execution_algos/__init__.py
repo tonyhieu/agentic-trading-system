@@ -113,6 +113,18 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.sip-afg-l5",
         "get_execution_algorithm",
     ),
+    "sip-afg-l6": (
+        "execution_algos.sip-afg-l6",
+        "get_execution_algorithm",
+    ),
+    "sip-afg-l7": (
+        "execution_algos.sip-afg-l7",
+        "get_execution_algorithm",
+    ),
+    "sip-afg-l8": (
+        "execution_algos.sip-afg-l8",
+        "get_execution_algorithm",
+    ),
     "sip-vrs-l1": (
         "execution_algos.sip-vrs-l1",
         "get_execution_algorithm",
