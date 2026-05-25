@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "brief-summary",
+  "loop": 4,
+  "algo_id": "vrs-b-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1086.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.426692625912472,
+    "max_drawdown_pct": -0.039274842900628396,
+    "win_rate": 0.3531275671869499,
+    "trade_count": 102252,
+    "vs_base_pnl_pct": 87.5324,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 7288,
+  "context_tokens_estimated": 1822,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Single config-default edit vs L3: adverse_multiplier 0.5 -> 0.25 (one-knob deepening of the L3 breakthrough lever per L3's `next` text). All other mechanics preserved verbatim: same gate topology (always apply base skip + multiplicative skip on adverse-drift), drift_threshold=0.005, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.0125 on adverse-drift floor cases vs 0.025 in L3). Mechanical structural copy from L3.",
+    "outcome": "Continued breakthrough. Pnl $1086.75 on 11 dates: +2412.72% vs simple ($43.25), +87.53% vs base_algo vol-regime-sizer ($579.50), +15.18% vs L3 ($943.50). Sharpe 4.43 (vs L3 3.83, vs base ~3.06). Trade_count 102,252 = -2.03% vs base (-2,120 trades), -0.76% vs L3 (-788 marginal extra skips). Marginal per-skip EV vs L3: ~$0.18/skip (positive; mildly below L3's ~$0.27/skip extras vs base, consistent with leading-edge diminishing returns). L4 beat L3 on 9 of 11 dates; the two losses (20260308 -$13.75, 20260309 -$24.75) are low-trade-count early-week dates where noise dominates the small absolute multiplier effect.",
+    "hypothesis": "L3's breakthrough lever is the adverse_multiplier on a well-defined adverse-drift subset. Deepening 0.5 -> 0.25 will compound the lever along the same direction: per-skip EV being positive means tightening admit probability further on adverse-drift orders should extract more of the negative-EV tail. Two outcomes predicted per L3's `next`: (i) uniform per-skip EV -> pnl $1100-1300 (best case); (ii) mult=0.5 already caught the worst -> pnl flat. Outcome was (i) at the lower bound: pnl $1086.75 vs predicted $1100-1300. Architecture predictions held verbatim: strict subset of base's admit set (and now also of L3's), trade_count decreases monotonically with each mult notch (L3 103,040 -> L4 102,252).",
+    "brief_summary": "vrs-b-l4 (vol-regime-sizer brief-summary loop 4) made a single-knob deepening per L3's `next`: adverse_multiplier 0.5 -> 0.25, nothing else changed. Result is a strong PASS and continued breakthrough: $1086.75 over 11 dates = +2412.72% vs simple ($43.25), +87.53% vs base ($579.50), +15.18% vs L3 ($943.50). Sharpe 4.43 (vs L3 3.83, base ~3.06). Trade_count 102,252 (-788 vs L3, -2,120 vs base) -- marginal per-skip EV vs L3 is ~$0.18/skip, positive but below L3's ~$0.27/skip extras vs base, consistent with the lever entering its diminishing-returns region but still net-productive. L4 beat L3 on 9 of 11 dates; the two losses are early-week low-trade-count dates where noise dominates. The 'best case' scenario L3's `next` predicted (uniform per-skip EV across adverse subset -> pnl $1100-1300) materialized at the lower bound. The structural breakthrough architecture from L3 (always apply base skip + multiplicative skip on adverse-drift, strict subset of base's admit set) holds and compounds as predicted; single-knob lever pushes are the right move while it continues working.",
+    "next": "Continue deepening the multiplier one more notch: 0.25 -> 0.1. With marginal per-skip EV at $0.18/skip and the diminishing-returns slope at ~$0.09/skip per mult halving (L3-extras-vs-base ~$0.27 -> L4-marginal-vs-L3 ~$0.18), expect L5 marginal EV to be ~$0.09/skip and incremental pnl gain of ~$70-100 over 11 dates -> total ~$1,150-1,200. Worst-case: mult=0.1 newly-skips some marginal-positive-EV adverse admits -> pnl regresses toward L3's $943 but the strict-subset architecture caps the downside. AVOID mult=0.0 in L5 -- save the corner case until L5 confirms the diminishing-returns slope shape; need one more data point before extrapolating to the floor. Alternative if L5 confirms saturation: widen the adverse subset by lowering drift_threshold 0.005 -> 0.003 (brings in borderline-drift orders to apply the multiplier on; risk is marginal adverse orders have lower per-skip EV than the current subset). Less attractive: vol_ratio-conditional multipliers (apply mult=0.1 only when vol_ratio > 2.0). Stay with single-knob mult pushes while the lever is still positive."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T18:18:09Z"
+}

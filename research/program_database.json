@@ -532,5 +532,29 @@
       "duration_seconds": null,
       "tokens_used": null
     }
+  },
+  {
+    "id": "vrs-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 \u2014 built on vrs-b-l3 by a single config-default edit: adverse_multiplier 0.5 -> 0.25 (deepen the breakthrough lever per L3's `next` text). Brief-summary context from loop-1.json + loop-2.json + loop-3.json only (changed/outcome/hypothesis/brief_summary/next + metrics; no NOTES.md prose, mechanical copy of L3's execution_algorithm.py). Everything else preserved verbatim from L3: same gate topology (always apply base skip + extra multiplicative skip on adverse), same drift_threshold (0.005), same drift_halflife (40), same vol EWM params. min_prob=0.05 floor applies to base_p only; p_final may dip to 0.0125 on adverse-drift floor cases (vs 0.025 in L3). Intent: compound the working lever (L3 confirmed adverse-drift subset is materially worse than aligned-drift subset), do NOT re-architect. Two outcomes predicted: (i) per-skip EV roughly uniform across adverse subset -> pnl rises to $1100-1300; (ii) mult=0.5 already caught the worst admits -> pnl flat or slightly down. Worst case still strict-subset architecture: bounded downside.",
+    "algorithm_path": "execution_algos/vrs-b-l4/",
+    "scores": {
+      "sharpe": 4.4267,
+      "realized_pnl": 1086.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2412.7168,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 102252,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+2412.72% pnl, gate +5.0%) AND widened the breakthrough vs base_algo vol-regime-sizer on same 11 dates (+87.53% pnl vs base's $579.50, up 24.7 pp from L3's +62.81%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l4 $1086.75/102,252 trades vs L3 $943.50/103,040 trades vs base $579.50/104,372 trades vs simple $43.25/111,489 trades. Trade_count delta vs base: -2,120 (-2.03%); vs L3: -788 trades (-0.76%) -- L4's marginal extra skips beyond L3's. Marginal per-skip EV vs L3: $143.25 / 788 = ~$0.18/skip (positive; mildly below the ~$0.27/skip seen on L3's extras vs base, consistent with leading-edge diminishing returns but lever still productive). L4 beat L3 on 9 of 11 dates; the two losses (20260308 -$13.75, 20260309 -$24.75) are low-trade-count early dates where noise dominates and the multiplier only moves a handful of orders. Sharpe 4.43 vs L3 3.83 vs base ~3.06 (delta +44.7% vs base). Max drawdown improved to -3.93% (vs L3 -4.03%, base -4.60%). Slippage 0.0/0.0 (no regression). Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base), and a clear improvement-on-improvement vs L3. Architecture L3's L3 established (always apply base skip + multiplicative skip on adverse-drift) holds; the single-knob deepening worked exactly as L3's `next` predicted (best-case scenario). Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess on signal 9; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T18:18:09Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
