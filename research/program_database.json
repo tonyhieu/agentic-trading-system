@@ -298,5 +298,29 @@
         "total": 80850
       }
     }
+  },
+  {
+    "id": "afg-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 -- built on afg-b-l3 by REMOVING the ratio leg entirely and TIGHTENING the absolute threshold from 2.0 -> 1.0 contracts (10s window). Brief-summary context across L1+L2+L3 indicated the ratio reformulation cannot beat base on this oracle no matter how composed; L1 also established a monotone rule (~$47/1k extra admits beyond base cost pnl). Read in reverse, marginal SKIPS beyond base should YIELD pnl at the same rate. Logically the way to ADD skips on top of base's set is to LOWER the absolute threshold (not raise it as L3's next text had textually prescribed). Hypothesis CONFIRMED.",
+    "algorithm_path": "execution_algos/afg-b-l4/",
+    "scores": {
+      "sharpe": 5.360031757285958,
+      "realized_pnl": 1088.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2415.606936416185,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86089,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2415.61% pnl, +5.0% gate cleared by very wide margin) AND GENUINELY BEATS base_algo aggressor-flow-gate on the matched 11 dates (+12.16% pnl: $1088.00 vs $970.00; -1,671 trades / -1.90%; sharpe 5.36 vs 4.58). This is the FIRST loop in the afg-b lineage to beat the base on this oracle (L1: -53%, L2: -52%, L3: 0%, L4: +12.16%). 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 4; uses only afg-b-l1/l2/l3 summary_out blocks as prior context plus mechanical inspection of those algos' source for class shape and parameter shape. Mechanism: 1,671 fewer admits (orders with |net_flow| in [1, 2) now skipped); those marginal-imbalance orders are weakly anti-informative, yielding ~$70.6 per 1k extra skips (modestly above L1's $47/1k for the inverse direction). Sharpe rose from 4.58 to 5.36 with comparable max_dd. Validates the L1 monotone arithmetic and pivots the search axis to the absolute-threshold sweep (next loop should test threshold 0.5 to bracket the optimum). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T02:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
