@@ -1,0 +1,58 @@
+{
+  "algo_name": "afg-pc-r2",
+  "backtest_date": "2026-05-25T21:27:37Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 1093.25,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 5.265113786688969,
+    "sharpe_n_days": 12,
+    "max_drawdown_pct": -0.029524867138097877,
+    "win_rate": 0.35242099316668296,
+    "trade_count": 92049,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.109325,
+    "is_weighted_bps": 0.0505857970755972,
+    "is_total_price": 6674.125,
+    "vs_baseline_pnl_pct": 600.801282051282,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 30.099279897000557
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260308",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260309",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260310",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260311",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260312",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260313",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260315",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260316",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260317",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260318",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260319",
+    "C:\\Users\\franklinliu\\agentic-trading-system\\execution_algos\\afg-pc-r2\\results\\20260320"
+  ]
+}
