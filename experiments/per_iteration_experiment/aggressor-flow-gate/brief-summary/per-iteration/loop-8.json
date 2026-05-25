@@ -17,8 +17,14 @@
   },
   "context_chars_in": 20779,
   "context_tokens_estimated": 5194,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1724,
+    "cache_creation": 303,
+    "cache_read": 85245,
+    "total": 87273
+  },
+  "duration_seconds": 397.4,
   "summary_out": {
     "changed": "Single ORTHOGONAL parameter change vs L4 (the prior in-arm leader at $1088), opposite direction from L7's window cut: LENGTHENED window_seconds from 10.0 -> 20.0 with flow_threshold PINNED at L4's integer optimum 1.0. Ratio leg absent (same as L4/L5/L6/L7), anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. All other code byte-identical to L4 (class renamed AfgBL4* -> AfgBL8*, default window in factory 10.0 -> 20.0). NOTE: vs L7 (the prior loop), the single change is window_seconds 5.0 -> 20.0 -- a 4x widening that brackets the OTHER side of the window-axis optimum from L7's probe.",
     "outcome": "pnl +2711.56% vs simple baseline ($1216.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 5.814, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by ~542x. AND vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades / sharpe 4.58): +25.36% pnl ($1216 vs $970; +$246), -2,446 trades (-2.79%), sharpe 5.81 vs 4.58 (+1.23 absolute, +27%). AND vs prior in-arm leader L4=L5 ($1088.00 / 86,089 / sharpe 5.36): +11.76% pnl ($1216 vs $1088; +$128), -775 trades (-0.90%), sharpe 5.81 vs 5.36 (+0.45 absolute). Refinement targets vs L4: pnl PASS by ~5.9x, sharpe CLOSE (delivered +0.454 vs +0.5 target, off by 0.046), slippage TIED, win_rate +0.18pp MISS, max_dd -0.14pp MISS. L8 is the NEW IN-ARM LEADER on pnl AND sharpe AND trade-count (most selective).",
