@@ -28,7 +28,13 @@
     "total": 62339
   },
   "duration_seconds": 200.7,
-  "critic_tokens_used": null,
-  "critic_duration_seconds": null,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 117,
+    "cache_creation": 770,
+    "cache_read": 23879,
+    "total": 24767
+  },
+  "critic_duration_seconds": 7.7,
   "timestamp": "2026-05-25T16:59:43Z"
 }
