@@ -388,5 +388,29 @@
         "total": 86383
       }
     }
+  },
+  {
+    "id": "afg-b-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 7 -- built on afg-b-l4 (the in-arm leader at $1088 / 86,089 trades / sharpe 5.36) by a single ORTHOGONAL parameter change: window_seconds 10.0 -> 5.0 with flow_threshold PINNED at L4 integer optimum 1.0; ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. Brief-summary context across L1+L2+L3+L4+L5+L6 plus L6 brief_summary explicitly prescribed pivoting to the orthogonal window axis at flow=1.0 because the absolute-threshold axis was fully bracketed and monotone (1:1088, 2:970, 3:832). Hypothesis: shorter window = less stale flow = potentially more selective skips; or alternately, shorter window misses slow-developing flow imbalance. CONTRADICTED (directional): pnl regressed to $950.50 vs L4 $1088 (-12.64%) and slightly below base (-2.01%). Newly admitted orders (the ones L4 skipped on 5-10s-stale flow imbalance) were NET ANTI-INFORMATIVE at ~-$155/k extra admits. The 5-10s flow memory IS informative for the 30s oracle horizon -- not stale noise.",
+    "algorithm_path": "execution_algos/afg-b-l7/",
+    "scores": {
+      "sharpe": 4.529771278300076,
+      "realized_pnl": 950.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2097.6878612716764,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86973,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2097.69% pnl, +5.0% gate cleared by ~419x; slippage tied at 0.0/0.0) but slightly REGRESSED vs base_algo aggressor-flow-gate on the matched 11 dates (-2.01% pnl: $950.50 vs $970.00; -787 trades / -0.90%; sharpe 4.53 vs 4.58 essentially tied) and materially REGRESSED vs in-arm leaders L4=L5 (-12.64% pnl: $950.50 vs $1088.00; +884 trades; sharpe 4.53 vs 5.36 / -15.5%). Refinement targets vs L4: ALL FAIL. PARTIAL recovery from L6 (-14.23% -> -2.01% vs base), driven almost entirely by reverting flow_threshold from L6 3.0 back to L4 integer optimum 1.0; the residual -2.01% gap is the COST of the orthogonal window cut 10s -> 5s. 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 7; uses only afg-b-l1/l2/l3/l4/l5/l6 summary_out blocks as prior context plus mechanical inspection of L4 source for class shape. Mechanism: cutting the deque window from 10s to 5s makes the absolute predicate fire less often (deque sees fewer trades, sums smaller), so L7 SKIPS FEWER orders than L4 (+884 admits); those newly-admitted orders are the ones L4 was correctly skipping on 5-10s-old flow imbalance, and they are net anti-informative on this oracle (-$155 per 1k extra admits). Read: the 5-10s flow memory is genuinely informative, not stale noise; the oracle 30s forecast horizon (config.yaml) supports flow look-back up to ~10s as a productive signal. Window-axis data now: 5s:950, 10s:1088 -- gradient at 10s is NEGATIVE going down. Next loop should probe window=20s at flow=1.0 to bracket the window optimum (oracle horizon 30s is the natural ceiling for any window > 20s). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND a regression vs L4 is not a snapshot candidate anyway.",
+    "timestamp": "2026-05-25T04:32:21Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
