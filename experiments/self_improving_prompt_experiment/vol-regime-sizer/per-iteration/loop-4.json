@@ -1,0 +1,28 @@
+{
+  "experiment":             "self_improving_prompt_experiment",
+  "base_algo":              "vol-regime-sizer",
+  "loop":                   4,
+  "algo_id":                "sip-vrs-l4",
+  "status":                 "completed",
+  "metrics": {
+    "realized_pnl":         439.0,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         1.771596364158811,
+    "max_drawdown_pct":     -0.04854974511383815,
+    "win_rate":             0.35153232432598464,
+    "trade_count":          130227,
+    "vs_base_pnl_pct":      -41.7578781858925,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in":              "prompt-l1.md",
+  "prompt_chars_in":        7324,
+  "trace_path":             "reasoning-traces/loop-4-trace.md",
+  "critic_summary":         "Targeted failure mode: the method allows a hypothesis to ship without recorded falsification artifacts and without parameters that are empirically tied to the parent's CSVs. Loop 4's NOTES.md committed straight to the trendiness mechanism with no documented candidate enumeration, no falsification snippets, no statistics, no verdicts — the trace itself flagged that the hypothesis went from 'plausible mechanism' to 'implemented algorithm' bypassing the method's central artifact. A second symptom: `trend_window=40` was nominally 'principled' (two parent fast-EWM half-lives ≈ 2-5 seconds) but the strategy's operative horizon is ~30 seconds, so the parameter was internally consistent and empirically untethered. The proposed method would have prevented both by (a) requiring each falsification test to be a runnable one-line pandas snippet with explicit pre-committed date list and an inline 'Per-date stats' line listing the per-date scalars (verdicts without this line are auto-treated as INDETERMINATE — the audit trail is mechanical, not voluntary), and (b) requiring at least one parameter of the chosen mechanism to be 'Derived from a step-4 statistic' on parent CSVs (parameters at a timescale that contradicts the Step-1 operative horizon by more than a factor of 3 are rejected). If the new method works, the next reasoning trace will show three candidate weaknesses each naming a τ and an H, three one-line snippets with explicit date lists, three per-date stats lines, and at least one parameter whose value traces directly to a parent CSV statistic rather than to a parent EWM half-life. Action was reverted because 0/5 gate metrics improved vs the running best (loop 1).",
+  "prompt_out":             "prompts/proposed/loop-4-proposal.md",
+  "prompt_action":          "reverted",
+  "tokens_used":            null,
+  "duration_seconds":       null,
+  "critic_tokens_used":     null,
+  "critic_duration_seconds": null,
+  "timestamp":              "2026-05-25T17:00:00Z"
+}
