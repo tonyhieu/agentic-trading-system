@@ -478,5 +478,29 @@
         "total": 180463
       }
     }
+  },
+  {
+    "id": "vrs-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 \u2014 built on vrs-b-l1 by a single config-default edit: drift_threshold 0.05 -> 0.008 (~6x smaller). Brief-summary context from loop-1.json only; L1 reported the drift gate fired on ~1 of 111,488 orders, so the directional-adverse-selection hypothesis was effectively untested. This loop recalibrates the threshold to mid-range of L1's recommended 0.005-0.01 band; all other mechanics (fast/slow halflives, sensitivity, min_prob, drift_halflife=40, gate semantics: skip iff vol elevated AND drift adverse; aligned drift forces p=1.0; reduce-only path; SHA256 deterministic draw) preserved verbatim.",
+    "algorithm_path": "execution_algos/vrs-b-l2/",
+    "scores": {
+      "sharpe": 0.2564,
+      "realized_pnl": 64.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 48.5549,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 111416,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+48.55% pnl gate +5.0%), BUT materially WORSE than base_algo vol-regime-sizer on same 11 dates (-88.91% pnl, +6.75% trade_count). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l2 $64.25/111,416 trades vs simple $43.25/111,489 trades vs base_algo vol-regime-sizer $579.50/104,372 trades. Trade_count delta vs L1 (which was $42.50/111,488): -72 trades (effectively identical). Even at threshold 0.008, the gate fires only ~72 more times than L1's ~0 \u2014 the asymmetric override architecture (admit on aligned drift, restrict skip to adverse) is structurally a strict liability against base's symmetric vol-skip. Per OBJECTIVE \u00a78 honesty: the formal pass_gate.baseline is 'simple' (PASS), but the per_iteration_experiment arm-level objective is improving on the base_algo, on which this is a -89% regression. Flagging 'PASS vs simple, FAIL vs base' pattern explicitly. Per_iteration_experiment loop \u2014 NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T17:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
