@@ -320,3 +320,14 @@ Append one entry to `experiments/proposer_criticizer_experiment/<base_algo>/prog
 - **Debate is pre-implementation only.** No code is written until the debate concludes.
 - **Honesty rules from OBJECTIVE.md §8 apply in full** — raw numbers, flag low trade counts.
 - **Do not read the `strategies/` folder.**
+- **Cross-experiment isolation.** To prevent contamination of the hypothesis from prior unrelated work, the Proposer and Criticizer may read ONLY the following directories under `execution_algos/` and `experiments/`:
+  - `execution_algos/<base_algo>/` — the fixed reference algorithm (full read: code, NOTES.md, results).
+  - `execution_algos/<algo-id>/` — the current run's own directory (write + read).
+  - `experiments/proposer_criticizer_experiment/<base_algo>/` — same-experiment prior runs (run-*/loop.json, run-*/debate.json, program_database.json).
+  - Reading any of the following is FORBIDDEN — it would bias the hypothesis with results from a different experimental setup:
+    - Sibling `execution_algos/<other-id>/` directories (e.g. `afg-m-l*`, `ptg-m-l*`, `vrs-*`, `simple_execution_strategy`, other base algos, or pc-experiment algos for a different `base_algo`). The cached baseline results are exposed only via `--use-cached-baseline` at backtest time, not via direct file reads.
+    - Other experiment trees: `experiments/per_iteration_experiment/`, `experiments/metrics_only_experiment/`, and any `experiments/proposer_criticizer_experiment/<other-base-algo>/`.
+    - `research/NOTES.md`, `research/program_database.json`, `research/log.md`, `research/suggested_improvements.md` — these reflect prior unrelated research loops.
+    - `docs/_archive/` and prior-iteration write-ups in `docs/literature/` that summarize specific past algorithms.
+  - Reading shared infrastructure is allowed: `research/config.yaml`, `docs/OBJECTIVE.md`, `.claude/skills/*/SKILL.md`, `backtest_engine/`, `scripts/`, `execution_algos/__init__.py` (registry), `execution_algos/base.py` or equivalent abstract-base files. Generic market microstructure literature in `docs/literature/` that is not specific to a prior algorithm is allowed.
+  - Do not run `grep`/`Grep` patterns that span the whole repo if they would surface forbidden file contents — scope searches to the allowed directories.
