@@ -17,8 +17,14 @@
   },
   "context_chars_in": 16573,
   "context_tokens_estimated": 4143,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 27,
+    "cache_creation": 594,
+    "cache_read": 87824,
+    "total": 88446
+  },
+  "duration_seconds": 507.5,
   "summary_out": {
     "changed": "Single ORTHOGONAL parameter change vs L4 (the in-arm leader at $1088): SHORTENED window_seconds from 10.0 -> 5.0 with flow_threshold PINNED at L4's integer optimum 1.0. Ratio leg absent (same as L4/L5/L6), anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. NOTE: vs L6 (the prior loop), TWO parameters shifted simultaneously: L7 reverted flow_threshold from L6's 3.0 back to 1.0 AND additionally cut window 10s -> 5s. So L7 is 'L4 with a shorter window,' not 'L6 with a shorter window' -- a brief-summary-prescribed pivot to the orthogonal window axis after L6 closed the threshold sweep.",
     "outcome": "pnl +2097.69% vs simple baseline ($950.50 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 4.530, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by ~419x. BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -2.01% pnl ($950.50 vs $970.00); -787 trades (-0.90%); sharpe 4.530 vs 4.580 essentially tied. AND vs in-arm leaders L4=L5 ($1088.00 / 86,089 / sharpe 5.36): regressed -12.64% pnl ($950.50 vs $1088); +884 trades (+1.03%); sharpe 4.530 vs 5.360 (-15.5%). Refinement targets vs L4: ALL FAIL. PARTIAL recovery vs L6 (L6: -14.23% vs base -> L7: -2.01% vs base), driven almost entirely by reverting flow_threshold from L6's 3.0 back to L4's optimum 1.0; the residual -2.01% gap (vs L4's $1088 -> L7's $950.50 = -$137.50) is the COST of the orthogonal window cut.",
