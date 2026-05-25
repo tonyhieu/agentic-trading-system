@@ -17,8 +17,14 @@
   },
   "context_chars_in": 22562,
   "context_tokens_estimated": 5640,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 2252,
+    "cache_creation": 1781,
+    "cache_read": 91397,
+    "total": 95431
+  },
+  "duration_seconds": 428.0,
   "summary_out": {
     "changed": "Single config-default edit vs L7: drift_threshold 0.003 -> 0.002 (one-knob further-WIDENING of the adverse-drift subset per L7's `next` text -- the second data point on the same fresh-and-productive threshold dimension L7 opened). adverse_multiplier held at L6/L7's 0.025; all other mechanics preserved verbatim from L7: same gate topology (always apply base vol-skip + multiplicative skip on adverse-drift), drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.00125 on adverse-drift floor cases, same as L7). Mechanical structural copy from L7; class names VrsBL7* -> VrsBL8*. This is the FINAL LOOP of the 8-loop arm.",
     "outcome": "PASS; FINAL ARM LEADER on every primary metric AND largest single-step pnl jump in the lineage. Pnl $1766.50 on 11 dates: +3984.39% vs simple ($43.25), +204.83% vs base_algo vol-regime-sizer ($579.50), +25.89% vs L7 ($1403.25). Sharpe 8.18 (vs L7 6.06, L6 5.05, L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- arm best with +2.12 jump, the LARGEST sharpe jump in the entire lineage (vs L6->L7 +1.01, L4->L5 +0.38, L5->L6 +0.24). Trade_count 96,095 = -7.93% vs base (-8,277 trades), -2.99% vs L7 (-2,964 marginal extra skips at borderline drift |drift_ewm| in [0.002, 0.003]). Marginal per-borderline-skip EV vs L7: $363.25 / 2,964 = $0.1225/skip -- ABOVE L7's marginal $0.0746/skip and ABOVE L6's marginal $0.117/skip; the threshold dimension is NOT yet saturated and the drift signal at |drift_ewm| in [0.002, 0.003] carries MORE per-skip information than the deeper [0.003, 0.005] band. L8 beat L7 on 8/11 dates, lost on 3 (20260310 -$31.25, 20260311 -$3.75, plus marginal). Max drawdown improved to -3.15% (vs L7 -3.61%, base -4.60%). Slippage 0.0/0.0 (no regression). PASS by both formal gate (vs simple) and arm-level objective (vs base).",
