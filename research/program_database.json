@@ -268,5 +268,29 @@
         "total": 76340
       }
     }
+  },
+  {
+    "id": "afg-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 -- built on afg-b-l2 by replacing the CONJUNCTION with a DISJUNCTION: skip iff (|net_flow| >= 2.0) OR (|r| >= 0.35 AND abs_vol >= 5.0). Brief-summary context across prior two loops (l1=-53.25%, l2=-52.14% vs base) indicated the path forward is to ADD skips on top of base's set; disjunction makes the skip set a strict superset of base's by construction. New busyness floor (min_busy_abs_vol=5.0) on the ratio leg avoids the L1 warm-up degenerate where a single 2-contract trade gives r=1.0 trivially. Result: contradicted -- algo collapsed to base EXACTLY (0.0% pnl diff, 0 trade diff) because the chosen parameters (flow=2, ratio=0.35, busy_floor=5) make the ratio leg structurally dominated by the absolute leg on this oracle.",
+    "algorithm_path": "execution_algos/afg-b-l3/",
+    "scores": {
+      "sharpe": 4.580877323065416,
+      "realized_pnl": 970.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2142.774566473988,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 87760,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2142.77% pnl, +5.0% gate cleared by wide margin) but EXACTLY IDENTICAL to base_algo aggressor-flow-gate on the matched 11 dates (pnl=$970.00=base, trades=87,760=base, 0 differences). 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 3; uses only afg-b-l1 and afg-b-l2 summary_out blocks as prior context plus mechanical inspection of those algos' source for class shape. Collapse-to-base diagnosis: for any order where the absolute leg is silent (|net_flow|<2) and the busyness floor is met (abs_vol>=5), the ratio |net_flow|/abs_vol is mechanically <0.35 (since |net_flow|<2 / abs_vol>=~5.7 -> |r|<0.35 for net in {0,1,1.5}). So the ratio leg adds zero new skips on this oracle with these parameters. L1+L2+L3 collectively triangulate that the ratio reformulation cannot beat base on this oracle no matter how composed. Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T01:35:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
