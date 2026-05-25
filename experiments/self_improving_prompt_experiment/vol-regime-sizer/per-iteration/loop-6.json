@@ -1,0 +1,34 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "vol-regime-sizer",
+  "loop": 6,
+  "algo_id": "sip-vrs-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 780.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 3.3855292716673504,
+    "max_drawdown_pct": -0.038624845500617996,
+    "win_rate": 0.3543308707015414,
+    "trade_count": 97186,
+    "vs_base_pnl_pct": 3.5491865068108925,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l5.md",
+  "prompt_chars_in": 7761,
+  "trace_path": "reasoning-traces/loop-6-trace.md",
+  "critic_summary": "Targeted failure mode: after 5 prior loops the method's hard 'parent-CSVs only' restriction in step 3 had exhausted the cheap CSV-derivable axes (direction L1, time-of-day L2, regime persistence L3, trendiness L4, spread L5). Loop 6's three Tier-A candidates (side, range-position, round-number) were all FALSIFIED and the method's step-5 'weakest-violation' branch then admitted C3 (round-number) despite the data showing the effect lived entirely in low-sample dates. The researcher's own trace named this explicitly ('the on-disk-CSV restriction limiting candidate quality when all easy CSV-derivable axes have been exhausted'). The proposed Tiered Propose-Audit-Falsify-Commit method makes the escalation mechanical: step 5 now reads the Tier-A verdicts, and on Zero-SURVIVED branches into Tier-B which authorises exactly one raw-DBN feature (size imbalance, signed aggressor flow, quote intensity, time-since-trade, quote half-life) computed across every train date and falsified with the same pre-committed decision rule schema. The commit priority is changed so that 'weakest violation' is only legal when Tier-B was actually attempted — Tier-A-only weakest-violation picks are now a method violation that forces a method-failure paragraph and a prior-reasoning pick. Gate result: 0/5 metrics improved vs running-best loop 5 (pnl 780.50 vs 1471.75, sharpe 3.39 vs 13.72, max_dd -0.0386 vs -0.0164, win_rate 0.3543 vs 0.3547; mean_slippage tied). Action: reverted. If the new method works, the next reasoning trace will show: three Tier-A candidates with verdicts; on a Zero-SURVIVED branch, exactly one Tier-B raw-DBN feature with a literature anchor, a Tier-B regime audit across every train date, and a Tier-B falsification verdict with a pre-committed decision rule — the 'Where I felt uncertain' section will no longer list 'on-disk-CSV restriction' or 'weakest violation chosen despite no mechanism' as the dominant uncertainty.",
+  "prompt_out": "prompts/proposed/loop-6-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": {
+    "input": 1,
+    "output": 2,
+    "cache_creation": 631,
+    "cache_read": 208898,
+    "total": 209532
+  },
+  "duration_seconds": 4282.1,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T05:50:00Z"
+}

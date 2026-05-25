@@ -58,5 +58,17 @@
     "prompt_chars_in":      7283,
     "prompt_action":        "kept",
     "timestamp":            "2026-05-25T04:16:54Z"
+  },
+  {
+    "loop":                 6,
+    "algo_id":              "sip-vrs-l6",
+    "status":               "completed",
+    "vs_base_pnl_pct":      3.5491865068108925,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         3.3855292716673504,
+    "trade_count":          97186,
+    "prompt_chars_in":      7761,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T05:50:00Z"
   }
 ]
