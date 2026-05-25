@@ -418,5 +418,29 @@
         "total": 88446
       }
     }
+  },
+  {
+    "id": "afg-b-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 8 (FINAL loop in the 8-loop arm) -- built on afg-b-l4 (the prior in-arm leader at $1088 / 86,089 trades / sharpe 5.36) by a single ORTHOGONAL parameter change in the OPPOSITE direction from L7's window cut: window_seconds 10.0 -> 20.0 with flow_threshold PINNED at L4 integer optimum 1.0; ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. Brief-summary context across L1+L2+L3+L4+L5+L6+L7; L7 brief_summary explicitly prescribed probing window=20s at flow=1.0 to bracket the window-axis optimum after L7's 5s probe (window axis 2 of 3 needed points: 5s:$950.50, 10s:$1088, gradient at 10s NEGATIVE going down). Oracle horizon=30s (config.yaml) makes 20s the natural ceiling -- ~2/3 of the predictive horizon. Hypothesis: 10-20s flow either GENUINELY MORE informative than 5-10s (pnl > L4), mostly NOISE (pnl < L4), or ~ matches (pnl ~ L4). Weakly leaned toward 'more informative' given L7's finding that 5-10s flow is informative not stale. CONFIRMED DECISIVELY: pnl rose to $1216 vs L4 $1088 (+11.76%) with sharpe 5.81 vs 5.36 (+0.45) and 775 fewer trades. -$165 per 1k extra skips vs L4, mirrored almost exactly to L7's -$155 per 1k extra admits. L8 is the NEW IN-ARM LEADER.",
+    "algorithm_path": "execution_algos/afg-b-l8/",
+    "scores": {
+      "sharpe": 5.813982949415382,
+      "realized_pnl": 1216.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2711.5606936416184,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 85314,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2711.56% pnl, +5.0% gate cleared by ~542x; slippage tied at 0.0/0.0) AND genuinely beats base_algo aggressor-flow-gate on the matched 11 dates (+25.36% pnl: $1216.00 vs $970.00; -2,446 trades / -2.79%; sharpe 5.81 vs 4.58 / +27%) AND beats the prior in-arm leader L4=L5 (+11.76% pnl: $1216.00 vs $1088.00; -775 trades / -0.90%; sharpe 5.81 vs 5.36 / +0.45 absolute, +8.5%). Refinement targets vs L4: pnl PASS by ~5.9x (+11.76% vs +2.0% target); sharpe CLOSE (delivered +0.454 vs +0.5 target, off by 0.046); slippage TIED at 0.0/0.0; win_rate +0.18pp MISS (target +2.0pp); max_dd -0.14pp WORSE MISS (target -1.0pp better, within close margin). L8 is the NEW IN-ARM LEADER on pnl AND sharpe AND trade selectivity. 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 8 (FINAL); uses only afg-b-l1/l2/l3/l4/l5/l6/l7 summary_out blocks + headline metrics as prior context plus mechanical inspection of L4 and L7 source for class shape. Mechanism: widening the deque window from 10s to 20s makes the absolute predicate fire MORE often (deque sees more trades, sums larger in magnitude when adverse), so L8 SKIPS MORE orders than L4 (-775 admits); the newly-skipped orders (those L4 was admitting because their 10-20s-old flow imbalance was invisible to the 10s deque) are net anti-informative on this oracle. Window-axis data now bracketed on 3 points at flow=1.0: 5s:$950.50, 10s:$1088, 20s:$1216 (NEW LEADER). The gradient at 20s going up is still POSITIVE (~$12.80/s) -- the curve is monotone INCREASING up to 20s, QUALITATIVELY DIFFERENT from the strictly-convex threshold axis (which bracketed at L4=1.0 with both sides regressing). A hypothetical L9 (arm exhausts at L8) would naturally probe window=25-30s at flow=1.0 since 30s is the oracle's horizon_seconds ceiling. 8-loop trajectory: L1 $453.50 (-53% vs base) -> L2 $464.25 (-52%) -> L3 $970 (+0%) -> L4 $1088 (+12.16%) -> L5 $1088 (=L4, integer resolution) -> L6 $832 (-14.23%, closed threshold axis) -> L7 $950.50 (-2.01%, opened window axis short side) -> L8 $1216 (+25.36%, NEW LEADER, opened window axis long side). Pnl leader: L8. Sharpe leader: L8. Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T05:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
