@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 5,
+  "algo_id": "afg-b-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1088.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.360031757285958,
+    "max_drawdown_pct": -0.03234982207597858,
+    "win_rate": 0.35399412236174194,
+    "trade_count": 86089,
+    "vs_base_pnl_pct": 12.1649,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 9612,
+  "context_tokens_estimated": 2403,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Single-parameter change vs L4: TIGHTENED the absolute threshold from 1.0 -> 0.5 contracts (10s window, ratio leg still absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly). Intent: continue the absolute-threshold sweep DOWN to probe the L1 monotone-yield rule below 1.0. ACTUAL EFFECT (discovered post-backtest): a mechanical no-op -- because net_flow is the signed sum of trade sizes which are integer contract counts on this oracle, the set {net : 0 < |net| < 1} is empty, so the conditions |net|>=1.0 and |net|>=0.5 admit identical sets of orders. L5 is L4 in disguise.",
+    "outcome": "pnl +2415.61% vs simple baseline ($1088.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 5.36, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by very wide margin. AND vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): +12.16% pnl ($1088.00 vs $970.00), -1,671 trades (-1.90%), sharpe 5.36 vs 4.58. BUT vs L4 (prior loop): bit-for-bit identical -- every metric matches to all decimals. Refinement targets vs L4: ALL FAIL (sharpe delta 0.000 vs required +0.5; pnl delta 0.00% vs required +2.0%; etc.). Tied PASS against the formal pass_gate baseline but ZERO improvement over the prior loop.",
+    "hypothesis": "I expected the L1 monotone-yield arithmetic to continue DOWN the absolute-threshold axis: orders with |net_flow| in [0.5, 1.0) would be newly skipped on top of L4's set, and pnl would either continue rising (if the rule still holds) or stall/drop (if we had crossed the optimum). This was WRONG because the predicate's parameter has integer resolution on this oracle: net_flow only takes integer values (trade sizes are integer contracts), so |net|>=1.0 and |net|>=0.5 are EQUIVALENT predicates -- the interval (0,1) is empty. The pre-loop note implicitly flagged this (\"trade sizes are typically integer contracts\") but failed to recognize the consequence. CONTRADICTED. The brief-summary stream had everything it needed to predict this: L1 already established the threshold lever was acting on |net_flow|, and the L1-L4 trajectory mentioned integer trade counts; the lesson should have been internalized as 'threshold sweep must move by integer steps' before submitting L5.",
+    "brief_summary": "afg-b-l5 (aggressor-flow-gate brief-summary loop 5) attempted to FURTHER TIGHTEN the absolute threshold from L4's 1.0 -> 0.5 contracts (10s window, ratio leg absent). Result: PASS vs simple (+2415.61% pnl) AND beats base (+12.16% pnl) -- BUT bit-for-bit identical to L4 on every metric (pnl=$1088, sharpe=5.36, trades=86,089). Refinement targets vs L4: ALL FAIL (0.0 deltas). DIAGNOSIS: net_flow is the signed integer sum of trade sizes (integer contracts on this oracle), so the predicate set {|net|>=0.5} equals {|net|>=1.0} -- the interval (0,1) is empty. L5 is mechanically L4 in disguise. CRITICAL LESSON for future loops in the afg-b lineage: flow_threshold has INTEGER RESOLUTION on this oracle. Decimal-fraction tweaks below 1.0 (0.5, 0.25, 0.1, ...) are ALL no-ops and ALL equivalent to threshold=1.0. Any meaningful threshold change must move by at least one INTEGER step from the effective state. The threshold sweep's data is now: base(2)=$970/87,760, L4(1)=$1088/86,089 -- two points, gradient +$118 pnl / -1,671 trades from 2 to 1.",
+    "next": "Push the threshold UP to flow_threshold = 3.0 (one integer step BEYOND base's 2.0 in the LOOSE direction). Tests whether the absolute-threshold curve is monotone (L1 rule extrapolates to the loose side too -- loosening should DECREASE pnl by admitting weakly-anti-informative orders that base currently skips) or has a secondary maximum on the loose side. The two existing points (base@2.0=$970, L4@1.0=$1088) already bracket a local maximum no looser than 2; L6@3.0 tests whether that local max is GLOBAL across the absolute-threshold axis. If pnl_L6 < $970, the L1 monotone-yield rule extrapolates to the loose side and the threshold sweep is firmly maximized somewhere in (0, 2). If pnl_L6 > $1088, the curve is non-monotone with surprises on the loose side -- unlikely but informative. Alternative if the integer-resolution lesson points away from threshold sweep entirely: change window_seconds (10s -> 5s or 20s) at fixed flow_threshold=1.0, attacking the orthogonal lever. Avoid: any flow_threshold value in (0, 1) or non-integer values >1 (e.g., 1.5) -- these all collapse onto neighboring integer-step predicates by the integer-resolution finding from L5; threshold=0 (degenerate, skips nearly all); reintroducing the ratio leg (L1+L2+L3 exhausted)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T03:30:00Z"
+}

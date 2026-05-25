@@ -328,5 +328,29 @@
         "total": 76400
       }
     }
+  },
+  {
+    "id": "afg-b-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 5 -- built on afg-b-l4 by FURTHER TIGHTENING the absolute threshold from 1.0 -> 0.5 contracts (10s window, ratio leg still absent). Brief-summary context across L1+L2+L3+L4 indicated the L1 monotone-yield rule (~$47-$70/1k extra skips) along the absolute-threshold axis; L4's 'next' explicitly prescribed testing 0.5 to probe whether the monotone rule continues DOWN or whether L4@1.0 had crossed the optimum. Hypothesis was that pnl would continue rising (if the rule holds) or stall/drop (if optimum crossed). ACTUAL: bit-for-bit identical to L4 -- the change was a mechanical no-op because net_flow only takes integer values (trade sizes are integer contracts on this oracle), so |net|>=0.5 and |net|>=1.0 are equivalent predicates (interval (0,1) is empty). Hypothesis CONTRADICTED at the meta level: the lever has integer resolution.",
+    "algorithm_path": "execution_algos/afg-b-l5/",
+    "scores": {
+      "sharpe": 5.360031757285958,
+      "realized_pnl": 1088.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2415.606936416185,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86089,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2415.61% pnl, +5.0% gate cleared by very wide margin; slippage tied at 0.0) and beats base_algo aggressor-flow-gate on the matched 11 dates (+12.16% pnl: $1088.00 vs $970.00; -1,671 trades / -1.90%; sharpe 5.36 vs 4.58). BUT this is BIT-FOR-BIT IDENTICAL to L4 -- every metric matches to all decimals (pnl=$1088, sharpe=5.360, trade_count=86,089, win_rate=0.35399, max_dd=-0.03235). Refinement targets vs L4: ALL FAIL (all deltas exactly 0.0). 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 5; uses only afg-b-l1/l2/l3/l4 summary_out blocks as prior context plus mechanical inspection of those algos' source for class shape. Root-cause diagnosis (filed honestly per OBJECTIVE.md §8 honesty rules): net_flow is the signed sum of trade sizes which are INTEGER contract counts on this oracle, so the predicate set {|net|>=0.5} equals {|net|>=1.0} -- the open interval (0, 1) contains no integers. L5 is L4 in disguise. Critical lesson encoded for future loops: flow_threshold has INTEGER RESOLUTION; decimal-fraction tweaks below 1.0 are inert. Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND a tied PASS is not a snapshot candidate anyway.",
+    "timestamp": "2026-05-25T03:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
