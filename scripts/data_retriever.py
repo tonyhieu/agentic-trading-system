@@ -138,6 +138,7 @@ class DataRetriever:
             f"{base}/partitions/{partition_path}",
             f"{base}/oos/partitions/{partition_path}",
             f"{base}/oos/{partition_path}",
+            f"{base}/in-sample/{partition_path}",
         ]
 
         for prefix in candidates:

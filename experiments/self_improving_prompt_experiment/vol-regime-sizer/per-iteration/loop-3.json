@@ -1,0 +1,28 @@
+{
+  "experiment":             "self_improving_prompt_experiment",
+  "base_algo":              "vol-regime-sizer",
+  "loop":                   3,
+  "algo_id":                "sip-vrs-l3",
+  "status":                 "completed",
+  "metrics": {
+    "realized_pnl":         868.75,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         3.5359461155850584,
+    "max_drawdown_pct":     -0.04552476099500478,
+    "win_rate":             0.353894041417863,
+    "trade_count":          125936,
+    "vs_base_pnl_pct":      15.256884349817427,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in":              "prompt-l1.md",
+  "prompt_chars_in":        7324,
+  "trace_path":             "reasoning-traces/loop-3-trace.md",
+  "critic_summary":         "Targeted failure mode: the method anchors every candidate to the parent's mechanism only — it has no machinery to use the running-best (champion) as a starting point, nor to ask whether a proposed mechanism composes with the champion or competes with it. The parent's signed-headwind weakness had already been addressed by loop-1 at +41% vs parent, yet loop-3 enumerated three candidates against the parent's gate (halflife, spread, vol-regime persistence) and chose transient-burst suppression — a fourth gate competing for the same submit-skip decision space the champion already occupies. The result beat the parent (+15%) but lost to the champion on every dimension (0/5 gate metrics improved vs loop-1). The proposed champion-anchored method makes the champion the primary anchor: candidates target the champion's residual-failure dates (where champion pnl is negative OR worse than parent), each candidate carries an explicit ADDITIVE-or-REPLACEMENT composition tag, ADDITIVE candidates must articulate the disjoint regime they trigger on, and the commit priority strictly prefers ADDITIVE survivors so the implementation inherits the champion's mechanism unchanged and layers on top. If the new method works, the next reasoning trace will show: residual-failure dates explicitly enumerated, three candidates tagged with composition rationale (not just falsification rationale), per-date statistics computed on the champion's CSVs (not the parent's), and a chosen hypothesis that either layers on top of the champion (preferred) or modifies the champion's existing layer locally — but does not propose a new gate that competes with it. Both vs-parent and vs-champion directional predictions will appear in NOTES.md.",
+  "prompt_out":             "prompts/proposed/loop-3-proposal.md",
+  "prompt_action":          "reverted",
+  "tokens_used":            null,
+  "duration_seconds":       null,
+  "critic_tokens_used":     null,
+  "critic_duration_seconds": null,
+  "timestamp":              "2026-05-25T00:55:00Z"
+}

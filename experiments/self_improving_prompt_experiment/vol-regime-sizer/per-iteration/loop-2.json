@@ -1,0 +1,28 @@
+{
+  "experiment":             "self_improving_prompt_experiment",
+  "base_algo":              "vol-regime-sizer",
+  "loop":                   2,
+  "algo_id":                "sip-vrs-l2",
+  "status":                 "completed",
+  "metrics": {
+    "realized_pnl":         723.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         2.9859656640010135,
+    "max_drawdown_pct":     -0.045749759813760976,
+    "win_rate":             0.3530579449853483,
+    "trade_count":          126948,
+    "vs_base_pnl_pct":      -4.046434540417082,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in":              "prompt-l1.md",
+  "prompt_chars_in":        7324,
+  "trace_path":             "reasoning-traces/loop-2-trace.md",
+  "critic_summary":         "Targeted failure mode: sample selection bias in falsification — loop-2 ran the propose-falsify-commit tests on only the two worst-loss train dates, which guaranteed an adverse signal in the sample (sample was selected on outcome) and gave zero information about generalization. When all three candidates were FALSIFIED, the researcher then disaggregated post-hoc to find a supporting sub-bucket (close-only within open+close), which is the exact rule-editing the method was supposed to prevent. The result generalized poorly — close-window suppression helped on adverse dates but hurt on profitable ones (-$12.50 on 20260309, -$14.25 on 20260310), netting -4% vs the parent. The proposed full-window method mandates: (a) a pre-committed odd/even chronological discovery/validation split before any artifact is opened, (b) falsification tests using every discovery date (not outcome-ranked samples), with BOTH a median-rule AND a 60% sign-consistency requirement, and (c) a hard prohibition on post-hoc sub-bucket slicing — if a candidate's stated rule fails but a sub-rule looks promising, it must be reserved as a NEXT-LOOP candidate. A surviving candidate must also pass on the held-out validation set before admission. If the new method works, the next reasoning trace will show: per-date statistics across the full discovery set rather than two-date samples, an explicit sign-consistency fraction per candidate, and either an admission via the validation gate or a flagged minimum-violation fallback — and the 'Where I felt uncertain' section will no longer list 'the two-date sample' or 'gave myself permission to narrow' as the dominant uncertainties.",
+  "prompt_out":             "prompts/proposed/loop-2-proposal.md",
+  "prompt_action":          "reverted",
+  "tokens_used":            null,
+  "duration_seconds":       null,
+  "critic_tokens_used":     null,
+  "critic_duration_seconds": null,
+  "timestamp":              "2026-05-25T00:13:00Z"
+}
