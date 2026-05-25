@@ -17,8 +17,14 @@
   },
   "context_chars_in": 9612,
   "context_tokens_estimated": 2403,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 29,
+    "cache_creation": 740,
+    "cache_read": 84174,
+    "total": 84944
+  },
+  "duration_seconds": 422.2,
   "summary_out": {
     "changed": "Single-parameter change vs L4: TIGHTENED the absolute threshold from 1.0 -> 0.5 contracts (10s window, ratio leg still absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly). Intent: continue the absolute-threshold sweep DOWN to probe the L1 monotone-yield rule below 1.0. ACTUAL EFFECT (discovered post-backtest): a mechanical no-op -- because net_flow is the signed sum of trade sizes which are integer contract counts on this oracle, the set {net : 0 < |net| < 1} is empty, so the conditions |net|>=1.0 and |net|>=0.5 admit identical sets of orders. L5 is L4 in disguise.",
     "outcome": "pnl +2415.61% vs simple baseline ($1088.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 5.36, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by very wide margin. AND vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): +12.16% pnl ($1088.00 vs $970.00), -1,671 trades (-1.90%), sharpe 5.36 vs 4.58. BUT vs L4 (prior loop): bit-for-bit identical -- every metric matches to all decimals. Refinement targets vs L4: ALL FAIL (sharpe delta 0.000 vs required +0.5; pnl delta 0.00% vs required +2.0%; etc.). Tied PASS against the formal pass_gate baseline but ZERO improvement over the prior loop.",
