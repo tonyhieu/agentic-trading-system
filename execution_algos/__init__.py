@@ -173,6 +173,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.sip-ptg-l4",
         "get_execution_algorithm",
     ),
+    "flicker-probe-ptg-l5": (
+        "execution_algos.flicker-probe-ptg-l5",
+        "get_execution_algorithm",
+    ),
 }
 
 
