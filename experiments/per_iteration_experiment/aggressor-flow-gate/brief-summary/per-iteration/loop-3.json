@@ -17,8 +17,14 @@
   },
   "context_chars_in": 4682,
   "context_tokens_estimated": 1170,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 21,
+    "cache_creation": 804,
+    "cache_read": 80024,
+    "total": 80850
+  },
+  "duration_seconds": 450.2,
   "summary_out": {
     "changed": "Replaced L2's CONJUNCTION with a DISJUNCTION: skip iff (|net_flow| >= 2.0) OR (|r| >= 0.35 AND abs_vol >= 5.0), 10s window. The ratio leg is now gated by a busyness floor (min_busy_abs_vol = 5.0) to avoid the warm-up degenerate where a single 2-contract trade trivially gives r=1.0. Anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly.",
     "outcome": "pnl +2142.77% vs simple baseline ($970.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 4.58, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by a wide margin. BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): 0.00% pnl diff, 0 trade diff -- algo collapsed to base EXACTLY. Hypothesis CONTRADICTED (expected pnl > base; got pnl = base).",
