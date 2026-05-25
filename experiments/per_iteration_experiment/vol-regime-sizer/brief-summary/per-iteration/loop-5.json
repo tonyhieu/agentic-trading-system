@@ -17,8 +17,14 @@
   },
   "context_chars_in": 10312,
   "context_tokens_estimated": 2578,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 29,
+    "cache_creation": 470,
+    "cache_read": 76068,
+    "total": 76568
+  },
+  "duration_seconds": 344.2,
   "summary_out": {
     "changed": "Single config-default edit vs L4: adverse_multiplier 0.25 -> 0.10 (one-knob deepening per L4's `next` text). All other mechanics preserved verbatim: same gate topology (always apply base skip + multiplicative skip on adverse-drift), drift_threshold=0.005, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.005 on adverse-drift floor cases vs 0.0125 in L4). Mechanical structural copy from L4.",
     "outcome": "Continued breakthrough; new arm leader. Pnl $1192.50 on 11 dates: +2657.23% vs simple ($43.25), +105.78% vs base_algo vol-regime-sizer ($579.50), +9.73% vs L4 ($1086.75). Sharpe 4.81 (vs L4 4.43, L3 3.83, base ~3.06). Trade_count 101,747 = -2.51% vs base (-2,625 trades), -0.49% vs L4 (-505 marginal extra skips). Marginal per-skip EV vs L4: ~$0.21/skip -- NOTABLY ABOVE the $0.09/skip slope L4 extrapolated, only mildly below L4's own marginal-vs-L3 of $0.18/skip. The newly-skipped tail at u in (0.10*base_p, 0.25*base_p) was nearly as bad as L4's earlier marginal admits; diminishing-returns slope did not flatten as L4 predicted. Max drawdown flat at -3.94%. Slippage 0.0/0.0 (no regression). PASS verdict by both formal gate (vs simple) and arm-level objective (vs base).",
