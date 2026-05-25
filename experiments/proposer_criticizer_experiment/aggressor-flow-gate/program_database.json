@@ -1,0 +1,15 @@
+[
+  {
+    "run": 1,
+    "algo_id": "afg-pc-r1",
+    "status": "completed",
+    "vs_base_pnl_pct": 212.66025641025644,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 1.9877261924112146,
+    "trade_count": 127392,
+    "debate_rounds_used": 3,
+    "debate_outcome": "CONVERGED",
+    "context_chars_in": 0,
+    "timestamp": "2026-05-25T20:57:05Z"
+  }
+]
