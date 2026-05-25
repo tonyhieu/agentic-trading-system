@@ -17,8 +17,14 @@
   },
   "context_chars_in": 7288,
   "context_tokens_estimated": 1822,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1906,
+    "cache_creation": 156,
+    "cache_read": 186681,
+    "total": 188744
+  },
+  "duration_seconds": 2426.6,
   "summary_out": {
     "changed": "Single config-default edit vs L3: adverse_multiplier 0.5 -> 0.25 (one-knob deepening of the L3 breakthrough lever per L3's `next` text). All other mechanics preserved verbatim: same gate topology (always apply base skip + multiplicative skip on adverse-drift), drift_threshold=0.005, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.0125 on adverse-drift floor cases vs 0.025 in L3). Mechanical structural copy from L3.",
     "outcome": "Continued breakthrough. Pnl $1086.75 on 11 dates: +2412.72% vs simple ($43.25), +87.53% vs base_algo vol-regime-sizer ($579.50), +15.18% vs L3 ($943.50). Sharpe 4.43 (vs L3 3.83, vs base ~3.06). Trade_count 102,252 = -2.03% vs base (-2,120 trades), -0.76% vs L3 (-788 marginal extra skips). Marginal per-skip EV vs L3: ~$0.18/skip (positive; mildly below L3's ~$0.27/skip extras vs base, consistent with leading-edge diminishing returns). L4 beat L3 on 9 of 11 dates; the two losses (20260308 -$13.75, 20260309 -$24.75) are low-trade-count early-week dates where noise dominates the small absolute multiplier effect.",
