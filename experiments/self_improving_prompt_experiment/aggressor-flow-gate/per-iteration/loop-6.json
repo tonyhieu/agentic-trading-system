@@ -17,9 +17,9 @@
   "prompt_in": "prompt-l5.md",
   "prompt_chars_in": 7689,
   "trace_path": "reasoning-traces/loop-6-trace.md",
-  "critic_summary": null,
-  "prompt_out": null,
-  "prompt_action": null,
+  "critic_summary": "The single failure mode targeted: the single-axis sibling calibration method (prompt-l5.md) instructed the researcher to calibrate a parameter from offline DBN replay, but the replay used worst-case adverse side at every arrival while the live algorithm picks oracle-driven sides. The offline firing-rate measurement (0.604 at threshold=3.0) was thus an upper bound on the live firing rate, and the offline-to-live transfer broke: trade_count moved +0.92% vs the predicted [82k, 86k] band (the pre-committed falsifier triggered), and realized_pnl regressed from 1002 to 984. The trace explicitly identifies this as the unguarded gap (Concerns section and 'What a different method might have produced'): the method had no protocol to measure firing rate AS THE ALGORITHM EXPERIENCES IT. The proposed method (live-instrumentation calibration) replaces offline DBN replay with counters embedded inside the actual on_order() branch the parameter controls. The probe algorithm is a behaviorally-identical copy of the kept algorithm with only +=1 increments and end-of-run log lines added; the firing rate is read back from grep'd backtest logs across the full 12-date train window; the trade_count delta prediction uses the same denominator the counter recorded (no scaling, no extrapolation). Two terminal escalation branches: (a) parameter already live-calibrated within 10% → null run; (b) denominator < 1000 across all 12 dates → branch fires too rarely to refine. Gate action this loop: 0 of 5 metrics improved vs L5 (realized_pnl, sharpe_ratio, max_drawdown_pct, win_rate all worse; mean_slippage tied at 0.0) → reverted; .current_prompt.md restored to prompt-l0.md per spec (L5's prompt_in). If this method works in the next loop, I'd expect the reasoning trace to (a) cite a live-counter firing rate that differs measurably from any offline projection, (b) derive the trade_count prediction directly as (Δfiring_rate × live_denominator) with no cross-protocol scaling, and (c) report a backtest in which the trade_count delta falls within the live-counter-projected band rather than tripping the falsifier.",
+  "prompt_out": "prompts/proposed/loop-6-proposal.md",
+  "prompt_action": "reverted",
   "tokens_used": {
     "input": 1,
     "output": 822,
