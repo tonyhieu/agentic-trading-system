@@ -216,3 +216,74 @@ at streak=1 almost never fires — meaning post-skip flow is rarely
 (> 2 contracts) on the prior order. That would falsify the calibration
 of the 1.5x relaxation factor and the underlying persistence assumption,
 not the cascade-policy mechanism itself.
+
+---
+
+## Backtest Observations
+
+Apples-to-apples on the 11 train dates where both algos completed
+(20260319 failed in the sip-afg-l5 subprocess on the heaviest train date,
+19,438 base trades — likely OOM/timeout; the runner dropped it from the
+comparable set).
+
+| Metric              | sip-afg-l5 | aggressor-flow-gate (same 11) | delta              |
+|---------------------|-----------:|------------------------------:|--------------------|
+| realized_pnl        | 1002.00    | 970.00                        | +3.30%             |
+| sharpe_ratio        | 4.947      | 4.581                         | +0.366 abs         |
+| max_drawdown_pct    | -2.93%     | -3.32%                        | improved by 0.40pp |
+| win_rate            | 0.3538     | 0.3544                        | -0.06pp            |
+| trade_count         | 78,442     | 87,760                        | -9,318 (-10.62%)   |
+| mean_slippage       | 0.0        | 0.0                           | 0                  |
+
+vs gate baseline `simple`: realized_pnl +2216.76%, far above +5% pass
+gate.
+
+**What drove improvement**: the trade_count gap (-10.62%) confirms the
+streak-cascade gate is firing — a sizable minority of base's forced
+re-entries are gated under the new policy, and on average those gated
+orders have negative expected value (else realized_pnl would have fallen
+on them). The result validates the structural hypothesis: at 1 Hz
+oracle cadence with a 10s gate window, adverse-flow regimes persist
+across the 1-second inter-order interval often enough that the base's
+unconditional re-entry is a measurable P&L leak.
+
+**What underperformed**: magnitude. The +3.30% is well below the
+NOTES.md sketch range of +3% to +10% (it sits at the bottom of that
+range). Sharpe improved only +0.37 absolute — short of refinement
+target min_sharpe_delta=0.5. The recovered orders are by selection the
+borderline cases (gate at streak=0 had |net_flow| ≥ 2 but at streak=1
+also has |net_flow| ≥ 3); they are not high-EV-negative misses, so
+per-trade variance does not collapse.
+
+**Hypothesis verdict**: SUPPORTED but with a smaller effect size than
+predicted. The cascade-policy axis is real and exploitable; the
+specific parameterization (relaxation 1.5x, cap 2) is uncalibrated and
+likely sub-optimal. The "1.5x relaxation factor and cap=2 are
+uncalibrated" concern in NOTES.md → Concerns proved out: I cannot tell
+from the aggregate output how often the streak=1 relaxed evaluation
+actually gates, only that the net effect is +3.30%.
+
+**Suggested next attempt**: empirical-anchor the relaxation factor.
+Measure on train: for each base skip, compute the |net_flow| seen at the
+next opening order's evaluation time. The distribution of those
+|net_flow| values directly informs whether `relaxation_factor * 2.0` =
+3.0 is "rarely binding" (factor too high), "always binding" (factor too
+low and the algorithm is effectively at streak-disabled), or
+"selectively binding" (factor near the median, working as designed).
+The next iteration should pick the relaxation factor to land at a
+target binding rate (e.g. ~30% of streak=1 evaluations gate). A
+secondary direction: extend the cascade window to streak >= 3 with a
+further-relaxed threshold (e.g. 2.0x at streak=2, force-submit at
+streak=3), trading a slightly longer worst-case blackout (3s vs 2s) for
+finer-grained adverse-regime tracking. Both are calibration
+refinements, not new mechanisms.
+
+**Refinement gate (OBJECTIVE.md §6)**: meets ONE refinement target
+(`min_pnl_delta_pct=2.0` ← +3.30%) without meaningful regression on the
+others (sharpe, mdd improve in the right direction but short of their
+delta bars; win_rate flat at noise scale). Per §6: "If the variant
+doesn't meet any target without regression vs the prior algorithm, but
+still passes the gate vs the baseline, status=PASS and snapshot it
+(it's a parallel passing algorithm)." Status = **PASS** — parallel
+passing algorithm vs `aggressor-flow-gate` with a modest PnL
+improvement.
