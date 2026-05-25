@@ -1,0 +1,34 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 4,
+  "algo_id": "sip-afg-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 780.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 3.5476652194662255,
+    "max_drawdown_pct": -0.040699786326121784,
+    "win_rate": 0.3523404467823018,
+    "trade_count": 120148,
+    "vs_base_pnl_pct": -37.853444842692156,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l0.md",
+  "prompt_chars_in": 1488,
+  "trace_path": "reasoning-traces/loop-4-trace.md",
+  "critic_summary": "The single failure mode targeted: the seed prompt-l0 method (back in force after loops 2 and 3 reverted) lets the researcher commit a key quantitative parameter (frac_threshold=0.25) by proportional reasoning from a guess at typical 10s total volume, with no mechanism to confront the empirical |flow_fraction| distribution before shipping. The researcher named this in NOTES.md (\"The 0.25 fraction-threshold choice is uncalibrated\") and in the trace (\"the method gave me no path to that calibration\"), and the backtest delivered −37.85% P&L with trade_count +12.08% — the gate fires too rarely because 0.25 is far above the typical |flow_fraction| at arrival moments. The deeper meta-pattern across loops 1–4 (all four negative: −15.2%, −48.6%, −43.1%, −37.9%) is that every global modification of the base mechanism either recovers adverse orders or skips favorable ones; the base is at least a local optimum, and prior methods (single-pass, three-candidate EDA, mirror discrimination) all share the architecture 'propose a global change, then ask where it helps.' The proposed (but reverted, 1-of-5 majority vs running-best loop-1) method inverts the search direction: counterfactual segmentation forces the researcher to measure first where the base's decision disagrees with the 30s-ahead drift across three distinct binning dimensions (volume, gate-state proximity, arrival rate, spread, time-of-day), pick the single bin with the largest n×|drift|, and ship a narrowly-scoped override that touches only that bin while leaving outside-bin behavior identical to base. A dimension whose bins are all 'base correct or inconclusive' is dead at Step 3; if no dimension survives across two cycles, the loop ships nothing. If this method works in a future loop, I'd expect the next reasoning trace to (a) report per-bin counterfactual P&L numbers (n_skip, mean_30s_drift) measured before any code change, (b) show at least one candidate dimension killed at Step 3 because no bin clears the n=100, |drift|=0.5bps gate, and (c) describe a mechanism whose predicted trade_count delta is a small fraction of total arrivals — anchored to the chosen bin's measured firing rate — rather than a global redistribution of which orders are gated.",
+  "prompt_out": "prompts/proposed/loop-4-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": {
+    "input": 1,
+    "output": 267,
+    "cache_creation": 249,
+    "cache_read": 42849,
+    "total": 43366
+  },
+  "duration_seconds": 103.5,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T01:12:34Z"
+}

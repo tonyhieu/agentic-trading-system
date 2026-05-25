@@ -17,7 +17,7 @@
   "prompt_in": "prompt-l0.md",
   "prompt_chars_in": 1488,
   "trace_path": "reasoning-traces/loop-3-trace.md",
-  "critic_summary": "The single failure mode targeted: the seed prompt-l0 method (back in use after loop 2's revert) permits the researcher to commit to a hypothesis whose central premise about WHICH orders the base over-skips is never empirically distinguished from its mirror image. Loop 3 picked the canonical NOTES.md weakness (\"base over-skips stale flow whose 10s window has not aged out\"), added a 3s confirmation gate, and shipped — but a competing reading of the same NOTES.md text (\"base correctly skips bursty-but-active flow whose short pauses are mid-burst, not ended\") is equally plausible and predicts the OPPOSITE outcome. The backtest's -43.13% P&L on +7.4% trade_count is exactly what the mirror predicts: recovered orders during 'paused' bursts were systematically adverse, not favorable. The trace identifies this mechanism precisely. The proposed (but reverted, by 1-of-5 majority vote vs running-best loop-1) method introduces mirror-hypothesis discrimination: every primary hypothesis must be paired with a steelmanned mirror that cites the same base weakness but predicts the opposite outcome, then a discriminating observable with a pre-committed threshold rule must be identified and measured on training data; if the measurement supports the mirror, the primary may NOT ship. This is architecturally distinct from loop-1's proposer-EDA-criticizer (which validated assumptions of one hypothesis) and loop-2's gate-aligned variant (which moved the sampling distribution): it forces the EDA to be diagnostic between two named alternatives rather than confirmatory of one. If this method works in a future loop, I'd expect the next reasoning trace to (a) contain a Mirror Hypothesis section with the same evidentiary citations as the primary but predicting the opposite P&L direction, (b) report a single discriminating number with a pre-committed threshold that resolves to primary, mirror, or inconclusive, and (c) name a falsifier distinct from the mirror prediction.",
+  "critic_summary": "The single failure mode targeted: the seed prompt-l0 method (back in use after loop 2's revert) permits the researcher to commit to a hypothesis whose central premise about WHICH orders the base over-skips is never empirically distinguished from its mirror image. Loop 3 picked the canonical NOTES.md weakness (\"base over-skips stale flow whose 10s window has not aged out\"), added a 3s confirmation gate, and shipped \u2014 but a competing reading of the same NOTES.md text (\"base correctly skips bursty-but-active flow whose short pauses are mid-burst, not ended\") is equally plausible and predicts the OPPOSITE outcome. The backtest's -43.13% P&L on +7.4% trade_count is exactly what the mirror predicts: recovered orders during 'paused' bursts were systematically adverse, not favorable. The trace identifies this mechanism precisely. The proposed (but reverted, by 1-of-5 majority vote vs running-best loop-1) method introduces mirror-hypothesis discrimination: every primary hypothesis must be paired with a steelmanned mirror that cites the same base weakness but predicts the opposite outcome, then a discriminating observable with a pre-committed threshold rule must be identified and measured on training data; if the measurement supports the mirror, the primary may NOT ship. This is architecturally distinct from loop-1's proposer-EDA-criticizer (which validated assumptions of one hypothesis) and loop-2's gate-aligned variant (which moved the sampling distribution): it forces the EDA to be diagnostic between two named alternatives rather than confirmatory of one. If this method works in a future loop, I'd expect the next reasoning trace to (a) contain a Mirror Hypothesis section with the same evidentiary citations as the primary but predicting the opposite P&L direction, (b) report a single discriminating number with a pre-committed threshold that resolves to primary, mirror, or inconclusive, and (c) name a falsifier distinct from the mirror prediction.",
   "prompt_out": "prompts/proposed/loop-3-proposal.md",
   "prompt_action": "reverted",
   "tokens_used": {
@@ -28,7 +28,13 @@
     "total": 47710
   },
   "duration_seconds": 123.9,
-  "critic_tokens_used": null,
-  "critic_duration_seconds": null,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 944,
+    "cache_creation": 1542,
+    "cache_read": 75175,
+    "total": 77662
+  },
+  "critic_duration_seconds": 250.5,
   "timestamp": "2026-05-25T00:04:57Z"
 }
