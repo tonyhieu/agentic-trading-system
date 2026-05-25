@@ -3,7 +3,6 @@ name: "pc-researcher"
 description: "use only when user invokes"
 model: claude-opus-4-7
 color: teal
-thinking: true
 skills:
   - backtest
   - analysis
