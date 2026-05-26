@@ -281,6 +281,38 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vrs-f-l8",
         "get_execution_algorithm",
     ),
+    "ptg-b-l1": (
+        "execution_algos.ptg-b-l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l2": (
+        "execution_algos.ptg-b-l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l3": (
+        "execution_algos.ptg-b-l3",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l4": (
+        "execution_algos.ptg-b-l4",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l5": (
+        "execution_algos.ptg-b-l5",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l6": (
+        "execution_algos.ptg-b-l6",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l7": (
+        "execution_algos.ptg-b-l7",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l8": (
+        "execution_algos.ptg-b-l8",
+        "get_execution_algorithm",
+    ),
 }
 
 
