@@ -17,8 +17,14 @@
   },
   "context_chars_in": 11792,
   "context_tokens_estimated": 2948,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 2,
+    "cache_creation": 2237,
+    "cache_read": 106488,
+    "total": 108728
+  },
+  "duration_seconds": 506.5,
   "summary_out": {
     "changed": "Single targeted change vs L4: added a 5-second position-age hold-time floor as a CONJUNCTION with the existing 5-tick adverse-mid override. Reversal-override admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5 seconds` instead of `adverse_mid >= 5 ticks` alone. Added `min_age_ns` config field (default 5_000_000_000 ns), `_skipped_reversal_fresh` counter, and one age-floor branch in on_order(). All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips) byte-identical to L4.",
     "outcome": "pnl +7354.91% vs simple baseline ($3224.25 vs $43.25 over 11 apples-to-apples dates), sharpe 15.66, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -9.54% pnl, +0.59% trade_count (+437 trades, -$340.00 aggregate). Still WORSE than base on 11/11 dates in absolute dollars. Vs L4 ($3140.75 / 74,420 trades): +2.66% pnl (+$83.50), -0.24% trade_count (-181 trades); 8/11 dates improved vs L4 in dollar terms (only 20260311 regressed materially). Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% is monotonic with rapidly diminishing marginal returns ($1213 -> $677 -> $371 -> $83.50 per loop). No date flipped sign this loop.",
