@@ -742,5 +742,29 @@
         "total": 83927
       }
     }
+  },
+  {
+    "id": "ptg-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 - built on ptg-b-l2 (adverse-move override at 1 tick) by a single mechanical change: raised adverse_threshold_ticks default from 1.0 to 3.0 ($0.25 -> $0.75 of adverse mid-move required to admit a reversal OPEN through the position cap). Everything else (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L2. Intent: 1 tick is bid-ask oscillation; 3 ticks is three full-spread displacements, sufficient to filter the noise floor that L2 was admitting.",
+    "algorithm_path": "execution_algos/ptg-b-l3/",
+    "scores": {
+      "sharpe": 13.933634237755003,
+      "realized_pnl": 2769.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 6304.046242774567,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 75587,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+6304.05% pnl, gate is +5%); slippage 0.0/0.0; sharpe 13.93 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l3 is -22.29% pnl on +2.42% trade_count (+1,785 trades) -- WORSE than base on 11/11 dates in absolute dollars (range -$12.50 to -$147). vs L2: +32.38% pnl on -6.72% trades (-5,447 fewer reversal admits -> +$677 aggregate). The convex monotonic lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% vs base shows the adverse-mid axis is the right axis with monotonic returns to tightening, but at 3 ticks the predicate still admits net-loss reversals. Per L2's branching rule: L3 has +trade_count vs base -> L4 should test 5 ticks. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T04:30:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
