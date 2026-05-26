@@ -17,8 +17,14 @@
   },
   "context_chars_in": 20636,
   "context_tokens_estimated": 5159,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 255,
+    "cache_creation": 443,
+    "cache_read": 108548,
+    "total": 109247
+  },
+  "duration_seconds": 599.4,
   "summary_out": {
     "changed": "Single targeted change vs L6: added a fourth condition to the reversal-override predicate -- aggressor flow over the most recent 1 second of trade ticks must AGREE with the proposed NEW direction at >= 60% same-side volume. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick AND flow_agreement >= 60%`. Added `flow_window_ns` (default 1_000_000_000 ns) and `flow_agreement_min` (default 0.60) config fields; rolling signed-flow deque on a new `on_trade_tick` handler (BUYER=+size, SELLER=-size, NO_AGGRESSOR=0); `_skipped_reversal_no_flow` and `_skipped_reversal_flow_disagree` counters. Defensive fallback: empty / all-NO_AGGRESSOR window -> SKIP. All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, prior counters) byte-identical to L6.",
     "outcome": "pnl +8082.08% vs simple baseline ($3538.75 vs $43.25 over 11 apples-to-apples dates), sharpe 16.18, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -0.72% pnl, +0.08% trade_count (+59 trades, -$25.50 aggregate) -- the smallest gap of the entire 7-loop lineage by a factor of ~3 and trade_count delta now squarely inside the +/-0.1% calibration band. Worse than base in aggregate dollars by less than $3/date on average. Vs L6 ($3496.25 / 73,953 trades): +1.22% pnl (+$42.50) on -0.12% trade_count (-92 trades; +$0.46/removed-trade, identical ratio to L5's age-conjunction filter). Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% -> L7 -0.72% is monotonic with marginal pnl per loop $1213, $677, $371, $83.50, $272, $42.50 -- L7 follows the post-L6 diminishing-returns shape.",
