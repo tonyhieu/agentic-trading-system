@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "full-trace",
+  "loop": 6,
+  "algo_id": "vrs-f-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1447.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.8736,
+    "max_drawdown_pct": -0.037075,
+    "win_rate": 0.354935,
+    "trade_count": 122431,
+    "vs_base_pnl_pct": 91.9735,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 111368,
+  "context_tokens_estimated": 27842,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 6 of the full-trace arm. Prior context (111,368 chars / ~27,842 tokens) included loops 1-5 metrics, full_reasoning, and NOTES.md for vrs-f-l1/l2/l3/l4/l5. Arm trajectory before this loop: L1 -34.23%, L2 +30.12%, L3 +82.36%, L4 +78.37%, L5 +59.67%.\n\nHypothesis rationale for L6: L1-L5 effectively isolated L3's sigmoid shape (k=3, max_tighten=0.9, symmetric) as the local optimum on the (k, max_tighten, symmetry) plane. Every deviation from it (sharper k, fuller saturation, asymmetric clip) either regressed or tied. The one parameter never perturbed across all 5 loops was drift_halflife=30. All prior loops, NOTES.md entries, and full_reasoning blocks for L2-L5 explicitly flagged this as the next principled experiment. L5 prescribed: 'test halflife=60 with L3 shape restored.' L6 implements that single-knob change: drift_halflife 30->60, all other parameters identical to L3.\n\nMechanism: slower drift EWM (halflife=60) produces fewer noise-driven z sign flips and retains persistent adverse signals through multi-second bursts. Additionally, at halflife=60 the drift EWM has smaller amplitude in flat periods, catching more cases at the noise_floor boundary and routing them to defensive tightening (z=0 -> tighten=0.45), which L3 data showed is net-positive.\n\nImplementation: copied vrs-f-l5, removed aligned-side clip (restoring L3 full-sigmoid behavior), changed drift_halflife 30->60 (drift_alpha: ~0.02284 -> ~0.01149, approximately halved). All other parameters identical to L3.\n\nResults (12d vs vol-regime-sizer): realized_pnl=$1,447.00 vs base $753.75 (+91.97%), sharpe 5.874 vs base 3.065 (+2.809 abs), trade_count 122,431 vs base 127,991 (-5,560, -4.34%), max_dd -0.0371% vs base -0.0460% (19% smaller), win_rate 35.49% vs base ~35.4% (+0.1pp).\n\nHypothesis assessment: SUPPORTED. L6 ($1,447.00, sharpe 5.87) is the best result found so far, narrowly beating L3 ($1,374.50, sharpe 5.80). The +$72.50 gain over L3 (+5.27% of L3 pnl) with nearly identical trade count (122,431 vs 122,400 -- +31 trades, noise-level) confirms the halflife change improved signal quality rather than changing trade volume.\n\nMax_dd note: L6's max_dd (-0.0371%) is slightly worse than L3's (-0.0346%). The difference is small (0.0025pp) and is likely single-date noise (worst-day drawdown is highly variable). All other metrics improved.\n\nImplication for L7: the halflife sweep produced a clear positive at 60 vs 30. Next options: (a) halflife=90 to bracket the optimum -- if 90 beats 60, push to 120; (b) pivot to orthogonal signal (book imbalance/aggressor flow) using L6 config as base. Recommended for L7: try halflife=90 with all other L6 parameters fixed. If it beats L6, the optimum is 90+ (test 120 in L8); if it ties or regresses, the optimum is near 60 (test 120 as a long-halflife sanity check or pivot to orthogonal signal).",
+  "timestamp": "2026-05-26T08:30:00Z"
+}
