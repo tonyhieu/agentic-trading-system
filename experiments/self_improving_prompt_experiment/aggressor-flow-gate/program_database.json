@@ -82,5 +82,17 @@
     "prompt_chars_in": 1488,
     "prompt_action": "reverted",
     "timestamp": "2026-05-25T09:06:58Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "sip-afg-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": -33.373158,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.8958,
+    "trade_count": 88329,
+    "prompt_chars_in": 1488,
+    "prompt_action": null,
+    "timestamp": "2026-05-25T16:59:43Z"
   }
 ]
