@@ -712,5 +712,29 @@
         "total": 75832
       }
     }
+  },
+  {
+    "id": "ptg-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 - built on ptg-b-l1 (age-override) by dropping the age dimension entirely and replacing it with an adverse-move signal-strength override: admit a reversal OPEN through the position cap only when the mid-price has moved adversely against the existing position by >= 1 MES tick since the position was opened; same-direction adds at/above cap remain skipped; reduce-only always submits.",
+    "algorithm_path": "execution_algos/ptg-b-l2/",
+    "scores": {
+      "sharpe": 10.077723736051514,
+      "realized_pnl": 2092.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 4737.57225433526,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 81034,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+4737.57% pnl, gate is +5%); slippage 0.0/0.0; sharpe 10.08 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates (564.25 / 73,802 trades), l2 is -41.30% pnl on +9.80% trade_count -- all 11 per-date pnls underperform base; three dates flip from positive to negative (20260313, 20260316, 20260317). The adverse-move predicate is materially better than L1's age predicate (+34 pp recovery from -75.3% to -41.3%), confirming the signal-strength axis is correct, but adverse_threshold_ticks=1 is too low a bar -- 7,232 extra admitted reversals are net money-losing. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T00:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

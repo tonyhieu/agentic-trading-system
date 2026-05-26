@@ -1,13 +1,24 @@
 [
   {
-    "loop":                 1,
-    "algo_id":              "ptg-b-l1",
-    "status":               "completed",
-    "vs_base_pnl_pct":      -75.3314,
+    "loop": 1,
+    "algo_id": "ptg-b-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -75.3314,
     "vs_base_slippage_pct": 0.0,
-    "sharpe_ratio":         4.299371377784174,
-    "trade_count":          83581,
-    "context_chars_in":     0,
-    "timestamp":            "2026-05-24T07:47:48Z"
+    "sharpe_ratio": 4.299371377784174,
+    "trade_count": 83581,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-24T07:47:48Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "ptg-b-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -41.3007,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 10.077723736051514,
+    "trade_count": 81034,
+    "context_chars_in": 2177,
+    "timestamp": "2026-05-25T00:00:00Z"
   }
 ]
