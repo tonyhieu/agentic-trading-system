@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "full-trace",
+  "loop": 5,
+  "algo_id": "vrs-f-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1203.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.8799,
+    "max_drawdown_pct": -0.037775,
+    "win_rate": 0.353614,
+    "trade_count": 124308,
+    "vs_base_pnl_pct": 59.6683,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 94629,
+  "context_tokens_estimated": 23657,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 5 of the full-trace arm. Prior context (94,629 chars / ~23,657 tokens) included loops 1-4 metrics, full_reasoning, and NOTES.md for vrs-f-l1/l2/l3/l4. Arm trajectory before this loop: L1 -34.23%, L2 +30.12%, L3 +82.36%, L4 +78.37% (corrected 12-date).\n\nHypothesis rationale for L5: L4's full 12-date result ($1,344.50, sharpe 5.71) was essentially flat vs L3 ($1,374.50, sharpe 5.80). L4 had jointly pushed k: 3->6 and max_tighten: 0.9->1.0. The near-neutral result was consistent with two effects canceling: more adverse-tail skipping (beneficial) vs less marginal-aligned tightening (possibly harmful). L4 explicitly prescribed: 'If coverage gap closed and L4 does not exceed L3 by clear margin, test asymmetric sigmoid (tighten only z<0, no-op at z>=0).' That condition was met precisely. L5 implements that prescription: revert sigmoid to L3 shape (k=3, max_tighten=0.9) but clip the tightening to zero on the aligned side (z>0). This is L3 on the adverse half-line, L2 on the aligned half-line -- a clean A/B vs L3 on whether aligned-side tightening was net-positive, net-neutral, or net-negative.\n\nImplementation: copied vrs-f-l4, reverted k=6->3 and max_tighten=1.0->0.9, added aligned-side clip (z>0 -> tighten=0). New diagnostic counter _tighten_clipped_aligned tracks how often the clip fires. Otherwise identical to L4 / L3 in all plumbing.\n\nResults (12d vs vol-regime-sizer): realized_pnl=$1,203.50 vs base $753.75 (+59.67%), sharpe 4.880 vs base 3.065 (+1.815 abs), trade_count 124,308 vs base 127,991 (-3,683, -2.88%), max_dd -0.0378% vs base -0.0460% (18% smaller), win_rate 35.36% (flat vs base), mean_slippage 0.0.\n\nHypothesis assessment: PARTIALLY SUPPORTED. The asymmetric clip correctly released ~1,900 trades on the aligned side (124,308 vs L3's 122,400), confirming the aligned-side clip direction. However, L5 ($1,203.50) underperforms L3 ($1,374.50) by $171 (-12.4%). This means the aligned-side tightening in L3 was mildly net-positive: those ~1,900 extra trades submitted by L5 were net-marginally unprofitable at full p_vol, while L3's mild tightening of them (p_eff ~ 0.85*p_vol for 0 < z < 1) was slightly better than submitting them at full rate. Sharpe also dropped vs L3: 4.88 vs 5.80, a 0.92 regression. max_dd widened slightly (adding aligned variance). The adverse-side (z<=0) path is identical to L3 by design.\n\nImplication: L3's full sigmoid (including the mild aligned-side tightening) was better than either L4 (sharper + saturated) or L5 (asymmetric clip). The L3 sigmoid shape is the best found so far. The next direction is NOT further sigmoid-shape tuning but an orthogonal perturbation. L4's enumerated directions: (4) drift_halflife sweep (currently always 30, never tested), (5) orthogonal signals (book imbalance, aggressor flow). L6 should test drift_halflife=60 with L3's exact sigmoid (k=3, max_tighten=0.9, full sigmoid, no clip) -- a single-knob change that could meaningfully alter regime sensitivity without touching the proven sigmoid shape. Alternative: restore L3 exactly and add a book-imbalance second signal for L6 -- still the 'most promising orthogonal extension' per L4 and still untested.",
+  "timestamp": "2026-05-26T07:30:00Z"
+}
