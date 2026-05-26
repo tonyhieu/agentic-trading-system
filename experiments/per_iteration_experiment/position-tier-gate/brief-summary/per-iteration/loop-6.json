@@ -17,8 +17,14 @@
   },
   "context_chars_in": 14210,
   "context_tokens_estimated": 3552,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 1,
+    "cache_creation": 860,
+    "cache_read": 95805,
+    "total": 96667
+  },
+  "duration_seconds": 411.7,
   "summary_out": {
     "changed": "Single targeted change vs L5: added a tight-spread guard at the admit moment as a CONJUNCTION with L5's two existing conditions. Reversal-override admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick` instead of `adverse >= 5 ticks AND age >= 5s` alone. Added `max_spread_ticks` config field (default 1.0; one MES tick = tightest possible book), refactored `_current_mid()` into `_current_quote_components()` returning `(bid, ask, mid, spread)` from one cache lookup, added `_skipped_reversal_wide_spread` counter, and one spread-gate branch in on_order. All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips) byte-identical to L5.",
     "outcome": "pnl +7983.82% vs simple baseline ($3496.25 vs $43.25 over 11 apples-to-apples dates), sharpe 16.04, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -1.91% pnl, +0.20% trade_count (+151 trades, -$68.00 aggregate) -- the smallest gap in the lineage by a factor of ~5 and trade_count delta now squarely inside the +/-0.5% calibration band. Worse than base on 10/11 dates, exact parity on 20260308 (1/11); biggest single-date miss is -$16 on 20260313. Vs L5 ($3224.25 / 74,239 trades): +8.43% pnl (+$272.00) on -0.39% trade_count (-286 trades); 10/11 dates improved over L5 in dollar terms, 1/11 (20260320) exactly matched. Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% is monotonic; marginal pnl per loop: $1213, $677, $371, $83.50, $272 -- L6 decisively broke the diminishing-returns pattern of L4->L5 in favor of 'right axis was added.'",
