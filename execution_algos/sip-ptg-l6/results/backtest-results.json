@@ -1,0 +1,58 @@
+{
+  "algo_name": "sip-ptg-l6",
+  "backtest_date": "2026-05-26T01:52:42Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 3848.0,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 17.09029213591002,
+    "sharpe_n_days": 12,
+    "max_drawdown_pct": -0.01744986040111679,
+    "win_rate": 0.37133390746854217,
+    "trade_count": 83604,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.3848,
+    "is_weighted_bps": 0.03863741141186512,
+    "is_total_price": 4445.625,
+    "vs_baseline_pnl_pct": 2366.666666666667,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -0.6302224662838198
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/sip-ptg-l6/results/20260308",
+    "execution_algos/sip-ptg-l6/results/20260309",
+    "execution_algos/sip-ptg-l6/results/20260310",
+    "execution_algos/sip-ptg-l6/results/20260311",
+    "execution_algos/sip-ptg-l6/results/20260312",
+    "execution_algos/sip-ptg-l6/results/20260313",
+    "execution_algos/sip-ptg-l6/results/20260315",
+    "execution_algos/sip-ptg-l6/results/20260316",
+    "execution_algos/sip-ptg-l6/results/20260317",
+    "execution_algos/sip-ptg-l6/results/20260318",
+    "execution_algos/sip-ptg-l6/results/20260319",
+    "execution_algos/sip-ptg-l6/results/20260320"
+  ]
+}
