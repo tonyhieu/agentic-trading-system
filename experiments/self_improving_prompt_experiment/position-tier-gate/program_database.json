@@ -46,5 +46,17 @@
     "prompt_chars_in": 6410,
     "prompt_action": "reverted",
     "timestamp": "2026-05-25T21:35:56Z"
+  },
+  {
+    "loop": 5,
+    "algo_id": "sip-ptg-l5",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.34021164021164,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "trade_count": 136734,
+    "prompt_chars_in": 6410,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-26T01:40:00Z"
   }
 ]
