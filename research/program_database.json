@@ -862,5 +862,29 @@
         "total": 96667
       }
     }
+  },
+  {
+    "id": "ptg-b-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 7 - built on ptg-b-l6 (adverse-AND-age-AND-tight-spread three-condition conjunction) by a single targeted change: added a fourth condition - aggressor flow over the most recent 1 second of trade ticks must AGREE with the proposed NEW reversal direction at >= 60% same-side volume. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick AND flow_agreement >= 60%`. All other logic byte-identical to L6 except a new on_trade_tick handler maintains a rolling signed-flow deque (BUYER=+size, SELLER=-size, NO_AGGRESSOR=0). Empty / all-no-aggressor window -> SKIP (absence of evidence is not evidence of presence; mirrors L6 no-quote behavior). Intent: signed flow is mathematically distinct from price displacement (adverse-mid), time (age), and quote thickness (spread); the most plausibly orthogonal remaining axis to close the residual -1.91% gap to base.",
+    "algorithm_path": "execution_algos/ptg-b-l7/",
+    "scores": {
+      "sharpe": 16.183781189900014,
+      "realized_pnl": 3538.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 8082.080924855491,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73861,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+8082.08% pnl, gate is +5%); slippage 0.0/0.0; sharpe 16.18 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L7 is -0.72% pnl on +0.08% trade_count (+59 trades, -$25.50 aggregate) -- the smallest gap of the entire 7-loop lineage. Vs L6 ($3496.25 / 73,953 trades): +1.22% pnl (+$42.50) on -0.12% trade_count (-92 trades; $0.46/removed-trade ratio matches L5 age-conjunction exactly). The flow axis behaved as PARTIALLY orthogonal to (adverse, age, spread) -- providing real-but-small incremental information without throwing out beneficial admits. L7's +$42.50 lands at the upper end of the +$0 to +$50 range L6's next text explicitly predicted for the (i)-aggressor-flow outcome. Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% -> L6: -1.91% -> L7: -0.72% vs base. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50. Residual gap to base is now within the noise floor of dropping a single bad date. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T06:21:09Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
