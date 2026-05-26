@@ -20,5 +20,16 @@
     "trade_count": 124876,
     "context_chars_in": 17013,
     "timestamp": "2026-05-26T05:38:00Z"
+  },
+  {
+    "loop": 3,
+    "algo_id": "vrs-f-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": 82.35538545631208,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 5.798141497639708,
+    "trade_count": 122400,
+    "context_chars_in": 39487,
+    "timestamp": "2026-05-26T06:04:47Z"
   }
 ]
