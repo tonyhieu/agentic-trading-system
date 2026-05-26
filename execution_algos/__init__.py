@@ -181,6 +181,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.sip-ptg-l6",
         "get_execution_algorithm",
     ),
+    "sip-ptg-l7": (
+        "execution_algos.sip-ptg-l7",
+        "get_execution_algorithm",
+    ),
 }
 
 

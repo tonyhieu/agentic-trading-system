@@ -1,0 +1,2 @@
+algo_name,status,total_pnl,sharpe_ratio,implementation_shortfall_bps,trade_count,win_rate
+sip-ptg-l7,fail,156.0,0.5996,0.038882,136734,0.350644
