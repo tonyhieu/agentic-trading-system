@@ -892,5 +892,29 @@
         "total": 109247
       }
     }
+  },
+  {
+    "id": "ptg-b-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 8 (FINAL LOOP) - built on ptg-b-l7 (four-condition adverse-AND-age-AND-tight-spread-AND-flow-agreement predicate) by a single targeted KNOB change: relaxed `max_spread_ticks` default from 1.0 to 2.0. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 2 ticks AND flow_agreement >= 60%`. All other logic byte-identical to L7 modulo class/config renames. L8 admit set is a STRICT SUPERSET of L7. Intent (per L7's brief-summary next text): re-admit ~150-250 of L5->L6's removed wide-spread reversals at near-zero net pnl, banking on the now-in-place flow-agreement guard to screen the worst flow-disagree admits in the re-admitted batch; hypothetical $143 gain > $25.50 residual gap, only theoretically-grounded mechanism for crossing base in the final loop.",
+    "algorithm_path": "execution_algos/ptg-b-l8/",
+    "scores": {
+      "sharpe": 15.830833803595018,
+      "realized_pnl": 3471.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7925.433526011561,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73917,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7925.43% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.83 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L8 is -2.62% pnl (-$93.25) on +0.16% trade_count (+115 trades) -- REGRESSED vs L7's -0.72% (which remains the in-arm pnl AND sharpe best). Vs L7 ($3538.75 / 73,861 trades): -1.91% pnl (-$67.75) on +0.08% trades (+56 new admits, the spread-(1,2] re-admits this loop bet on), sharpe -0.353 (-2.18%). The 56 newly-admitted trades lost -$1.21/trade -- materially worse than L7's flow-removal ratio of $0.46/trade and ~30% worse than L5->L6 wide-spread removal ratio of $0.95/trade. Hypothesis CONTRADICTED by sign: re-admits lost money rather than breaking even. Mechanism failure: wide-spread reversals (1.25-2 ticks) coincide with aggressive directional flow that PASSES the 60% agreement test because aggressive same-side flow is precisely what widens the spread by removing one book side; the flow filter cannot rescue wide-spread admits in this regime. L6's 1-tick spread guard was at or near the arm's true optimum. 8-loop trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% -> L7 -0.72% -> L8 -2.62%. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50, -$67.75. Arm closed 99.3% of L1's gap by L7 but never crossed base; the final L8 spread-axis probe confirms 1-tick guard was at or near optimum. FINAL LOOP of the 8-loop position-tier-gate brief-summary arm; L7 is the arm leader. Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND L8 is not the arm leader anyway.",
+    "timestamp": "2026-05-26T06:53:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

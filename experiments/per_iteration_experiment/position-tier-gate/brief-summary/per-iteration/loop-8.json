@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 8,
+  "algo_id": "ptg-b-l8",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3471.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 15.830833803595018,
+    "max_drawdown_pct": -0.017324913375433123,
+    "win_rate": 0.37155187575253323,
+    "trade_count": 73917,
+    "vs_base_pnl_pct": -2.6163,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 25521,
+  "context_tokens_estimated": 6380,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "SINGLE knob change vs L7: relaxed the spread guard `max_spread_ticks` from 1.0 to 2.0 in both the config dataclass default and the factory signature default. Predicate transitions from `adverse_mid >= 5 ticks AND age >= 5s AND spread <= 1 tick AND flow_agreement >= 60%` (L7) to `adverse_mid >= 5 ticks AND age >= 5s AND spread <= 2 ticks AND flow_agreement >= 60%` (L8). Class/config renamed PtgBL7* -> PtgBL8*. Everything else (adverse 5-tick threshold, 5s age, 1s flow window, 60% flow agreement, on_trade_tick handler, reversal classification, same-direction-add skip, reduce-only short-circuit, quote/trade subscription, fallback skips, diagnostic counters) byte-identical to L7. L8 admit set is a STRICT SUPERSET of L7 (every L7 admit also satisfies spread <= 2).",
+    "outcome": "pnl +7925.43% vs simple baseline ($3471.00 vs $43.25 over 11 apples-to-apples dates), sharpe 15.831, slippage tied at 0.0/0.0. Gate vs simple: PASS by ~1585x the +5% gate. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -2.62% pnl (-$93.25), +0.16% trade_count (+115 trades). REGRESSED from L7's -0.72% (in-arm best). Vs L7 directly ($3538.75 / 73,861 trades): -1.91% pnl (-$67.75), +0.08% trades (+56 new admits), sharpe -0.353 (-2.18%). The 56 newly-admitted trades (spread in (1, 2] ticks that pass flow_agree) lost -$1.21/trade -- materially worse than L7's flow-removal ratio of $0.46/trade and ~30% worse than L5->L6 wide-spread removal ratio of $0.95/trade. Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% -> L7 -0.72% -> L8 -2.62%. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50, -$67.75. L7 remains arm pnl AND sharpe leader; L8 confirms the spread axis was at optimum at L6/L7's 1-tick guard.",
+    "hypothesis": "L7's next text recommended (ii) relax spread 1->2 ticks with the mechanism: L5->L6 removed 286 wide-spread admits at $0.95/trade aggregate cost, so re-admitting half should give back ~+$143 IF the now-in-place flow-agreement guard could screen the worst flow-disagree admits among the re-admitted batch. Hypothetical $143 > $25.50 residual gap. CONTRADICTED by sign: re-admits lost money (-$1.21/trade) rather than breaking even. Mechanism failure: wide-spread reversals (1.25-2 ticks) coincide with aggressive directional flow that PASSES the 60% agreement test because aggressive same-side flow is precisely what widens the spread by removing one book side. The flow filter cannot rescue wide-spread admits in this regime -- the spread guard was correctly screening adverse-resolution microbursts where the market is actively discovering the position is wrong. L6's 1-tick guard was at or near the arm's true optimum; L7's choice to leave it alone was right.",
+    "brief_summary": "ptg-b-l8 (position-tier-gate brief-summary loop 8, FINAL loop of the 8-loop arm) relaxed the spread guard from 1 tick to 2 ticks on top of L7's 4-condition predicate; no other changes. Result: PASS vs simple (+7925.43% pnl, slippage tied) but REGRESSED to -2.62% vs base (L7 was -0.72%, the in-arm best). 56 new admits (spread in (1, 2] ticks passing flow agreement) lost -$1.21/trade, worse than every prior removal ratio in the lineage. L7 remains arm pnl AND sharpe leader; the arm closed 99.3% of L1's gap (-75.33% -> -0.72%) but never crossed base. L8 is the spread-axis probe that confirms L6/L7's 1-tick guard was at or near optimum: the (1, 2]-tick spread band is dominated by microbursts where aggressive flow (which passes the 60% test) is exactly what makes the admit bad, so the flow filter is NOT orthogonal to spread in that regime. The arm verdict is that brief-summary context produced a clean monotonic improvement to within $25.50 of base over 7 loops, then a small regression on the final probe -- a sequence of progressively-better but asymptotic-to-base improvements.",
+    "next": "No L9 -- this is the final loop. If a hypothetical L9 existed, the productive directions would be: (a) revert to L7's parameter set as the arm leader and stop; (b) probe ORTHOGONAL axes that have not been tried (e.g. a no-recent-flip recency floor on the same position, requiring no prior flip within K seconds), since the existing 4 axes (adverse, age, spread, flow) appear to have hit a natural floor at $25.50; (c) try TUNING flow_agreement_min (60% -> 70% or 50%) at L7's parameter point to probe whether the flow filter is over- or under-selective; (d) try TUNING flow_window_ns (1s -> 2s or 500ms) at L7's parameter point. All four directions have low expected upside given the L1-L7 marginal-pnl exhaustion shape ($1213, $677, $371, $83.50, $272, $42.50). The brief-summary arm's terminal answer is: the position-tier-gate base is at or very near its conjunction-of-conditions optimum on this oracle, and the brief-summary context regimen drove the loop sequence to within $25.50 (0.72%) of base but did not produce the orthogonal-axis breakthrough required to cross."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-26T06:53:13Z"
+}
