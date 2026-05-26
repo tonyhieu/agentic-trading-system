@@ -1,0 +1,13 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "vrs-f-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -34.228398076816054,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 1.9839028941574335,
+    "trade_count": 131029,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-26T05:16:46Z"
+  }
+]
