@@ -33,10 +33,10 @@
     "id": "sip-ptg-l7",
     "status": "fail",
     "baseline": "simple",
-    "hypothesis": "Deferred pair OPEN via on_order_filled: when a pair OPEN arrives while net_qty >= cap=1 (close submitted but not yet filled), store the order and submit it inside on_order_filled() after the corresponding close fills and the OMS cache updates to flat. The oracle's directional signal at pair-time is 1–4 seconds earlier than the next solo OPEN; if pair-time direction persists, the earlier entry captures more of the predicted price move. Builds on position-tier-gate (PTG) structural foundation.",
+    "hypothesis": "Deferred pair OPEN via on_order_filled: when a pair OPEN arrives while net_qty >= cap=1 (close submitted but not yet filled), store the order and submit it inside on_order_filled() after the corresponding close fills and the OMS cache updates to flat. The oracle's directional signal at pair-time is 1\u20134 seconds earlier than the next solo OPEN; if pair-time direction persists, the earlier entry captures more of the predicted price move. Builds on position-tier-gate (PTG) structural foundation.",
     "algorithm_path": "execution_algos/sip-ptg-l7/",
     "scores": {
-      "sharpe": 0.60,
+      "sharpe": 0.6,
       "realized_pnl": 156.0,
       "mean_slippage": 0.0,
       "vs_baseline_pnl_pct": 0.0,
@@ -44,13 +44,19 @@
       "trade_count": 136734,
       "passed": false
     },
-    "notes": "FAIL -- 12-date train window (20260308-20260320): sip-ptg-l7 pnl=$156.0/136734 trades == simple baseline $156.0; delta_pnl=0.0%, below 5.0% PASS gate and 3.0% CLOSE threshold. The deferred pair OPEN mechanism produced zero net alpha. Static pre-check in NOTES.md predicted 51.4% of deferred OPENs would be direction-opposite, costing ~$1048/day on 20260313 median date; confirmed — deferred OPENs cancel to produce simple-baseline PnL. Per-date variance high: 20260313=−$512.75, 20260316=−$521.50, 20260317=−$246.75 offset early-week gains. Config: sigma=6, seed=42, horizon=30s.",
+    "notes": "FAIL -- 12-date train window (20260308-20260320): sip-ptg-l7 pnl=$156.0/136734 trades == simple baseline $156.0; delta_pnl=0.0%, below 5.0% PASS gate and 3.0% CLOSE threshold. The deferred pair OPEN mechanism produced zero net alpha. Static pre-check in NOTES.md predicted 51.4% of deferred OPENs would be direction-opposite, costing ~$1048/day on 20260313 median date; confirmed \u2014 deferred OPENs cancel to produce simple-baseline PnL. Per-date variance high: 20260313=\u2212$512.75, 20260316=\u2212$521.50, 20260317=\u2212$246.75 offset early-week gains. Config: sigma=6, seed=42, horizon=30s.",
     "timestamp": "2026-05-25T12:00:00Z",
     "strategy_kwargs_hash": "sha256:35e971933feb",
     "oos_retrieved_at": null,
     "meta": {
-      "duration_seconds": null,
-      "tokens_used": null
+      "duration_seconds": 237.6,
+      "tokens_used": {
+        "input": 1,
+        "output": 1081,
+        "cache_creation": 455,
+        "cache_read": 58115,
+        "total": 59652
+      }
     }
   }
 ]
