@@ -6,13 +6,13 @@
   "algo_id": "vrs-f-l4",
   "status": "completed",
   "metrics": {
-    "realized_pnl": 830.25,
+    "realized_pnl": 1344.5,
     "mean_slippage": 0.0,
-    "sharpe_ratio": 3.925272451887096,
+    "sharpe_ratio": 5.706252572647415,
     "max_drawdown_pct": -0.03429987995042017,
-    "win_rate": 0.3515494962072602,
-    "trade_count": 78703,
-    "vs_base_pnl_pct": 143.47507331378296,
+    "win_rate": 0.3541329477394283,
+    "trade_count": 121717,
+    "vs_base_pnl_pct": 78.3748,
     "vs_base_slippage_pct": 0.0
   },
   "context_chars_in": 70479,
