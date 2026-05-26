@@ -682,5 +682,245 @@
         "total": 95431
       }
     }
+  },
+  {
+    "id": "ptg-b-l1",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo position-tier-gate by adding a 5-second position-age override: when the position cap is hit by a reversal OPEN, admit it if the currently held position is at least 5s old; otherwise preserve the base's blanket skip. Reduce-only orders always submit. Intent: distinguish noisy 1-tick flip-flops (still gated) from matured genuine reversals (now executed). Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/ptg-b-l1/",
+    "scores": {
+      "sharpe": 4.299371377784174,
+      "realized_pnl": 879.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 1932.9479768786125,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 83581,
+      "passed": true
+    },
+    "notes": "PASS vs simple gate -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): ptg-b-l1 $879.25/83581 trades vs simple $43.25/111489 trades; delta_pnl_pct=+1932.95 (well above +5.0 PASS gate). Sharpe 4.30. Slippage 0.0/0.0 (no regression, zero fill-cost model; see research/NOTES.md). Win rate 35.6%. Max DD -3.89%. is_weighted_bps 0.043 vs simple 0.673 (delta_is_bps=+0.673, better arrival-mid capture). However, vs base_algo position-tier-gate on the same 11 dates ($3,564.25/73,802 trades): delta_pnl=-75.33%, trade_count +13.25%. Per-date pnls are WORSE than the base on all 11 dates (range -$32 to -$450). The 5s age override admits ~9,779 extra reversal opens that are systematically money-losing -- with a 30s oracle horizon, a 5s position is still mid-forecast and flipping it realizes a worse entry than holding. Hypothesis CONTRADICTED. PASS verdict applies only to the simple baseline gate; vs base_algo refinement comparison (informational here, since this is loop 1 of the arm) is materially worse. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T07:47:48Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 287.3,
+      "tokens_used": {
+        "input": 1,
+        "output": 51,
+        "cache_creation": 618,
+        "cache_read": 75162,
+        "total": 75832
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 - built on ptg-b-l1 (age-override) by dropping the age dimension entirely and replacing it with an adverse-move signal-strength override: admit a reversal OPEN through the position cap only when the mid-price has moved adversely against the existing position by >= 1 MES tick since the position was opened; same-direction adds at/above cap remain skipped; reduce-only always submits.",
+    "algorithm_path": "execution_algos/ptg-b-l2/",
+    "scores": {
+      "sharpe": 10.077723736051514,
+      "realized_pnl": 2092.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 4737.57225433526,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 81034,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+4737.57% pnl, gate is +5%); slippage 0.0/0.0; sharpe 10.08 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates (564.25 / 73,802 trades), l2 is -41.30% pnl on +9.80% trade_count -- all 11 per-date pnls underperform base; three dates flip from positive to negative (20260313, 20260316, 20260317). The adverse-move predicate is materially better than L1's age predicate (+34 pp recovery from -75.3% to -41.3%), confirming the signal-strength axis is correct, but adverse_threshold_ticks=1 is too low a bar -- 7,232 extra admitted reversals are net money-losing. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T00:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 418.0,
+      "tokens_used": {
+        "input": 1,
+        "output": 492,
+        "cache_creation": 684,
+        "cache_read": 82750,
+        "total": 83927
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 - built on ptg-b-l2 (adverse-move override at 1 tick) by a single mechanical change: raised adverse_threshold_ticks default from 1.0 to 3.0 ($0.25 -> $0.75 of adverse mid-move required to admit a reversal OPEN through the position cap). Everything else (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L2. Intent: 1 tick is bid-ask oscillation; 3 ticks is three full-spread displacements, sufficient to filter the noise floor that L2 was admitting.",
+    "algorithm_path": "execution_algos/ptg-b-l3/",
+    "scores": {
+      "sharpe": 13.933634237755003,
+      "realized_pnl": 2769.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 6304.046242774567,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 75587,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+6304.05% pnl, gate is +5%); slippage 0.0/0.0; sharpe 13.93 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l3 is -22.29% pnl on +2.42% trade_count (+1,785 trades) -- WORSE than base on 11/11 dates in absolute dollars (range -$12.50 to -$147). vs L2: +32.38% pnl on -6.72% trades (-5,447 fewer reversal admits -> +$677 aggregate). The convex monotonic lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% vs base shows the adverse-mid axis is the right axis with monotonic returns to tightening, but at 3 ticks the predicate still admits net-loss reversals. Per L2's branching rule: L3 has +trade_count vs base -> L4 should test 5 ticks. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T04:30:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 389.1,
+      "tokens_used": {
+        "input": 1,
+        "output": 75,
+        "cache_creation": 1100,
+        "cache_read": 87255,
+        "total": 88431
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 - built on ptg-b-l3 (adverse-move override at 3 ticks) by a single mechanical change: raised adverse_threshold_ticks default from 3.0 to 5.0 ($0.75 -> $1.25 of adverse mid-move required to admit a reversal OPEN through the position cap). Everything else (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L3. Intent: 5 ticks is five full-spread displacements, demanding a meaningfully larger adverse regime than 3 ticks; a position 5 ticks underwater is likely on the wrong side of a real micro-trend rather than oscillating. L3 next text identified this as the natural single-step probe under L2's branching rule (+trade_count vs base -> tighten further).",
+    "algorithm_path": "execution_algos/ptg-b-l4/",
+    "scores": {
+      "sharpe": 15.320778516538454,
+      "realized_pnl": 3140.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7161.849710982659,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 74420,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7161.85% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.32 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l4 is -11.88% pnl on +0.84% trade_count (+618 trades, -$423.50) -- WORSE than base on 11/11 dates in absolute dollars (range -$6.00 to -$112.00). The convex monotonic lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% vs base shows the adverse-mid axis has monotonic returns to tightening with diminishing margins (+33, +19, +10 pp per single step). trade_count is now within +/-1% of base (well inside the calibration band L3's next text identified), but the residual +618 admits are still on average money-losing. The adverse-mid axis appears to have ~90% closed the gap to base but cannot fully close it on its own. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T05:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 398.0,
+      "tokens_used": {
+        "input": 1,
+        "output": 3,
+        "cache_creation": 222,
+        "cache_read": 82092,
+        "total": 82318
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 5 - built on ptg-b-l4 (adverse-move override at 5 ticks) by a single targeted change: added a 5-second hold-time floor on the existing position as a CONJUNCTION with the existing 5-tick adverse-mid override. Concretely: L4 admit predicate `adverse_mid >= 5 ticks` becomes L5 admit predicate `adverse_mid >= 5 ticks AND age >= 5 seconds`. All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips) byte-identical to L4. Intent: L1 (age-only at 5s) and L4 (adverse-only at 5 ticks) each individually underperformed base. The hypothesis was that the failure modes compound: age was wrong as the SOLE predicate (positions mid-forecast at 5s), but at BOTH 5s AND 5-ticks-adverse the position has matured AND been wrong, which is exactly the conjunction the base's blanket skip is too coarse to capture. Strict subset of L4 admits.",
+    "algorithm_path": "execution_algos/ptg-b-l5/",
+    "scores": {
+      "sharpe": 15.659482979030653,
+      "realized_pnl": 3224.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7354.913294797687,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 74239,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7354.91% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.66 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l5 is -9.54% pnl on +0.59% trade_count (+437 trades, -$340.00) -- WORSE than base on 11/11 dates in absolute dollars (range -$3.25 to -$84.25). Vs L4 ($3140.75 / 74,420 trades): +2.66% pnl (+$83.50) on -0.24% trade_count (-181 trades); 8/11 dates improved vs L4. The conjunction direction was correct but magnitude was much weaker than expected (~25% of the predicted +$100-350 gain) because adverse-mid accumulation and position age are strongly positively correlated -- most L4 admits already cleared the 5s age threshold. Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% vs base shows continued recovery but at $83.50 marginal vs the L3->L4 step's $371. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T05:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 506.5,
+      "tokens_used": {
+        "input": 1,
+        "output": 2,
+        "cache_creation": 2237,
+        "cache_read": 106488,
+        "total": 108728
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 6 - built on ptg-b-l5 (adverse-AND-age conjunction at 5 ticks AND 5s) by a single targeted change: added a tight-spread guard at the admit moment as a third CONJUNCTION condition. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick`. All other logic byte-identical to L5. Intent: spread is a fill-cost axis orthogonal to signal-strength axes (adverse-mid) and time axes (age). Crossing a wide spread to flip a position pays the mid-edge to the spread-crossing cost; admitting reversals only at the tightest book should filter the residual money-losing admits L5 still admits. 1-tick threshold = tightest possible MES spread = strictest possible single-step probe of the orthogonality hypothesis.",
+    "algorithm_path": "execution_algos/ptg-b-l6/",
+    "scores": {
+      "sharpe": 16.03579159896312,
+      "realized_pnl": 3496.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7983.815028901734,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73953,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7983.82% pnl, gate is +5%); slippage 0.0/0.0; sharpe 16.04 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L6 is -1.91% pnl on +0.20% trade_count (+151 trades, -$68.00 aggregate). Worse than base on 10/11 dates, exact parity on 1/11 (20260308); biggest single-date miss is -$16 on 20260313 (a low-base-pnl day). Vs L5 ($3224.25 / 74,239 trades): +8.43% pnl (+$272.00) on -0.39% trade_count (-286 trades); 10/11 dates improved over L5, 1/11 (20260320) exactly matched. The spread axis is demonstrated to be GENUINELY orthogonal to (adverse, age): the +$272 gain came from filtering admits that the first two conditions silently let through (wide-spread reversal flips), ruling out the explicit failure mode the hypothesis bet against (spread correlated with adverse-mid at admit time). Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% -> L6: -1.91% vs base. Marginal pnl per loop: $1213, $677, $371, $83.50, $272 -- L6 broke the diminishing-returns pattern of L4->L5 decisively. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T06:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 411.7,
+      "tokens_used": {
+        "input": 1,
+        "output": 1,
+        "cache_creation": 860,
+        "cache_read": 95805,
+        "total": 96667
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 7 - built on ptg-b-l6 (adverse-AND-age-AND-tight-spread three-condition conjunction) by a single targeted change: added a fourth condition - aggressor flow over the most recent 1 second of trade ticks must AGREE with the proposed NEW reversal direction at >= 60% same-side volume. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick AND flow_agreement >= 60%`. All other logic byte-identical to L6 except a new on_trade_tick handler maintains a rolling signed-flow deque (BUYER=+size, SELLER=-size, NO_AGGRESSOR=0). Empty / all-no-aggressor window -> SKIP (absence of evidence is not evidence of presence; mirrors L6 no-quote behavior). Intent: signed flow is mathematically distinct from price displacement (adverse-mid), time (age), and quote thickness (spread); the most plausibly orthogonal remaining axis to close the residual -1.91% gap to base.",
+    "algorithm_path": "execution_algos/ptg-b-l7/",
+    "scores": {
+      "sharpe": 16.183781189900014,
+      "realized_pnl": 3538.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 8082.080924855491,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73861,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+8082.08% pnl, gate is +5%); slippage 0.0/0.0; sharpe 16.18 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L7 is -0.72% pnl on +0.08% trade_count (+59 trades, -$25.50 aggregate) -- the smallest gap of the entire 7-loop lineage. Vs L6 ($3496.25 / 73,953 trades): +1.22% pnl (+$42.50) on -0.12% trade_count (-92 trades; $0.46/removed-trade ratio matches L5 age-conjunction exactly). The flow axis behaved as PARTIALLY orthogonal to (adverse, age, spread) -- providing real-but-small incremental information without throwing out beneficial admits. L7's +$42.50 lands at the upper end of the +$0 to +$50 range L6's next text explicitly predicted for the (i)-aggressor-flow outcome. Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% -> L6: -1.91% -> L7: -0.72% vs base. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50. Residual gap to base is now within the noise floor of dropping a single bad date. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T06:21:09Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 599.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 255,
+        "cache_creation": 443,
+        "cache_read": 108548,
+        "total": 109247
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 8 (FINAL LOOP) - built on ptg-b-l7 (four-condition adverse-AND-age-AND-tight-spread-AND-flow-agreement predicate) by a single targeted KNOB change: relaxed `max_spread_ticks` default from 1.0 to 2.0. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 2 ticks AND flow_agreement >= 60%`. All other logic byte-identical to L7 modulo class/config renames. L8 admit set is a STRICT SUPERSET of L7. Intent (per L7's brief-summary next text): re-admit ~150-250 of L5->L6's removed wide-spread reversals at near-zero net pnl, banking on the now-in-place flow-agreement guard to screen the worst flow-disagree admits in the re-admitted batch; hypothetical $143 gain > $25.50 residual gap, only theoretically-grounded mechanism for crossing base in the final loop.",
+    "algorithm_path": "execution_algos/ptg-b-l8/",
+    "scores": {
+      "sharpe": 15.830833803595018,
+      "realized_pnl": 3471.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7925.433526011561,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73917,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7925.43% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.83 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L8 is -2.62% pnl (-$93.25) on +0.16% trade_count (+115 trades) -- REGRESSED vs L7's -0.72% (which remains the in-arm pnl AND sharpe best). Vs L7 ($3538.75 / 73,861 trades): -1.91% pnl (-$67.75) on +0.08% trades (+56 new admits, the spread-(1,2] re-admits this loop bet on), sharpe -0.353 (-2.18%). The 56 newly-admitted trades lost -$1.21/trade -- materially worse than L7's flow-removal ratio of $0.46/trade and ~30% worse than L5->L6 wide-spread removal ratio of $0.95/trade. Hypothesis CONTRADICTED by sign: re-admits lost money rather than breaking even. Mechanism failure: wide-spread reversals (1.25-2 ticks) coincide with aggressive directional flow that PASSES the 60% agreement test because aggressive same-side flow is precisely what widens the spread by removing one book side; the flow filter cannot rescue wide-spread admits in this regime. L6's 1-tick spread guard was at or near the arm's true optimum. 8-loop trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% -> L7 -0.72% -> L8 -2.62%. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50, -$67.75. Arm closed 99.3% of L1's gap by L7 but never crossed base; the final L8 spread-axis probe confirms 1-tick guard was at or near optimum. FINAL LOOP of the 8-loop position-tier-gate brief-summary arm; L7 is the arm leader. Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND L8 is not the arm leader anyway.",
+    "timestamp": "2026-05-26T06:53:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 205.8,
+      "tokens_used": {
+        "input": 1,
+        "output": 501,
+        "cache_creation": 507,
+        "cache_read": 95438,
+        "total": 96447
+      }
+    }
   }
 ]
