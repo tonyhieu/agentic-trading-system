@@ -17,8 +17,14 @@
   },
   "context_chars_in": 6586,
   "context_tokens_estimated": 1646,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 3,
+    "cache_creation": 222,
+    "cache_read": 82092,
+    "total": 82318
+  },
+  "duration_seconds": 398.0,
   "summary_out": {
     "changed": "Single mechanical change vs L3: raised adverse_threshold_ticks default from 3.0 to 5.0 ($0.75 -> $1.25 of adverse mid-move required to admit a reversal OPEN through the position cap). All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L3.",
     "outcome": "pnl +7161.85% vs simple baseline ($3140.75 vs $43.25 over 11 apples-to-apples dates), sharpe 15.32, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -11.88% pnl, +0.84% trade_count (+618 trades, -$423.50 aggregate). Still WORSE than base on 11/11 dates in absolute dollars but the trade_count delta is now well within the +/-1% calibration band that L3's next text identified as the sign the predicate is approaching the right threshold. Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% is monotonic with diminishing-but-positive marginal returns (+33, +19, +10 pp per single-step tightening). No date flipped sign this loop.",
