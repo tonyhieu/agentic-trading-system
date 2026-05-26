@@ -832,5 +832,29 @@
         "total": 108728
       }
     }
+  },
+  {
+    "id": "ptg-b-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 6 - built on ptg-b-l5 (adverse-AND-age conjunction at 5 ticks AND 5s) by a single targeted change: added a tight-spread guard at the admit moment as a third CONJUNCTION condition. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick`. All other logic byte-identical to L5. Intent: spread is a fill-cost axis orthogonal to signal-strength axes (adverse-mid) and time axes (age). Crossing a wide spread to flip a position pays the mid-edge to the spread-crossing cost; admitting reversals only at the tightest book should filter the residual money-losing admits L5 still admits. 1-tick threshold = tightest possible MES spread = strictest possible single-step probe of the orthogonality hypothesis.",
+    "algorithm_path": "execution_algos/ptg-b-l6/",
+    "scores": {
+      "sharpe": 16.03579159896312,
+      "realized_pnl": 3496.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7983.815028901734,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73953,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7983.82% pnl, gate is +5%); slippage 0.0/0.0; sharpe 16.04 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L6 is -1.91% pnl on +0.20% trade_count (+151 trades, -$68.00 aggregate). Worse than base on 10/11 dates, exact parity on 1/11 (20260308); biggest single-date miss is -$16 on 20260313 (a low-base-pnl day). Vs L5 ($3224.25 / 74,239 trades): +8.43% pnl (+$272.00) on -0.39% trade_count (-286 trades); 10/11 dates improved over L5, 1/11 (20260320) exactly matched. The spread axis is demonstrated to be GENUINELY orthogonal to (adverse, age): the +$272 gain came from filtering admits that the first two conditions silently let through (wide-spread reversal flips), ruling out the explicit failure mode the hypothesis bet against (spread correlated with adverse-mid at admit time). Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% -> L6: -1.91% vs base. Marginal pnl per loop: $1213, $677, $371, $83.50, $272 -- L6 broke the diminishing-returns pattern of L4->L5 decisively. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T06:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
