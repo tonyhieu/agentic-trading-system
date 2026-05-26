@@ -17,8 +17,14 @@
   },
   "context_chars_in": 2177,
   "context_tokens_estimated": 544,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 492,
+    "cache_creation": 684,
+    "cache_read": 82750,
+    "total": 83927
+  },
+  "duration_seconds": 418.0,
   "summary_out": {
     "changed": "Dropped the L1 5s position-age override. Replaced it with an adverse-move signal-strength override: when the cap is hit by a REVERSAL order (opposite side of current position), admit it only if the mid-price has moved adversely against the entry by >= 1 MES tick ($0.25) since the position opened. Same-direction adds at/above cap remain skipped (matching base). Reduce-only orders always submit.",
     "outcome": "pnl +4737.57% vs simple baseline ($2092.25 vs $43.25 over 11 apples-to-apples dates), sharpe 10.08, slippage 0.0/0.0. Gate vs simple: PASS. BUT vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -41.30% pnl, +9.80% trade_count. All 11 per-date pnls underperform base; 3 dates (20260313, 20260316, 20260317) flipped from positive to negative under l2. Hypothesis PARTIALLY VINDICATED (signal-strength direction is right -- L1 was -75.3%, L2 is -41.3%, a +34 pp recovery on one change) but the threshold of 1 tick is too low: 7,232 extra admitted reversals are net money-losing because 1 tick of adverse mid-move is bid-ask oscillation, not a regime change. Sharpe 10.08 over 11 days is a small-N artifact -- treat as directional only; realized_pnl is the bottom line and on that L2 is materially worse than base.",
