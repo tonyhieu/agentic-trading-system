@@ -265,6 +265,22 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vrs-f-l4",
         "get_execution_algorithm",
     ),
+    "vrs-f-l5": (
+        "execution_algos.vrs-f-l5",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l6": (
+        "execution_algos.vrs-f-l6",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l7": (
+        "execution_algos.vrs-f-l7",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l8": (
+        "execution_algos.vrs-f-l8",
+        "get_execution_algorithm",
+    ),
 }
 
 
