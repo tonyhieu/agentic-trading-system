@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "full-trace",
+  "loop": 7,
+  "algo_id": "vrs-f-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1384.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.7322,
+    "max_drawdown_pct": -0.035925,
+    "win_rate": 0.354534,
+    "trade_count": 122462,
+    "vs_base_pnl_pct": 83.6816,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 126991,
+  "context_tokens_estimated": 31747,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 7 of the full-trace arm. Prior context (126,991 chars / ~31,747 tokens) included loops 1-6 metrics, full_reasoning, and NOTES.md. Arm trajectory before this loop: L1 -34.23%, L2 +30.12%, L3 +82.36%, L4 +78.37%, L5 +59.67%, L6 +91.97%.\n\nHypothesis rationale for L7: L6 improved on L3 by changing drift_halflife 30->60 (+5.27% pnl, +0.07 sharpe, trade_count unchanged). Every sigmoid-shape perturbation (L4, L5) regressed from L3. L6's NOTES.md and full_reasoning explicitly prescribed: 'try halflife=90 for L7 -- if it underperforms L6, optimum is near 60.' L7 implements that single-knob test: drift_halflife 60->90, all other parameters identical to L6.\n\nMechanism: halflife=90 produces an even slower, less noisy drift EWM. Hypothesized two competing effects: (a) better noise suppression -> more accurate z classification; (b) slower signal response to fast adverse bursts -> diluted tightening. The test discriminates which dominates.\n\nImplementation: copied vrs-f-l6, changed drift_halflife 60->90 (drift_alpha ~0.01149 -> ~0.00767, ~2/3 of L6's alpha). All other parameters identical.\n\nResults (12d vs vol-regime-sizer): pnl=$1,384.50 vs base $753.75 (+83.68%), sharpe 5.732 (+2.667 abs), trade_count 122,462 (-5,529, -4.32%), max_dd -0.0359% (-22% vs base), win_rate 35.45%, mean_slippage 0.0.\n\nHypothesis assessment: REFUTED. halflife=90 regressed vs L6: pnl -$62.50 (-4.32%), sharpe -0.142. L7 beats L3 marginally (+83.68% vs +82.36%) but the halflife=60->90 step is clearly negative. The halflife sweep: 30 (+82%), 60 (+92%), 90 (+84%) -- symmetric regression on both sides of 60, confirming 60 as the local optimum.\n\nKey observations: (1) trade_count essentially unchanged (122,462 vs L6's 122,431, +31) -- the signal smoothing change did not alter trade volume. (2) max_dd improved slightly vs L6 (-0.0359% vs -0.0371%) but at cost of pnl and sharpe. (3) The halflife=30->60 gain was repeatable; 60->90 erases most of it. Optimum is robustly near halflife=60.\n\nImplication for L8: L7's alternatives #1 was explicit: 'if L7 regresses, halflife=120 too aggressive, pivot to orthogonal signal.' The regression confirms: L8 should pivot to the orthogonal-signal direction -- book imbalance or aggressor flow as a second directional signal added to L6's best configuration. L6 (halflife=60, k=3, max_tighten=0.9, full sigmoid) is the clean baseline. Deferred across L4-L7, this is the highest-information remaining direction.",
+  "timestamp": "2026-05-26T09:30:00Z"
+}
