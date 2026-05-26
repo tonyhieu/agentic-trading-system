@@ -1,0 +1,54 @@
+{
+  "algo_name": "vrs-f-l4",
+  "backtest_date": "2026-05-26T06:33:21Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 830.25,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 3.925272451887096,
+    "sharpe_n_days": 10,
+    "max_drawdown_pct": -0.03429987995042017,
+    "win_rate": 0.3515494962072602,
+    "trade_count": 78703,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.083025,
+    "is_weighted_bps": 0.04413101779256325,
+    "is_total_price": 4563.375,
+    "vs_baseline_pnl_pct": 1100.301204819277,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -8.181075970267509
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/vrs-f-l4/results/20260308",
+    "execution_algos/vrs-f-l4/results/20260309",
+    "execution_algos/vrs-f-l4/results/20260310",
+    "execution_algos/vrs-f-l4/results/20260311",
+    "execution_algos/vrs-f-l4/results/20260312",
+    "execution_algos/vrs-f-l4/results/20260313",
+    "execution_algos/vrs-f-l4/results/20260315",
+    "execution_algos/vrs-f-l4/results/20260316",
+    "execution_algos/vrs-f-l4/results/20260317",
+    "execution_algos/vrs-f-l4/results/20260318"
+  ]
+}
