@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "full-trace",
+  "loop": 8,
+  "algo_id": "vrs-f-l8",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1437.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 6.0749,
+    "max_drawdown_pct": -0.034525,
+    "win_rate": 0.354731,
+    "trade_count": 122349,
+    "vs_base_pnl_pct": 90.6468,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 143359,
+  "context_tokens_estimated": 35839,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 8 (FINAL) of the full-trace arm. Prior context (143,359 chars / ~35,839 tokens) included loops 1-7 metrics, full_reasoning, and NOTES.md. Arm trajectory: L1 -34%, L2 +30%, L3 +82%, L4 +78%, L5 +60%, L6 +92% (best pnl), L7 +84%.\n\nHypothesis rationale for L8: L1-L7 fully explored the (k, max_tighten, symmetry, drift_halflife) parameter space with L6 (halflife=60, k=3, max_tighten=0.9, full sigmoid) as the local optimum. L7's regression from halflife=90 closed out the halflife sweep. L7 explicitly prescribed pivoting to the orthogonal-signal direction: book imbalance as a second directional signal on top of L6's best configuration. This was flagged across L4-L7 as 'the most promising orthogonal extension' and L7 is the explicit handoff. L8 implements it: adds an EWM of side-signed top-of-book imbalance (imbal_raw = (bid_size - ask_size) / (bid_size + ask_size), halflife=60, side-signed as z_imbal = order_sign * imbal_ewm * imbal_scale=2.0) and combines with L6's drift coordinate via weighted average: z_combined = 0.6 * z_drift + 0.4 * z_imbal. Conservative initial weight on unproven signal.\n\nMechanism: book imbalance carries immediate liquidity asymmetry not captured by price drift. When signals agree on adverse classification, combined z is more negative -> sharper tightening on worst-EV trades. When signals disagree, combined z moves toward 0 -> defensive 0.45 tightening (proven net-positive in L3/L6). Conservative averaging bounds downside vs multiplicative combination.\n\nImplementation: copied vrs-f-l6. Added imbal_ewm state (alpha=0.01149, matching drift_alpha at halflife=60), z_imbal coordinate, weighted combination in _effective_prob. New diagnostic counter _imbal_warm_count. All other parameters identical to L6.\n\nResults (12d vs vol-regime-sizer): pnl=$1,437.00 vs base $753.75 (+90.64%), sharpe 6.075 (BEST of all 8 loops, +3.010 vs base), trade_count 122,349 (-5,642, -4.41%), max_dd -0.0345% (BEST of all 8 loops, 25% smaller than base), win_rate 35.47%, mean_slippage 0.0.\n\nHypothesis assessment: PARTIALLY SUPPORTED. Best sharpe and best max_dd across all 8 loops, but pnl slightly regressed vs L6 (-$10, -0.7%). Split result interpretation: (1) Sharpe and max_dd improvement confirms the combined signal routes more ambiguous trades to defensive z=0 path, reducing variance. (2) Slight pnl regression (-$10) is consistent with imbalance being marginally redundant with drift at this timescale -- the signal added ~82 extra skips vs L6 with ~zero net pnl change. (3) L8 and L6 are statistically very close over 12 dates; the pnl difference may be noise. L8 has the best risk-adjusted profile of all full-trace loops.\n\nFull-trace arm best configurations: L6 (best pnl: $1,447.00, sharpe 5.874, +91.97%) and L8 (best sharpe: 6.075, best max_dd: -0.0345%, pnl $1,437.00, +90.64%). Both substantially beat the brief-summary arm's best pnl context (+204.8% vs base) is on a different mechanism, so cross-arm comparison is informational only.",
+  "timestamp": "2026-05-26T10:30:00Z"
+}
