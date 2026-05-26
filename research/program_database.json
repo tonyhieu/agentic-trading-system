@@ -772,5 +772,29 @@
         "total": 88431
       }
     }
+  },
+  {
+    "id": "ptg-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 - built on ptg-b-l3 (adverse-move override at 3 ticks) by a single mechanical change: raised adverse_threshold_ticks default from 3.0 to 5.0 ($0.75 -> $1.25 of adverse mid-move required to admit a reversal OPEN through the position cap). Everything else (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L3. Intent: 5 ticks is five full-spread displacements, demanding a meaningfully larger adverse regime than 3 ticks; a position 5 ticks underwater is likely on the wrong side of a real micro-trend rather than oscillating. L3 next text identified this as the natural single-step probe under L2's branching rule (+trade_count vs base -> tighten further).",
+    "algorithm_path": "execution_algos/ptg-b-l4/",
+    "scores": {
+      "sharpe": 15.320778516538454,
+      "realized_pnl": 3140.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7161.849710982659,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 74420,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7161.85% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.32 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l4 is -11.88% pnl on +0.84% trade_count (+618 trades, -$423.50) -- WORSE than base on 11/11 dates in absolute dollars (range -$6.00 to -$112.00). The convex monotonic lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% vs base shows the adverse-mid axis has monotonic returns to tightening with diminishing margins (+33, +19, +10 pp per single step). trade_count is now within +/-1% of base (well inside the calibration band L3's next text identified), but the residual +618 admits are still on average money-losing. The adverse-mid axis appears to have ~90% closed the gap to base but cannot fully close it on its own. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T05:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]
