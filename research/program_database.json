@@ -802,5 +802,29 @@
         "total": 82318
       }
     }
+  },
+  {
+    "id": "ptg-b-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 5 - built on ptg-b-l4 (adverse-move override at 5 ticks) by a single targeted change: added a 5-second hold-time floor on the existing position as a CONJUNCTION with the existing 5-tick adverse-mid override. Concretely: L4 admit predicate `adverse_mid >= 5 ticks` becomes L5 admit predicate `adverse_mid >= 5 ticks AND age >= 5 seconds`. All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips) byte-identical to L4. Intent: L1 (age-only at 5s) and L4 (adverse-only at 5 ticks) each individually underperformed base. The hypothesis was that the failure modes compound: age was wrong as the SOLE predicate (positions mid-forecast at 5s), but at BOTH 5s AND 5-ticks-adverse the position has matured AND been wrong, which is exactly the conjunction the base's blanket skip is too coarse to capture. Strict subset of L4 admits.",
+    "algorithm_path": "execution_algos/ptg-b-l5/",
+    "scores": {
+      "sharpe": 15.659482979030653,
+      "realized_pnl": 3224.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7354.913294797687,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 74239,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7354.91% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.66 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l5 is -9.54% pnl on +0.59% trade_count (+437 trades, -$340.00) -- WORSE than base on 11/11 dates in absolute dollars (range -$3.25 to -$84.25). Vs L4 ($3140.75 / 74,420 trades): +2.66% pnl (+$83.50) on -0.24% trade_count (-181 trades); 8/11 dates improved vs L4. The conjunction direction was correct but magnitude was much weaker than expected (~25% of the predicted +$100-350 gain) because adverse-mid accumulation and position age are strongly positively correlated -- most L4 admits already cleared the 5s age threshold. Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% vs base shows continued recovery but at $83.50 marginal vs the L3->L4 step's $371. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T05:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
   }
 ]

@@ -1,0 +1,31 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 5,
+  "algo_id": "ptg-b-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3224.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 15.659482979030653,
+    "max_drawdown_pct": -0.017599912000439998,
+    "win_rate": 0.3710852786271367,
+    "trade_count": 74239,
+    "vs_base_pnl_pct": -9.5392,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 11792,
+  "context_tokens_estimated": 2948,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": {
+    "changed": "Single targeted change vs L4: added a 5-second position-age hold-time floor as a CONJUNCTION with the existing 5-tick adverse-mid override. Reversal-override admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5 seconds` instead of `adverse_mid >= 5 ticks` alone. Added `min_age_ns` config field (default 5_000_000_000 ns), `_skipped_reversal_fresh` counter, and one age-floor branch in on_order(). All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips) byte-identical to L4.",
+    "outcome": "pnl +7354.91% vs simple baseline ($3224.25 vs $43.25 over 11 apples-to-apples dates), sharpe 15.66, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -9.54% pnl, +0.59% trade_count (+437 trades, -$340.00 aggregate). Still WORSE than base on 11/11 dates in absolute dollars. Vs L4 ($3140.75 / 74,420 trades): +2.66% pnl (+$83.50), -0.24% trade_count (-181 trades); 8/11 dates improved vs L4 in dollar terms (only 20260311 regressed materially). Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% is monotonic with rapidly diminishing marginal returns ($1213 -> $677 -> $371 -> $83.50 per loop). No date flipped sign this loop.",
+    "hypothesis": "L4's next text proposed (ii) keep 5-tick adverse threshold AND add a structural conditioner -- specifically the hold-time floor at 5s, on the reasoning that L1 (age-only) and L4 (adverse-only) each individually underperformed base but at 5s AND 5-ticks-adverse the position has BOTH matured and been wrong, which is the conjunction the base's blanket skip is too coarse to capture. I predicted L5 trade_count would land 73,500-74,200 (trimming half-to-all of L4's +618 excess) and pnl would land $3,250-3,500 (+$100 to +$350 over L4). PARTIALLY VINDICATED in direction (+$83.50 pnl, -181 trades) but CLEARLY WEAKER than predicted in magnitude. The conjunction did filter some money-losing admits (+$0.46/removed-trade) but only ~30% of L4's +618 excess admits failed the age check -- adverse-mid and position-age are strongly positively correlated in this microstructure because adverse-mid accumulation is itself time-consuming, so by the time the 5-tick adverse threshold is reached most positions are already 5s+ old. Same diminishing-returns shape as the single-axis adverse-mid sweep, for the same underlying reason: the two filter dimensions are not independent.",
+    "brief_summary": "ptg-b-l5 (position-tier-gate brief-summary loop 5) added a 5-second hold-time floor on the existing position as a CONJUNCTION with L4's 5-tick adverse-mid override (admit predicate `adverse >= 5 ticks AND age >= 5s`, a strict subset of L4 admits). Result: PASS vs simple (+7354.91% pnl) and continued small recovery from L4 (-11.88% -> -9.54% vs base, +2.34 pp). Still worse than base on 11/11 dates ($-340.00 aggregate). Vs L4: +$83.50 pnl (+2.66%) on -181 trades (-0.24%); 8/11 dates improved vs L4. Hypothesis direction correct, magnitude weak (~25% of predicted +$100-350 gain): adverse-mid accumulation and position age are strongly positively correlated, so the age conjunction often doesn't bind on L4 admits. The conjunctive AND pattern hits diminishing returns the same way the single-axis sweep did because the two dimensions are not orthogonal. Marginal pnl gains per loop: $1213 (L1->L2), $677 (L2->L3), $371 (L3->L4), $83.50 (L4->L5) -- clear exhaustion shape on both the threshold-sweep and the same-direction conjunction.",
+    "next": "Pivot to a genuinely orthogonal conditioning variable. The adverse-mid axis (alone or in age-conjunction) cannot close the residual gap because its filter is correlated with what L4 already screens. The highest-leverage truly orthogonal candidate from the L4 candidate pool is the spread-not-widened guard: skip the reversal override if `(ask - bid) > 1 tick` at the admit moment. This is a fill-cost axis, not a signal-direction axis, so it should bind on admits that adverse-mid AND age both pass -- an adverse-rich aged reversal can still be expensive to enter if the book is thin right then. Predicted endpoint: small but meaningful pnl gain (+$50 to +$150) and small trade_count drop (-50 to -250). In-flight diagnostic: if L6 returns ~$0 incremental gain, spread is also correlated with adverse-mid at admit time (a position 5-ticks underwater after 5s tends to have a wide spread by default) and L7 should pivot to (b) signed aggressor imbalance on recent ticks. If L6 pnl regresses while trade_count drops, the spread guard is throwing out beneficial admits in addition to losers (1-tick threshold too strict) and L7 should test 2-tick threshold. Avoid: any further pure-threshold sweeps on adverse-mid; any age increase beyond 5s without an orthogonal axis change first; any return to single-axis age-only filters."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-26T05:30:00Z"
+}
