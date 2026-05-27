@@ -105,6 +105,26 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.afg-pc-r3",
         "get_execution_algorithm",
     ),
+    "afg-pc-r4": (
+        "execution_algos.afg-pc-r4",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r5": (
+        "execution_algos.afg-pc-r5",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r6": (
+        "execution_algos.afg-pc-r6",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r7": (
+        "execution_algos.afg-pc-r7",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r8": (
+        "execution_algos.afg-pc-r8",
+        "get_execution_algorithm",
+    ),
     "ptg-pc-r1": (
         "execution_algos.ptg-pc-r1",
         "get_execution_algorithm",
