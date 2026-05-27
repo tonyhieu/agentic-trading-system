@@ -18,7 +18,13 @@
   },
   "context_chars_in": 412,
   "context_tokens_estimated": 103,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 219,
+    "cache_creation": 355,
+    "cache_read": 42661,
+    "total": 43236
+  },
+  "duration_seconds": 72.4,
   "timestamp": "2026-05-26T00:00:00Z"
 }
