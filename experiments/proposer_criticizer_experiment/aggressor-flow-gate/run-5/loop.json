@@ -1,0 +1,24 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "run": 5,
+  "algo_id": "afg-pc-r5",
+  "status": "completed",
+  "debate_rounds_used": 3,
+  "debate_outcome": "CONVERGED",
+  "metrics": {
+    "realized_pnl": 755.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 3.517015411181623,
+    "max_drawdown_pct": -0.036199837100733046,
+    "win_rate": 0.3494836198706751,
+    "trade_count": 97893,
+    "vs_base_pnl_pct": -39.84468140581839,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 412,
+  "context_tokens_estimated": 103,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "timestamp": "2026-05-26T00:00:00Z"
+}
