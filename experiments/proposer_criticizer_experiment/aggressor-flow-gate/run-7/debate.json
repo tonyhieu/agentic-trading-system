@@ -1,0 +1,89 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "run": 7,
+  "algo_id": "afg-pc-r7",
+  "max_rounds": 3,
+  "rounds": [
+    {
+      "round": 1,
+      "proposer": {
+        "mechanism": "r6 verbatim (Two-Path Additive AFG with r2 directional-chain state machine, max_consecutive_skips=3, long_window=10s, long_threshold=2.0, short_window=2.0s) EXCEPT burst_threshold lowered from 5.0 to 4.0 contracts. Path A fires when 10s long_net >= 2.0 contracts adverse. Path B fires when 2s short_net >= 4.0 contracts adverse (down from 5.0). OR of paths feeds r2 chain state machine. All r6 invariants preserved.",
+        "inefficiency_exploited": "r6 NOTES.md explicitly recommended sweeping burst_threshold downward (4.0, 3.5) to test whether more aggressive Path B firing extracts further edge. r6's trade_count=90287 is well above r4's over-skipping (89421 with -43% pnl), so headroom exists. burst_threshold=5.0 is conservative; median 2s acute burst likely sits in 3-5 contract range, so 4.0 should catch ~30-50% more genuine acute bursts. 4.0 is a half-step from 5.0, minimizing overshoot risk that r4 demonstrated.",
+        "why_survives_costs": "Zero simulator costs (slippage=0, commissions=0 per base AFG backtest-results.json). Only 'cost' is opportunity from incorrect skips. Path B operates on 2s window where signal-to-noise per contract is higher than Path A's 10s. Chain state machine's hard cap (max=3) and direction-change force-submit prevent runaway suppression even if 4.0 slightly over-skips.",
+        "builds_on": "afg-pc-r6 (empirical winner, realized_pnl=$1383.25, sharpe=6.68, +10.2% vs base AFG). r6 NOTES.md explicitly suggests this ablation.",
+        "alternatives_considered": "1) burst_threshold=3.5 -- riskier full step; r4 showed overshoots drop pnl 35-43%. 2) short_window variation (1.5s, 3s) -- orthogonal but less directly motivated. 3) Triple-path with 5s medium -- adds dimensionality without empirical motivation. 4) Adaptive threshold -- r5's weighting variant failed; suggests further transformations may not help. 5) Lower cap=2 -- shrinks r2 mechanism. burst_threshold=4.0 is smallest most surgical single-variable refinement.",
+        "revision_notes": ""
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MAJOR", "text": "Near-duplicate of r6 with single hyperparameter changed by 20%. Proposer presents no empirical evidence (no skip-rate breakdown, no per-date Path A vs B firing counts) showing burst_threshold=5.0 is the binding constraint on r6. Without that evidence, this is parameter-tweaking on a fitted surface."},
+          {"severity": "MAJOR", "text": "r3's outcome (-0.3% from lowering long_threshold 2.0->1.0) is direct empirical evidence on the same axis: lowering an AFG threshold on this train window produces flat-to-negative results. Proposer asserts 'Path B is different from Path A' but does not justify why r3's threshold-reduction lesson should not transfer to Path B. Both are signed-aggressor-flow thresholds; only window length differs."},
+          {"severity": "MAJOR", "text": "Clearly superior untried alternative: COMBINE r6 with magnitude-conditional chain extension. r4's failure mode was that fixed cap=5 over-skipped; a state-conditional cap (chain extends past 3 only if gate-fire magnitude is significantly stronger than first skip in chain) directly addresses r4's failure mechanism. This would be structural improvement, not hyperparameter sweep."}
+        ],
+        "suggested_alternatives": [
+          "Magnitude-conditional chain extension: r6 verbatim but allow chain to extend to position 4 (only) when gate-fire signal magnitude at would-be 4th skip is >= 1.5x magnitude at 1st skip. Targets r4's failure mode directly.",
+          "Adaptive burst_threshold = max(3.0, k * recent_sigma) where recent_sigma is 60s rolling sigma of |short_net|. Self-tuning.",
+          "Triple-path: add medium 5s window with intermediate threshold (e.g., 3.5 contracts)."
+        ],
+        "verdict": "REVISE",
+        "reasoning": "Defensible coordinate-descent step but near-duplicate of r6 with weak empirical grounding, and a superior structural alternative (conditional chain extension) is available."
+      }
+    },
+    {
+      "round": 2,
+      "proposer": {
+        "mechanism": "Magnitude-Conditional Chain Extension AFG (builds on r6 verbatim). Preserve r6's Two-Path Additive gate (Path A: 10s long_net adverse beyond 2.0; Path B: 2s short_net adverse beyond 5.0). Preserve r6's directional-chain machine for chain positions 1-3 EXACTLY. Modify ONLY hard-cap behavior: when consecutive_skips == 3 and gate would re-fire same-direction, compute max(|long_net|, |short_net|) = current_fire_magnitude; compare to first_fire_magnitude recorded at chain position 1. EXTEND to position 4 (absolute cap = 4) iff current_fire_magnitude >= 1.5 * first_fire_magnitude. Otherwise force-submit and reset (r6 behavior). Direction-change still force-submits and resets. Reduce-only short-circuit, warm-up, look-ahead-free pruning preserved.",
+        "inefficiency_exploited": "r4 (cap=5 unconditional, -43% vs base) and r6 (cap=3 + Path B, +10% vs base) jointly show unconditional extension past cap=3 over-skips, but chain captures real regime-suppression edge. r6 per-date inspection: lost vs base AFG on 20260312 (more negative) and 20260320 (less positive) -- high-volume days with variable regime length. Magnitude-conditional extension lets chain extend by exactly 1 position ONLY when regime is empirically intensifying (1.5x stronger signal). Targets r4's failure mode (unconditional extension) rather than retrying it.",
+        "why_survives_costs": "Zero simulator costs. Single extra skip per chain bounded; r4 added TWO extra unconditionally. Expected value of extra skip is positive when gate signal is intensifying; absolute cap=4 prevents r4-style runaway. 1.5x magnitude threshold is conservative: a merely-persisting regime (similar magnitude) does not trigger extension.",
+        "builds_on": "afg-pc-r6 (empirical winner). r4 is the negative evidence guiding design.",
+        "alternatives_considered": "1) burst_threshold=4.0 (round-1) -- abandoned per near-duplicate objection. 2) Adaptive burst_threshold -- requires tuning a volatility estimator. 3) Triple-path -- adds two parameters. 4) cap=2 -- shrinks r2's +600% mechanism. 5) Persistent-direction requirement -- suppresses legitimate exit-and-flip moves.",
+        "revision_notes": "Pivoted from threshold sweep to magnitude-conditional chain extension per Criticizer's structural alternative. Targets r4's documented failure mode (unconditional extension) with intensification-conditional extension. Bounded (single extra position) and capped (4) against r4 runaway."
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MAJOR", "text": "max(|long_net|, |short_net|) is asymmetric across paths: long_net is bounded by total volume over 10s (large numbers), short_net by 2s volume (small numbers). On most chain extensions max will be dominated by long_net, so 1.5x intensification mostly tracks 10s flow growth, not the burst signal Path B was added to capture. This may collapse the new rule to 'extend chain when long_net is growing,' effectively cap raising on the same axis r4 proved fragile."},
+          {"severity": "MAJOR", "text": "Introduces TWO new degrees of freedom (1.5x ratio, choice of magnitude metric) without empirical grounding from per-date r6 data. r4 specifically warned that adding a single parameter to chain extension can flip the response surface sign."},
+          {"severity": "MINOR", "text": "Look-ahead concern resolved by inspection: first_fire_magnitude recorded at chain start; current_fire_magnitude uses only deque entries pruned by order.ts_init. No future data leakage."}
+        ],
+        "suggested_alternatives": [
+          "Use short-window magnitude only as the intensification metric (resolves asymmetry).",
+          "Single-parameter version: raise max_consecutive_skips=4 (single half-step toward r4's 5). Tests response surface at midpoint without conditional logic."
+        ],
+        "verdict": "REVISE",
+        "reasoning": "Pivot is right direction but asymmetric magnitude metric collapses to long-window cap-raising; resolve by switching to short-window magnitude only."
+      }
+    },
+    {
+      "round": 3,
+      "proposer": {
+        "mechanism": "Magnitude-Conditional Chain Extension AFG (v2, short-window anchored). Preserve r6 verbatim. Modify ONLY hard-cap behavior at chain position 3: use SHORT-WINDOW magnitude only as the intensification metric. At chain start (position 1), record first_short_mag = |short_net at first skip| computed over r6's 2s short_window. When consecutive_skips == 3 and gate would re-fire same-direction, compute current_short_mag = |short_net at would-be 4th skip|. EXTEND to position 4 (absolute cap = 4) iff (current_short_mag >= 1.5 * first_short_mag) AND (current_short_mag >= burst_threshold = 5.0). Second condition anchors intensification to an absolute acute-burst floor. Direction-change still force-submits and resets. All other r6 semantics preserved verbatim. Single new parameter (intensification_ratio = 1.5); two new state variables (first_short_mag, an extra computation at gate evaluation).",
+        "inefficiency_exploited": "r6's Path B is the empirically validated acute-burst signal. Conditioning chain extension on short-window intensification (not long-window growth) leverages the same signal-quality logic r6 validated. Conjunction with burst_threshold floor ensures extension fires only when both signal trajectory (intensification) AND absolute level (acute burst still present) confirm an ongoing acute regime. r4's failure mode was unconditional extension; this is doubly-conditional extension, with both conditions empirically anchored to r6's validated Path B mechanism.",
+        "why_survives_costs": "Zero simulator costs. Opportunity cost bounded by single extra deferred entry per chain; absolute cap=4 prevents r4-style runaway. Conjunction with burst_threshold floor makes extension condition STRICTLY narrower than round 2, so worst-case it fires less often than round 2 -- never more. Bounded above by r6's behavior: the extension only ADDS skips r6 would not make (it never removes r6 skips).",
+        "builds_on": "afg-pc-r6 (empirical winner). r4 is the negative evidence; round-2 design refined per Criticizer's asymmetry objection.",
+        "alternatives_considered": "1) Cap=4 unconditional (criticizer round-2 alt) -- same character as r4 cap=5 just smaller; r2->r4 surface (cap=3 +600% -> cap=5 -43%) is monotonically degrading, so cap=4 likely underperforms r6. Conditional extension is structurally different, not softer r4. 2) Cool-down rule -- orthogonal but unmotivated by direct empirical evidence in prior runs. 3) Round-2 max(long,short) metric -- abandoned per asymmetry.",
+        "revision_notes": "Switched magnitude metric to short-window only (resolves round-2 asymmetry objection). Anchored intensification to burst_threshold floor. Extension condition now STRICTLY narrower than round 2, bounded above by r6 behavior."
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MINOR", "text": "Two-condition extension makes the rule narrow enough that on 12-day train window the number of fires may be small. If <10 total fires, pnl impact could be lost in r6's per-date variance. Experimental power concern, not hypothesis flaw."},
+          {"severity": "MINOR", "text": "Intensification ratio 1.5 is unverified on this train window; could be 1.3 or 2.0. But bounded downside: STRICTLY narrower than r6's behavior, only adds skips r6 would not make, capped at one per chain."}
+        ],
+        "suggested_alternatives": [],
+        "verdict": "PASS",
+        "reasoning": "Remaining objections are MINOR experimental-power concerns. Mechanism is structurally distinct from r4 (conditional vs unconditional), anchored to r6's empirically validated Path B signal, single new parameter + bounded state, bounded downside (strictly at most one extra skip per chain). No BLOCKING or MAJOR objections remain and no clearly superior untried alternative identified."
+      }
+    }
+  ],
+  "debate_outcome": "CONVERGED",
+  "rounds_used": 3,
+  "final_hypothesis": {
+    "mechanism": "Magnitude-Conditional Chain Extension AFG (v2, short-window anchored). Preserve r6 verbatim. Modify ONLY hard-cap behavior at chain position 3: use SHORT-WINDOW magnitude only as the intensification metric. At chain start (position 1), record first_short_mag = |short_net at first skip| computed over r6's 2s short_window. When consecutive_skips == 3 and gate would re-fire same-direction, compute current_short_mag = |short_net at would-be 4th skip|. EXTEND to position 4 (absolute cap = 4) iff (current_short_mag >= 1.5 * first_short_mag) AND (current_short_mag >= burst_threshold = 5.0). Second condition anchors intensification to an absolute acute-burst floor. Direction-change still force-submits and resets. All other r6 semantics preserved verbatim. Single new parameter (intensification_ratio = 1.5); two new state variables (first_short_mag, an extra computation at gate evaluation).",
+    "inefficiency_exploited": "r6's Path B is the empirically validated acute-burst signal. Conditioning chain extension on short-window intensification (not long-window growth) leverages the same signal-quality logic r6 validated. Conjunction with burst_threshold floor ensures extension fires only when both signal trajectory (intensification) AND absolute level (acute burst still present) confirm an ongoing acute regime. r4's failure mode was unconditional extension; this is doubly-conditional extension, with both conditions empirically anchored to r6's validated Path B mechanism.",
+    "why_survives_costs": "Zero simulator costs. Opportunity cost bounded by single extra deferred entry per chain; absolute cap=4 prevents r4-style runaway. Conjunction with burst_threshold floor makes extension condition STRICTLY narrower than round 2, so worst-case it fires less often than round 2 -- never more. Bounded above by r6's behavior: the extension only ADDS skips r6 would not make (it never removes r6 skips).",
+    "builds_on": "afg-pc-r6 (empirical winner). r4 is the negative evidence; round-2 design refined per Criticizer's asymmetry objection.",
+    "alternatives_considered": "1) Cap=4 unconditional (criticizer round-2 alt) -- same character as r4 cap=5 just smaller; r2->r4 surface (cap=3 +600% -> cap=5 -43%) is monotonically degrading, so cap=4 likely underperforms r6. Conditional extension is structurally different, not softer r4. 2) Cool-down rule -- orthogonal but unmotivated by direct empirical evidence in prior runs. 3) Round-2 max(long,short) metric -- abandoned per asymmetry.",
+    "revision_notes": "Switched magnitude metric to short-window only (resolves round-2 asymmetry objection). Anchored intensification to burst_threshold floor. Extension condition now STRICTLY narrower than round 2, bounded above by r6 behavior."
+  },
+  "timestamp": "2026-05-26T00:00:00Z"
+}
