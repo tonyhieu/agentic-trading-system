@@ -1,0 +1,53 @@
+{
+  "algo_name": "afg-isl-g3l2",
+  "evaluation_type": "oos_local",
+  "backtest_date": "2026-05-27T04:27:11Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance_oos": {
+    "realized_pnl": 4140.75,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 21.65895892124363,
+    "sharpe_n_days": 10,
+    "max_drawdown_pct": -0.009622950311583632,
+    "win_rate": 0.3712060734131643,
+    "trade_count": 127770,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.414075,
+    "is_weighted_bps": 0.020482404953319273,
+    "is_total_price": 3419.5,
+    "vs_baseline_pnl_pct": 169.8435972629521,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 29.061270753632613
+  },
+  "period": {
+    "test_dates": [
+      "2026-03-26",
+      "2026-03-27",
+      "2026-03-29",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-01",
+      "2026-04-02",
+      "2026-04-03",
+      "2026-04-05",
+      "2026-04-06"
+    ]
+  },
+  "run_dirs": [
+    "execution_algos/afg-isl-g3l2/results/20260326",
+    "execution_algos/afg-isl-g3l2/results/20260327",
+    "execution_algos/afg-isl-g3l2/results/20260329",
+    "execution_algos/afg-isl-g3l2/results/20260330",
+    "execution_algos/afg-isl-g3l2/results/20260331",
+    "execution_algos/afg-isl-g3l2/results/20260401",
+    "execution_algos/afg-isl-g3l2/results/20260402",
+    "execution_algos/afg-isl-g3l2/results/20260403",
+    "execution_algos/afg-isl-g3l2/results/20260405",
+    "execution_algos/afg-isl-g3l2/results/20260406"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "algo_name": "aggressor-flow-gate",
+  "evaluation_type": "oos_local",
+  "backtest_date": "2026-05-26T08:40:40Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance_oos": {
+    "realized_pnl": 2071.75,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 16.95588733771078,
+    "sharpe_n_days": 10,
+    "max_drawdown_pct": -0.019221737110125554,
+    "win_rate": 0.3574408802393933,
+    "trade_count": 140689,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.20717499999999997,
+    "is_weighted_bps": 0.021353384322610802,
+    "is_total_price": 3931.125,
+    "vs_baseline_pnl_pct": 35.01140436624308,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": 34.5493813762451
+  },
+  "period": {
+    "test_dates": [
+      "2026-03-26",
+      "2026-03-27",
+      "2026-03-29",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-01",
+      "2026-04-02",
+      "2026-04-03",
+      "2026-04-05",
+      "2026-04-06"
+    ]
+  },
+  "run_dirs": [
+    "execution_algos/aggressor-flow-gate/results/20260326",
+    "execution_algos/aggressor-flow-gate/results/20260327",
+    "execution_algos/aggressor-flow-gate/results/20260329",
+    "execution_algos/aggressor-flow-gate/results/20260330",
+    "execution_algos/aggressor-flow-gate/results/20260331",
+    "execution_algos/aggressor-flow-gate/results/20260401",
+    "execution_algos/aggressor-flow-gate/results/20260402",
+    "execution_algos/aggressor-flow-gate/results/20260403",
+    "execution_algos/aggressor-flow-gate/results/20260405",
+    "execution_algos/aggressor-flow-gate/results/20260406"
+  ]
+}
