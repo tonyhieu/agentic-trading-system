@@ -37,5 +37,18 @@
     "debate_outcome": "CONVERGED",
     "context_chars_in": 197,
     "timestamp": "2026-05-27T04:54:46Z"
+  },
+  {
+    "run": 4,
+    "algo_id": "ptg-pc-r4",
+    "status": "completed",
+    "vs_base_pnl_pct": -3.1378299120234607,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.115553169129736,
+    "trade_count": 89562,
+    "debate_rounds_used": 2,
+    "debate_outcome": "CONVERGED",
+    "context_chars_in": 297,
+    "timestamp": "2026-05-27T17:01:57Z"
   }
 ]
