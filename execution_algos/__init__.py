@@ -113,6 +113,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-pc-r2",
         "get_execution_algorithm",
     ),
+    "ptg-pc-r3": (
+        "execution_algos.ptg-pc-r3",
+        "get_execution_algorithm",
+    ),
 }
 
 
