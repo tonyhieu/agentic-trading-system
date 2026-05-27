@@ -13,12 +13,18 @@
     "max_drawdown_pct": -0.04099978475113006,
     "win_rate": 0.3543845426293744,
     "trade_count": 111015,
-    "vs_base_pnl_pct": -25.288729589008365,
+    "vs_base_pnl_pct": -25.288729589008366,
     "vs_base_slippage_pct": 0.0
   },
   "context_chars_in": 694,
   "context_tokens_estimated": 173,
-  "tokens_used": null,
-  "duration_seconds": null,
+  "tokens_used": {
+    "input": 1,
+    "output": 421,
+    "cache_creation": 379,
+    "cache_read": 78966,
+    "total": 79767
+  },
+  "duration_seconds": 976.0,
   "timestamp": "2026-05-27T06:40:00Z"
 }
