@@ -89,7 +89,11 @@ def _find_researcher_transcript(main_transcript: Path) -> Path | None:
             meta = json.loads(meta_path.read_text())
         except (OSError, json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher"):
+        if not isinstance(meta, dict) or meta.get("agentType") not in (
+            "researcher",
+            "per-iteration-researcher",
+            "best-of-n-researcher",
+        ):
             continue
         try:
             mtime = jsonl.stat().st_mtime
@@ -286,24 +290,30 @@ def main() -> None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Path 2: experiment loop file (per_iteration_experiment agent).
-    # Triggered by a git-ignored pointer file the agent writes before committing.
+    # Path 2: experiment loop file (any experiment with a `.current_loop.json`
+    # pointer under experiments/<name>/). Each pointer file is git-ignored and
+    # written by the experiment's agent before commit. New experiments hook
+    # into the same backfill mechanism just by writing such a pointer.
     loop_file: Path | None = None
     loop_file_rel: str | None = None
-    pointer_path = Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json"
-    if pointer_path.exists():
-        try:
-            pointer = json.loads(pointer_path.read_text())
-            rel = pointer.get("loop_file")
-            if rel:
+    experiments_dir = Path(cwd) / "experiments"
+    if experiments_dir.is_dir():
+        for pointer_path in sorted(experiments_dir.glob("*/.current_loop.json")):
+            try:
+                pointer = json.loads(pointer_path.read_text())
+                rel = pointer.get("loop_file")
+                if not rel:
+                    continue
                 candidate = Path(cwd) / rel
-                if candidate.exists():
-                    loop_data = json.loads(candidate.read_text())
-                    if loop_data.get("tokens_used") is None:
-                        loop_file = candidate
-                        loop_file_rel = rel
-        except (OSError, json.JSONDecodeError, KeyError, TypeError):
-            pass
+                if not candidate.exists():
+                    continue
+                loop_data = json.loads(candidate.read_text())
+                if loop_data.get("tokens_used") is None:
+                    loop_file = candidate
+                    loop_file_rel = rel
+                    break  # First unbackfilled pointer wins; one loop per SubagentStop.
+            except (OSError, json.JSONDecodeError, KeyError, TypeError):
+                continue
 
     if not db_needs_patch and loop_file is None:
         return  # Nothing to patch — skip transcript scan entirely.

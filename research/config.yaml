@@ -83,3 +83,18 @@ refinement:
     max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
     min_winrate_delta_pp:   2.0    # percentage points
     min_mdd_delta_pp:      -1.0    # negative = less drawdown
+
+best_of_n_experiment:
+  # Within ONE loop the agent generates K mechanistically orthogonal candidate
+  # algorithms, fast-screens them on screen_dates, and full-backtests only the
+  # winner. Tests whether parallel sampling + screen reduces lineage variance
+  # vs single-shot refinement.
+  k: 5
+  # Subset of train dates used for fast screening. Pick dates spread across
+  # the train window so the screen ranking is representative. The winner is
+  # re-run on the FULL train window for the official metrics; losers stay at
+  # screen-window scale by design.
+  screen_dates: ["20260308", "20260315", "20260320"]
+  # Tie-broken by sharpe_ratio. One of: pnl_vs_base | realized_pnl | sharpe.
+  winner_metric: pnl_vs_base
+  max_loops: 8
