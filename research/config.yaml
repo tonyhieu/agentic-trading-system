@@ -83,3 +83,22 @@ refinement:
     max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
     min_winrate_delta_pp:   2.0    # percentage points
     min_mdd_delta_pp:      -1.0    # negative = less drawdown
+
+analogical_transfer_experiment:
+  # Replication of Gick & Holyoak (1980, 1983) in agentic code-gen. 2x2:
+  # (1 vs K exemplars) × (no cue vs cue+compare/abstract scaffold).
+  # Conditions: a=1/no-cue, b=1/cue, c=K/no-cue, d=K/cue+scaffold.
+  # Each invocation = one loop in ONE cell. Predicted ordering: d > b ~ c > a.
+  k_multi: 3                   # exemplar count for conditions c, d
+  max_loops_per_cell: 8        # refuse beyond this many loops in any cell
+  winner_metric: pnl_vs_base   # informational; the agent does not pick winners
+  exemplar_pool:
+    # Program databases scanned for prior winners. The agent ranks entries by
+    # vs_base_pnl_pct desc (ties: sharpe desc, algo_id asc), excludes any whose
+    # lineage matches the current base_algo (transfer requires source != target),
+    # and takes top-1 (a, b) or top-K (c, d). Pool is DETERMINISTIC given the
+    # snapshot at loop time; exemplars used are recorded in each loop JSON.
+    sources:
+      - experiments/per_iteration_experiment/position-tier-gate/metrics-only/program_database.json
+      - experiments/per_iteration_experiment/aggressor-flow-gate/metrics-only/program_database.json
+    min_vs_base_pnl_pct: 5.0   # entry must beat baseline by ≥5% to enter the pool
