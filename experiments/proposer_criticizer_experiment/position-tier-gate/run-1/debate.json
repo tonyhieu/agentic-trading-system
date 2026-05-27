@@ -1,0 +1,87 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "position-tier-gate",
+  "run": 1,
+  "algo_id": "ptg-pc-r1",
+  "max_rounds": 3,
+  "rounds": [
+    {
+      "round": 1,
+      "proposer": {
+        "mechanism": "Build on position-tier-gate (retain cap=1) and add a layered 'blocked-reversal' filter: track the direction of the most recent OPEN that the cap blocked. When the next OPEN is about to be submitted (cap allows it), if that OPEN's direction differs from the most-recent blocked direction, SKIP it as well. The intuition: a blocked OPEN means the strategy wanted to flip into a new direction while still positioned; if the very next (allowed) OPEN flips again, that's a noise-driven choppy reversal and should be filtered.",
+        "inefficiency_exploited": "Position-tier-gate skips the CLOSE+OPEN same-ts_init pair but still re-enters on the FLIPPED signal as soon as the prior close clears. On choppy days (20260312, 20260313, 20260316, 20260317), those flip-then-reenter trades are exactly the high-noise losers. The base achieves win_rate of only 37.2% - most surviving trades lose. We filter out the next-tick reversal trades to lift edge per trade.",
+        "why_survives_costs": "Mean slippage is already 0 and base commissions are 0 (no fee model). The filter only reduces trade count further - it cannot worsen execution costs. Pure P&L filter that activates only after a cap-block event.",
+        "builds_on": "position-tier-gate (cap=1 retained verbatim; filter is purely additive)",
+        "alternatives_considered": "(1) Wider position cap (cap=2,3): known to fail empirically - oracle never exceeds 1 contract. (2) Time-based cooldown (N seconds): fragile, doesn't adapt. (3) Cross-tick spread/volume gate: different axis, deferred. (4) Signed/directional cap: equivalent reformulation.",
+        "revision_notes": ""
+      },
+      "criticizer": {
+        "objections": [
+          {
+            "severity": "BLOCKING",
+            "text": "Logical incoherence in the framing. Per the base algo NOTES, the dominant case where cap=1 blocks is the same-ts_init CLOSE+OPEN pair from a single oracle tick - and by construction the OPEN's direction is the opposite of the just-closed position. So 'the most recent blocked direction' is ALWAYS the opposite of the just-closed position. The Proposer's rule degenerates to: 'allow only same-direction re-entry as the position you just closed.' This is a coherent rule on its own, but the proposal's narrative about 'choppy reversal detection' rests on a phantom distinction that doesn't exist."
+          },
+          {
+            "severity": "MAJOR",
+            "text": "Falsifiable risk: once the rule degenerates to 'same-direction re-entry only,' on choppy days (20260312, 20260313, 20260316, 20260317 where base earns +$492.50/+$264.00/+$124.50/+$166.50) it would block ALL opposite-direction re-entries. There is no evidence in the base NOTES that the surviving opposite-direction trades on those days are net-negative - they might be capturing genuine reversals. The proposal could destroy the base's choppy-day gains."
+          },
+          {
+            "severity": "MAJOR",
+            "text": "Superior alternative not considered: a signal-consensus filter that conditions on the agreement among recent OPEN-order directions over a short rolling window. If the last K OPENs (those that fired or were blocked, observed via on_order at exec-algo) point predominantly the same direction, submit; if split, skip. This directly attacks oracle noise (sigma=6.0) using only past information visible at decision time, is orthogonal to the position cap, and doesn't depend on the post-block reversal heuristic that has the coherence problem above."
+          },
+          {
+            "severity": "MINOR",
+            "text": "Implementation surface: the proposal doesn't specify how OPEN direction is read (order.side relative to net position direction). Tightening this is needed but doesn't affect the core hypothesis."
+          }
+        ],
+        "suggested_alternatives": [
+          "Signal-consensus filter: rolling window of last K observed OPEN directions; submit only when agreement >= threshold.",
+          "Magnitude-aware filter: not applicable here since oracle exposes only orders, not signal magnitude."
+        ],
+        "verdict": "REVISE",
+        "reasoning": "The proposed mechanism has a logical incoherence and risks destroying the base's choppy-day gains. A signal-consensus filter is a clearly superior untried alternative that directly attacks the oracle-noise inefficiency without these problems."
+      }
+    },
+    {
+      "round": 2,
+      "proposer": {
+        "mechanism": "Layer a signal-consensus filter on top of position-tier-gate. The exec algorithm maintains a rolling buffer of the last K OPEN-order directions observed at on_order() (whether the cap eventually submits or skips them). When a new OPEN passes the cap=1 gate, compute the fraction of recent OPEN directions in the buffer matching the new OPEN's direction; if below agreement_threshold (default 0.6 with K=5), SKIP. Otherwise SUBMIT. CLOSE (is_reduce_only=True) orders always submit. Buffer starts empty; during the first K observations, default to SUBMIT (warmup).",
+        "inefficiency_exploited": "Oracle noise (sigma=6.0, ~14% R^2). Most individual signals contain more noise than signal. When consecutive directional decisions disagree, the local stream is noise-dominated; when they agree, persistence is evidence of real edge. The base algo wins at only 37.2% - the consensus filter shifts that distribution by selecting signals more likely to be on the persistent side of the noise floor.",
+        "why_survives_costs": "Mean slippage is 0, commissions are 0 in this simulator (verified from base backtest-results.json). The filter only reduces trade count - it cannot worsen execution costs. Strictly a P&L-by-trade-selection mechanism.",
+        "builds_on": "position-tier-gate (cap=1 retained verbatim; consensus filter is an additional gate applied AFTER the position-cap check passes).",
+        "alternatives_considered": "(1) Original blocked-reversal trigger from round 1 - dropped due to logical incoherence (the dominant cap-block case is the same-ts_init CLOSE+OPEN pair, so the 'blocked direction' is by construction the opposite of the just-closed position). (2) Wider K (e.g. 10) - more stable but more lag; reserved for follow-up tuning. (3) Magnitude-based filter - not available; signal magnitude is not exposed to the exec algo, only orders. (4) Signed/directional position cap - subsumed by K=1 consensus, weaker. (5) Cross-tick spread/volume microstructure filters - different conditioning axis; deferred to a different experiment.",
+        "revision_notes": "Round 1 BLOCKING (logical coherence of blocked-reversal trigger): abandoned that framing entirely; new mechanism uses an evenly-spaced rolling buffer of all observed OPEN directions, not a post-block trigger. Round 1 MAJOR (choppy-day destruction risk): new mechanism filters symmetrically by direction agreement; does not preferentially block opposite-direction re-entries. Round 1 MAJOR (superior alternative): adopted the suggested signal-consensus filter directly. Round 1 MINOR (implementation surface): direction is read from order.side (BUY/SELL enum), unambiguous."
+      },
+      "criticizer": {
+        "objections": [
+          {
+            "severity": "MINOR",
+            "text": "Warmup behavior: during the first K signals each session, the filter defaults to SUBMIT. With thousands of signals per day, this affects only the first 5 OPENs per session - negligible. Acceptable as-is."
+          },
+          {
+            "severity": "MINOR",
+            "text": "Parameter motivation: the threshold 0.6 with K=5 is unmotivated empirically. Worst case is the filter under- or over-blocks, but since slippage=0 and commissions=0, the downside is bounded - no PnL regression below baseline, just possibly no improvement. Not structural."
+          },
+          {
+            "severity": "MINOR",
+            "text": "Mechanistic premise: claims to attack oracle noise via autocorrelation of correct vs noise signals. If correct signals are also i.i.d. and only the strategy's response is what varies, a directional-consensus filter might be a near-no-op. Plausible but unverified for this specific oracle. Acceptable empirical risk since worst case is bounded as above."
+          }
+        ],
+        "suggested_alternatives": [],
+        "verdict": "PASS",
+        "reasoning": "The revised mechanism is logically coherent, addresses all prior BLOCKING and MAJOR objections, has a plausible inefficiency, survives costs trivially (zero slippage/commissions in the simulator), and the residual concerns are parameter-tuning rather than structural. No clearly superior untried alternative remains apparent."
+      }
+    }
+  ],
+  "debate_outcome": "CONVERGED",
+  "rounds_used": 2,
+  "final_hypothesis": {
+    "mechanism": "Layer a signal-consensus filter on top of position-tier-gate. The exec algorithm maintains a rolling buffer of the last K OPEN-order directions observed at on_order() (whether the cap eventually submits or skips them). When a new OPEN passes the cap=1 gate, compute the fraction of recent OPEN directions in the buffer matching the new OPEN's direction; if below agreement_threshold (default 0.6 with K=5), SKIP. Otherwise SUBMIT. CLOSE (is_reduce_only=True) orders always submit. Buffer starts empty; during the first K observations, default to SUBMIT (warmup).",
+    "inefficiency_exploited": "Oracle noise (sigma=6.0, ~14% R^2). Most individual signals contain more noise than signal. When consecutive directional decisions disagree, the local stream is noise-dominated; when they agree, persistence is evidence of real edge. The base algo wins at only 37.2% - the consensus filter shifts that distribution by selecting signals more likely to be on the persistent side of the noise floor.",
+    "why_survives_costs": "Mean slippage is 0, commissions are 0 in this simulator (verified from base backtest-results.json). The filter only reduces trade count - it cannot worsen execution costs. Strictly a P&L-by-trade-selection mechanism.",
+    "builds_on": "position-tier-gate (cap=1 retained verbatim; consensus filter is an additional gate applied AFTER the position-cap check passes).",
+    "alternatives_considered": "(1) Original blocked-reversal trigger from round 1 - dropped due to logical incoherence (the dominant cap-block case is the same-ts_init CLOSE+OPEN pair, so the 'blocked direction' is by construction the opposite of the just-closed position). (2) Wider K (e.g. 10) - more stable but more lag; reserved for follow-up tuning. (3) Magnitude-based filter - not available; signal magnitude is not exposed to the exec algo, only orders. (4) Signed/directional position cap - subsumed by K=1 consensus, weaker. (5) Cross-tick spread/volume microstructure filters - different conditioning axis; deferred to a different experiment.",
+    "revision_notes": "Round 1 BLOCKING (logical coherence of blocked-reversal trigger): abandoned that framing entirely; new mechanism uses an evenly-spaced rolling buffer of all observed OPEN directions, not a post-block trigger. Round 1 MAJOR (choppy-day destruction risk): new mechanism filters symmetrically by direction agreement; does not preferentially block opposite-direction re-entries. Round 1 MAJOR (superior alternative): adopted the suggested signal-consensus filter directly. Round 1 MINOR (implementation surface): direction is read from order.side (BUY/SELL enum), unambiguous."
+  },
+  "timestamp": "2026-05-26T00:00:00Z"
+}

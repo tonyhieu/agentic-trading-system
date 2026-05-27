@@ -1,0 +1,15 @@
+[
+  {
+    "run": 1,
+    "algo_id": "ptg-pc-r1",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "trade_count": 90433,
+    "debate_rounds_used": 2,
+    "debate_outcome": "CONVERGED",
+    "context_chars_in": 0,
+    "timestamp": "2026-05-27T02:24:06Z"
+  }
+]
