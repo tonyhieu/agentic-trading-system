@@ -37,5 +37,18 @@
     "debate_outcome": "CONVERGED",
     "context_chars_in": 198,
     "timestamp": "2026-05-27T03:30:00Z"
+  },
+  {
+    "run": 4,
+    "algo_id": "afg-pc-r4",
+    "status": "completed",
+    "vs_base_pnl_pct": -43.42891278375149,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.4122727871138365,
+    "trade_count": 89421,
+    "debate_rounds_used": 3,
+    "debate_outcome": "CONVERGED",
+    "context_chars_in": 298,
+    "timestamp": "2026-05-26T00:00:00Z"
   }
 ]
