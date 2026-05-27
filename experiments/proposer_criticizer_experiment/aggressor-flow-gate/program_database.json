@@ -29,7 +29,7 @@
     "run": 3,
     "algo_id": "afg-pc-r3",
     "status": "completed",
-    "vs_base_pnl_pct": -0.29868578255674517,
+    "vs_base_pnl_pct": -0.29868578255674516,
     "vs_base_slippage_pct": 0.0,
     "sharpe_ratio": 5.572787437346755,
     "trade_count": 107083,
@@ -89,5 +89,18 @@
     "debate_outcome": "CONVERGED",
     "context_chars_in": 660,
     "timestamp": "2026-05-26T00:00:00Z"
+  },
+  {
+    "run": 8,
+    "algo_id": "afg-pc-r8",
+    "status": "completed",
+    "vs_base_pnl_pct": -25.288729589008366,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.001887896047223,
+    "trade_count": 111015,
+    "debate_rounds_used": 2,
+    "debate_outcome": "CONVERGED",
+    "context_chars_in": 694,
+    "timestamp": "2026-05-27T06:40:00Z"
   }
 ]

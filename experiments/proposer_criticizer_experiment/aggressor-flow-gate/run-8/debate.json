@@ -1,0 +1,61 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "run": 8,
+  "algo_id": "afg-pc-r8",
+  "max_rounds": 3,
+  "rounds": [
+    {
+      "round": 1,
+      "proposer": {
+        "mechanism": "High-Conviction Confluence AFG (HCC-AFG). Build on base aggressor-flow-gate. Single trade-tick deque pruned to 10s. At each open-order decision: compute long_net = signed_vol sum over (t_order - 10s, t_order] and short_net = signed_vol sum over (t_order - 1.5s, t_order]. Gate fires (skip) iff BOTH (a) |long_net| >= 5.0 in the adverse direction AND (b) sign(short_net) == sign(long_net) (short-window confirms long-window adverse direction; short_net non-zero in the same direction). Base AFG's anti-cascade preserved verbatim: after any skip, _position_flat=True so the next open is unconditional. Reduce-only always submits. Warm-up unconditional submit if deque empty.",
+        "inefficiency_exploited": "Base AFG (threshold=2.0) is itself an over-gater on this data: all 7 pc-experiment refinements that extended skipping underperformed base AFG ($1255.5). The opposite direction — fewer but higher-precision skips — has not been tried. |long_net|>=5.0 in 10s screens only structurally adverse regimes; short-window same-sign confirmation removes stale-signal cases.",
+        "why_survives_costs": "Zero commission, zero slippage. Base AFG (21.6% skip rate) beats simple by +704.8% ($1255.5 vs $156). All 7 pc refinements that ADDED skips underperformed. Direction of opportunity: SKIP LESS, high-confidence only. Prediction: skip rate ~8-12%; realized_pnl > $1255.5 by >=5%. Failure mode: if base AFG's skips are uniformly precision-positive, removing any hurts.",
+        "builds_on": "aggressor-flow-gate (base). Preserves: signed-flow, 10s window, post-skip _position_flat, reduce-only, warm-up, look-ahead-free pruning. Changes: long_threshold 2.0->5.0; add short-window same-sign confirmation.",
+        "alternatives_considered": "(a) Pure threshold raise (no confluence): risks stale-long-window cases. (b) Threshold=3 or 4: 5.0 chosen for material separation. (c) Short-window-only: noisier. (d) AND-of-two-thresholds (r1): r1 used multi-window+chain; clean confluence not isolated. (e) Drop _position_flat: cascade risk.",
+        "revision_notes": ""
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MAJOR", "text": "Two-variable change (confluence + threshold raise) confounds the experiment. If HCC-AFG underperforms, you cannot tell whether confluence is good and threshold-raise is bad, or vice versa. Cleaner single-variable change: 'raise long_threshold from 2.0 to 5.0; preserve all other base semantics'. Single-variable ablation has not been tried on the base."},
+          {"severity": "MINOR", "text": "Same-sign-with-magnitude>0 confluence is a weak filter. In a 1.5s window on MESM6 there is almost always at least one trade; sign(short_net) will often agree with sign(long_net) by autocorrelation. Filter discriminates <10% of cases — adds complexity for little screening power."}
+        ],
+        "suggested_alternatives": ["Single-variable threshold raise to 5.0, base AFG otherwise verbatim (cleanest unexplored single-variable change)."],
+        "verdict": "REVISE",
+        "reasoning": "Hypothesis takes the correct direction (SKIP LESS) — the empirical pattern strongly supports it. But the confluence layer confounds the ablation and adds little screening; simplify to the single-variable threshold change."
+      }
+    },
+    {
+      "round": 2,
+      "proposer": {
+        "mechanism": "Raised-Threshold AFG (single-variable ablation vs base). Identical to base aggressor-flow-gate in every respect: single 10s rolling trade-tick deque, signed_vol = +size (BUYER) / -size (SELLER) / 0 (NO_AGGRESSOR), O(1) long_net maintained, look-ahead-free pruning by ts_event, reduce-only short-circuit, warm-up unconditional submit, post-skip _position_flat=True anti-cascade. ONLY CHANGE: flow_threshold raised from 2.0 to 5.0. Skip BUY when long_net <= -5.0; skip SELL when long_net >= +5.0.",
+        "inefficiency_exploited": "Base AFG with threshold=2.0 over-gates: it skips marginally-adverse signals where the flow magnitude (2-5 contracts in 10s, ~0.2-0.5 contracts/sec) is not statistically distinct from noise. Empirical: all 7 pc-experiment runs that added skips underperformed base AFG; r3 (lowered threshold to 1.0) FAILED at -0.3%. The marginal gradient at threshold=2.0 appears to point UP (toward less gating, higher threshold). Raising to 5.0 retains only structurally adverse skips (>=2.5x base threshold).",
+        "why_survives_costs": "Zero commission, zero slippage. Edge accrues purely as realized_pnl. Pre-committed falsifiable prediction: realized_pnl on the 12-day train window exceeds base AFG's $1255.5 by at least 5% (PASS gate); skip rate drops from base's 21.6% to roughly 5-10%. Failure mode: if base AFG's 2.0 threshold is near-optimal, raising hurts and realized_pnl < $1255.5 — hypothesis falsified, confirming r3's evidence as a symmetric over-shoot.",
+        "builds_on": "aggressor-flow-gate (base, $1255.5, +704.8% vs simple, sharpe 5.59, skip rate 21.6%). Diverges from ALL 7 prior pc-r1..r7 attempts, which uniformly extended skipping via chains, multi-windows, or lower thresholds.",
+        "alternatives_considered": "(a) Threshold = 3.0 or 4.0: smaller steps; 5.0 chosen for material separation and clearer ablation signal. (b) Multi-variable confluence (round 1 proposal): rejected per Criticizer — confounds the experiment. (c) Threshold = 10.0: too aggressive; would essentially disable gating. (d) Lower threshold (r3 territory): empirically falsified. (e) Drop _position_flat anti-cascade: all passing AFG variants rely on it; not the change under test.",
+        "revision_notes": "Round 1 MAJOR objection (two-variable confounding) directly addressed by adopting Criticizer's suggested single-variable simplification: threshold 2.0 -> 5.0, no confluence layer, all other base semantics verbatim. Round 1 MINOR (weak confluence) made moot by removing confluence. Now a clean single-variable ablation against the base — the result will unambiguously identify whether the threshold gradient at 2.0 points up or is locally flat/optimal."
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MINOR", "text": "Gradient-direction inference from r3 alone is a single data point; the surface could be non-monotonic (locally optimal at 2.0 with both raises and drops degrading). However, the pre-committed falsifiable prediction handles this — the run is informative either way."}
+        ],
+        "suggested_alternatives": [],
+        "verdict": "PASS",
+        "reasoning": "Clean single-variable ablation against the base, takes the only direction in the parameter space not yet explored by 7 prior runs, falsifiable prediction is well-specified. No BLOCKING or MAJOR concerns remain."
+      }
+    }
+  ],
+  "debate_outcome": "CONVERGED",
+  "rounds_used": 2,
+  "final_hypothesis": {
+    "mechanism": "Raised-Threshold AFG (single-variable ablation vs base). Identical to base aggressor-flow-gate in every respect: single 10s rolling trade-tick deque, signed_vol = +size (BUYER) / -size (SELLER) / 0 (NO_AGGRESSOR), O(1) long_net maintained, look-ahead-free pruning by ts_event, reduce-only short-circuit, warm-up unconditional submit, post-skip _position_flat=True anti-cascade. ONLY CHANGE: flow_threshold raised from 2.0 to 5.0. Skip BUY when long_net <= -5.0; skip SELL when long_net >= +5.0.",
+    "inefficiency_exploited": "Base AFG with threshold=2.0 over-gates: it skips marginally-adverse signals where the flow magnitude (2-5 contracts in 10s, ~0.2-0.5 contracts/sec) is not statistically distinct from noise. Empirical: all 7 pc-experiment runs that added skips underperformed base AFG; r3 (lowered threshold to 1.0) FAILED at -0.3%. The marginal gradient at threshold=2.0 appears to point UP (toward less gating, higher threshold). Raising to 5.0 retains only structurally adverse skips (>=2.5x base threshold).",
+    "why_survives_costs": "Zero commission, zero slippage. Edge accrues purely as realized_pnl. Pre-committed falsifiable prediction: realized_pnl on the 12-day train window exceeds base AFG's $1255.5 by at least 5% (PASS gate); skip rate drops from base's 21.6% to roughly 5-10%. Failure mode: if base AFG's 2.0 threshold is near-optimal, raising hurts and realized_pnl < $1255.5 — hypothesis falsified, confirming r3's evidence as a symmetric over-shoot.",
+    "builds_on": "aggressor-flow-gate (base, $1255.5, +704.8% vs simple, sharpe 5.59, skip rate 21.6%). Diverges from ALL 7 prior pc-r1..r7 attempts, which uniformly extended skipping via chains, multi-windows, or lower thresholds.",
+    "alternatives_considered": "(a) Threshold = 3.0 or 4.0: smaller steps; 5.0 chosen for material separation and clearer ablation signal. (b) Multi-variable confluence (round 1 proposal): rejected per Criticizer — confounds the experiment. (c) Threshold = 10.0: too aggressive; would essentially disable gating. (d) Lower threshold (r3 territory): empirically falsified. (e) Drop _position_flat anti-cascade: all passing AFG variants rely on it; not the change under test.",
+    "revision_notes": "Round 1 MAJOR objection (two-variable confounding) directly addressed by adopting Criticizer's suggested single-variable simplification: threshold 2.0 -> 5.0, no confluence layer, all other base semantics verbatim."
+  },
+  "rounds_used": null,
+  "final_hypothesis": null,
+  "timestamp": "2026-05-26T00:00:00Z"
+}
