@@ -157,6 +157,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-pc-r8",
         "get_execution_algorithm",
     ),
+    "vrs-pc-r1": (
+        "execution_algos.vrs-pc-r1",
+        "get_execution_algorithm",
+    ),
 }
 
 
