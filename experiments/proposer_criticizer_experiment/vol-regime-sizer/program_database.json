@@ -11,5 +11,18 @@
     "debate_outcome": "CONVERGED",
     "context_chars_in": 0,
     "timestamp": "2026-05-28T00:00:00Z"
+  },
+  {
+    "run": 2,
+    "algo_id": "vrs-pc-r2",
+    "status": "completed",
+    "vs_base_pnl_pct": -41.39303482587064,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 9.373335540331068,
+    "trade_count": 85526,
+    "debate_rounds_used": 3,
+    "debate_outcome": "CONVERGED",
+    "context_chars_in": 99,
+    "timestamp": "2026-05-28T00:00:00Z"
   }
 ]
