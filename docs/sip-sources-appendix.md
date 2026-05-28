@@ -491,11 +491,11 @@ docs/
 
 ---
 
-## 16. OOS Results — Where They Will Live **[OOS PENDING]**
+## 16. OOS Results — Source Locations (Merged)
 
-*This section is a placeholder. Update it once Lambda evaluator results are merged.*
+*OOS results are merged. All pending-OOS placeholders across the three docs are filled.*
 
-### Pipeline
+### Pipeline (how the data was produced)
 
 ```
 1. git push origin snapshots/<algo-id>          ← triggers GitHub Actions
@@ -504,52 +504,63 @@ docs/
 4. evaluate skill (.claude/skills/evaluate/SKILL.md) ← fetches report, merges into backtest-results.json
 ```
 
-Test window dates: 2026-03-26 to 2026-04-06 (~8 trading days, per `research/config.yaml` → `data_window.test`).
+Test window dates: 2026-03-26 to 2026-04-06 — **10 trading days** (`sharpe_n_days = 10`), per the `period.test_dates` list in each OOS file and `research/config.yaml` → `data_window.test`.
 
-### Algorithms Requiring Snapshot + Evaluate
+### OOS Result Files (`evaluation_type: oos_local`)
 
-| Algo | Status | Snapshot branch | Backtest-results target |
+| Algo | Status | OOS source file | Backtested |
 |---|---|---|---|
-| sip-vrs-l5 | **[PENDING]** | `snapshots/sip-vrs-l5` | `execution_algos/sip-vrs-l5/results/backtest-results.json` |
-| sip-ptg-l8 | **[PENDING]** | `snapshots/sip-ptg-l8` | `execution_algos/sip-ptg-l8/results/backtest-results.json` |
-| sip-afg-l5 | **[PENDING]** | `snapshots/sip-afg-l5` | `execution_algos/sip-afg-l5/results/backtest-results.json` |
+| sip-vrs-l5 | **MERGED** | `oos-results/sip-vrs-l5.json` | 2026-05-28 |
+| sip-ptg-l8 | **MERGED** | `oos-results/sip-ptg-l8.json` | 2026-05-27 |
+| sip-afg-l5 | **MERGED** | `oos-results/sip-afg-l5.json` | 2026-05-27 |
+| sip-vrs-l7 | **MERGED** (identical to sip-vrs-l5 — rediscovery) | `oos-results/sip-vrs-l7.json` | 2026-05-26 |
 
-### Where OOS Data Lives (once merged)
+**Base-algorithm OOS files** (used to recompute the **vs-own-base** percentages, since each variant file's `vs_baseline_pnl_pct` is measured against `simple`, not the arm base):
 
-All three files will gain a `performance_oos` top-level key with the same schema as `performance`:
+| Base algo | OOS source file | OOS PnL | Used as base for |
+|---|---|---|---|
+| vol-regime-sizer | `oos-results/vol-regime-sizer.json` | $2,052.50 | sip-vrs-l5 (+71.3%) |
+| position-tier-gate | `oos-results/position-tier-gate.json` | $4,431.50 | sip-ptg-l8 (−4.0%) |
+| aggressor-flow-gate | `oos-results/aggressor-flow-gate.json` | $2,071.75 | sip-afg-l5 (−17.2%) |
+
+### `performance_oos` schema (real values, sip-vrs-l5)
+
+Each OOS file carries a `performance_oos` object. Example (`oos-results/sip-vrs-l5.json`):
 
 ```json
 {
   "algo_name": "sip-vrs-l5",
+  "evaluation_type": "oos_local",
   "baseline": "simple",
-  "performance": { ... },         ← train window (already present)
-  "performance_oos": {            ← [PENDING] test window
-    "realized_pnl":        null,
-    "mean_slippage":       null,
-    "sharpe_ratio":        null,
-    "max_drawdown_pct":    null,
-    "win_rate":            null,
-    "trade_count":         null,
-    "vs_baseline_pnl_pct": null,
-    "vs_baseline_slippage_pct": null
+  "sharpe_metric_version": "v2",
+  "performance_oos": {
+    "realized_pnl":            3515.25,
+    "sharpe_ratio":            21.34,
+    "sharpe_n_days":           10,
+    "max_drawdown_pct":        -0.00522,
+    "win_rate":                0.36423,
+    "trade_count":             157556,
+    "mean_slippage":           0.0,
+    "vs_baseline_pnl_pct":     129.08,          // vs `simple` baseline
+    "vs_baseline_is_bps":      -45.26,
+    "vs_baseline_slippage_pct": 0.0
   }
 }
 ```
 
-### Documents to Update When Data Arrives
+**Important:** `vs_baseline_pnl_pct` is vs `simple`. The "vs base" numbers in the briefing/outline (+71.3% / −4.0% / −17.2%) are recomputed as `variant_PnL / base_OOS_PnL − 1` from the base files above, to stay comparable with the train `vs_base_pnl_pct` figures.
 
-Search all three docs for `[OOS PENDING]` — **7 total markers**:
+### Filled-in tracker (verification)
 
-| Marker location | File | What to do |
+| Marker location | File | Status |
 |---|---|---|
-| §2 setup table (test window row) | `sip-experiment-briefing.md` | Remove `[OOS PENDING]` tag |
-| §6 sip-vrs-l5 placeholder block | `sip-experiment-briefing.md` | Fill table, delete block |
-| §6 sip-ptg-l8 placeholder block | `sip-experiment-briefing.md` | Fill table, delete block |
-| §6 sip-afg-l5 placeholder block | `sip-experiment-briefing.md` | Fill table, delete block |
-| §9 Paper gaps table | `sip-experiment-briefing.md` | Remove row if all OOS in; update mitigation if partial |
-| §10 update guide | `sip-experiment-briefing.md` | This section can be deleted once all OOS are filled |
-| Slide 9 OOS column | `sip-presentation-outline.md` | Fill OOS column |
-| Slide 14 "What's missing" | `sip-presentation-outline.md` | Remove OOS bullet, add to "publishable" list |
-| Slide 15 signal assessment | `sip-presentation-outline.md` | Replace hedged question with OOS result summary |
-| Appendix A6 | `sip-presentation-outline.md` | Fill table, remove `[OOS PENDING]` tag |
-| This section (§16) | `sip-sources-appendix.md` | Fill status column, confirm `performance_oos` populated |
+| §2 setup table (test window row) | `sip-experiment-briefing.md` | Filled — "10 trading days; results merged" |
+| §6 sip-vrs-l5 / sip-ptg-l8 / sip-afg-l5 blocks | `sip-experiment-briefing.md` | Filled with two-baseline OOS tables + verdicts |
+| §9 Paper gaps table + strongest claim | `sip-experiment-briefing.md` | Updated to mixed/honest verdict |
+| §10 (was update guide) | `sip-experiment-briefing.md` | Converted to results log |
+| §13 EHL question 1 | `sip-experiment-briefing.md` | Updated to "OOS is in: [summary]" |
+| Slide 9 / 10 / 11 / 8 | `sip-presentation-outline.md` | OOS columns/lines filled |
+| Slide 14 "What's missing" + publishable | `sip-presentation-outline.md` | OOS bullet moved/qualified |
+| Slide 15 signal assessment | `sip-presentation-outline.md` | Replaced with OOS summary |
+| Appendix A6 | `sip-presentation-outline.md` | Verdict table filled |
+| This section (§16) | `sip-sources-appendix.md` | Filled |

@@ -162,6 +162,7 @@ REVERTED → prior best method drives Loop N+1
 - Loops 1-4 produce incremental fixes (add an empirical check, add falsification). It takes seeing those fixes fail to identify deeper structural failures.
 - We call this a "critic burn-in period." The critic warms up before it can redesign rather than patch.
 - This is testable. Prediction: if you ran 12 loops instead of 8, you'd see a second inflection at ~loop 9.
+- Caveat to carry forward: the L5 inflection is an *in-sample* pattern. On the held-out window only the VRS L5 breakthrough survives vs its base (+71.3%); the AFG L5 breakthrough does not transfer. The burn-in is a property of the method's learning curve, not a guarantee that every L5 winner generalizes.
 
 ---
 
@@ -173,17 +174,17 @@ REVERTED → prior best method drives Loop N+1
 
 **Visual:** Bar chart or two-panel metrics comparison for sip-vrs-l5 vs vol-regime-sizer base.
 
-| Metric | Base VRS | sip-vrs-l5 (train) | sip-vrs-l5 (OOS) | Delta (train) |
+| Metric | Base VRS (train) | sip-vrs-l5 (train) | Base VRS (OOS) | sip-vrs-l5 (OOS) |
 |---|---|---|---|---|
-| Realized PnL | $753.75 | $1,471.75 | **[OOS PENDING]** | +95.3% |
-| Sharpe Ratio | 3.06 | 13.72 | **[OOS PENDING]** | +10.7 |
-| Max Drawdown | -4.95% | -1.64% | **[OOS PENDING]** | +3.3pp |
-| Win Rate | 35.1% | 35.5% | **[OOS PENDING]** | +0.4pp |
-| Trade Count | 127,991 | 90,582 | **[OOS PENDING]** | -29% |
-| vs baseline PnL % | — | +95.3% | **[OOS PENDING]** | — |
+| Realized PnL | $753.75 | $1,471.75 | $2,052.50 | $3,515.25 |
+| Sharpe Ratio | 3.06 | 13.72 | 17.85 | 21.34 |
+| Max Drawdown | -4.95% | -1.64% | -1.81% | -0.52% |
+| Win Rate | 35.1% | 35.5% | 35.9% | 36.4% |
+| Trade Count | 127,991 | 90,582 | 168,721 | 157,556 |
+| **vs own base PnL %** | — | **+95.3%** | — | **+71.3%** |
+| vs `simple` PnL % | — | — | — | +129.1% |
 
-*OOS test window: 2026-03-26 to 2026-04-06 (~8 trading days). Results pending Lambda evaluator.*  
-*Source when available: `execution_algos/sip-vrs-l5/results/backtest-results.json` → `performance_oos`*
+***Generalizes.*** *VRS L5 beats its base on the held-out window by +71.3% (down from +95.3% in-sample — decay, no sign flip), with lower drawdown and a higher win rate. OOS window: 2026-03-26 to 2026-04-06, 10 trading days. Source: `oos-results/sip-vrs-l5.json` → `performance_oos`; vs-base recomputed from `oos-results/vol-regime-sizer.json`. The whole OOS window runs hot (note base Sharpe jumps to 17.85), so the comparable signal is the +71.3% margin over base, not the absolute Sharpe.*
 
 **The mechanism (plain English):**
 - Layer 1: Replace unsigned vol-skip with signed headwind filter. If recent micro-drift is against the order (you're fading a move), suppress. If you're riding a drift, submit at full probability.
@@ -204,6 +205,7 @@ REVERTED → prior best method drives Loop N+1
 - The mechanism: rolling win-rate gate. If the oracle's recent accuracy (last 20 round trips) drops below 35%, suppress new opens. Resume when quality recovers.
 - This is a regime-selectivity filter: participate fully in high-quality oracle periods, sit out low-quality periods.
 - For a live system, this risk profile matters more than marginal PnL improvement.
+- **OOS (honest):** on the held-out 10-day window the marginal PnL edge does *not* survive — sip-ptg-l8 lands −4.0% vs the PTG base on PnL. But the risk story partially holds: it still posts the **lowest max drawdown of all 24 variants (−0.49%)**, the highest win rate (38.0%), and ~19% fewer trades than the base. Frame this as a risk-profile result, not a PnL win — and say so before the audience asks.
 
 ---
 
@@ -218,6 +220,7 @@ REVERTED → prior best method drives Loop N+1
 - The failures are not random — they cluster around specific failure modes that the critic eventually addresses.
 - The important question is not "how many passed?" but "did the kept variants accumulate over time?" — and yes, all three arms' running-best improved or stayed stable after the L5 inflection.
 - We have a clean signal that the critic's evolution is meaningful, not just noise.
+- **OOS check:** of the three best variants, only VRS L5 beats its own base on the held-out window (+71.3%). PTG L8 keeps the best risk profile but not PnL; AFG L5 does not transfer. We report this plainly — the method-level findings (taxonomy, burn-in) don't hinge on any one algorithm surviving OOS.
 
 ---
 
@@ -262,17 +265,18 @@ REVERTED → prior best method drives Loop N+1
 **Headline:** "A testable claim about self-improving research agents."
 
 **Core claim:**
-> "An LLM critic operating on structured reasoning traces can autonomously identify systematic failure modes in LLM hypothesis generation and evolve the generation method to correct them, exhibiting an empirical burn-in period of approximately N failures before producing architectural-level method changes."
+> "An LLM critic operating on structured reasoning traces can autonomously identify systematic failure modes in LLM hypothesis generation and evolve the generation method to correct them, exhibiting an empirical burn-in period of approximately 4 failures before producing architectural-level method changes."
 
 **Why this is publishable:**
 - Concrete, falsifiable, replicable
 - Addresses a problem every quantitative researcher knows (bad backtest hypotheses)
 - Demonstrates the failure mode taxonomy empirically, not theoretically
 - Introduces the critic burn-in concept with supporting data from 3 independent arms
+- OOS-supported: the best variant (sip-vrs-l5) generalizes to a held-out 10-day test window at +71.3% vs base (from +95.3% in-sample) — and we report the two variants that did *not* generalize with equal prominence
 
 **What's missing:**
 - Statistical significance (need confidence intervals on Sharpe, more training dates)
-- **[OOS PENDING]** Out-of-sample validation — Lambda OOS results for sip-vrs-l5, sip-ptg-l8, sip-afg-l5 pending. *When in: remove this bullet and add "OOS confirms [X]% test-window result" to the "Why this is publishable" list above.*
+- Broader OOS confirmation — only 1 of 3 best variants (VRS L5) beat its own base on the held-out window; PTG L8 held risk but not PnL, AFG L5 did not transfer. Need more arms whose L5 breakthrough *also* survives OOS.
 - Ablation study (critic vs fixed-good-prompt, critic vs random-variation)
 - Replication with more base algorithms
 
@@ -284,7 +288,7 @@ REVERTED → prior best method drives Loop N+1
 
 **Three questions for Event Horizon Labs:**
 
-1. **Signal assessment:** Do the execution algorithm results (+95.3% for VRS L5, Sharpe 13.7 on train) represent economically meaningful signal in your view? **[OOS PENDING]** — *When OOS results arrive, update to: "Our OOS test window showed [X]. Does this change your assessment?"*
+1. **Signal assessment:** Our held-out OOS test window (10 days) showed VRS L5 generalizing at **+71.3% vs base** (from +95.3% in-sample, no sign flip), while PTG L8 kept the lowest drawdown but lost its PnL edge (−4.0%) and AFG L5 did not transfer (−17.2%). Does the surviving VRS L5 result represent economically meaningful signal in your view, or an artifact of the oracle-strategy backtest?
 
 2. **Research value:** Is the critic architecture — the ability to systematically identify and fix LLM research failure modes — something that would be valuable in your internal research pipeline? We're interested in whether this framework transfers to strategy research, not just execution.
 
@@ -324,20 +328,20 @@ Show side-by-side: prompt-l0.md (4 steps, ~500 chars) vs prompt-l1.md (6 steps w
 - Real-world application: replace oracle with any alpha signal; the execution research framework is the same
 - The methods discovered here transfer to any execution context — spread gating, vol-regime filtering, cascade policy — none are oracle-specific
 
-### A6 — OOS Results **[OOS PENDING]**
+### A6 — OOS Results
 
-*Fill this slide once Lambda evaluator results are in. Remove `[OOS PENDING]` tags from Slide 9 and Slide 14 at the same time.*
+**Headline:** "Train results partially held — one of three best variants generalized cleanly on the unseen test window."
 
-**Headline when ready:** "Train results held / partially held / did not hold on the unseen test window."
+All "vs base" figures are vs the arm's **own base algorithm** (apples-to-apples with the train numbers), recomputed from the base OOS files. Each variant's native `vs_baseline_pnl_pct` field is vs the trivial `simple` baseline and is shown separately.
 
-| Algo | Train vs baseline | OOS vs baseline | Verdict |
-|---|---|---|---|
-| sip-vrs-l5 | +95.3% | `[FILL]` | `[CONFIRMS / PARTIAL / FAILS]` |
-| sip-ptg-l8 | +0.7% PnL, Sharpe 18.81 | `[FILL]` | `[CONFIRMS / PARTIAL / FAILS]` |
-| sip-afg-l5 | +3.3% | `[FILL]` | `[CONFIRMS / PARTIAL / FAILS]` |
+| Algo | Train vs base | OOS vs base | OOS vs `simple` | Verdict |
+|---|---|---|---|---|
+| sip-vrs-l5 | +95.3% | **+71.3%** ($3,515 vs $2,052 base) | +129.1% | **CONFIRMS** (no sign flip; drawdown still lowest in arm) |
+| sip-ptg-l8 | +0.7% PnL, Sharpe 18.81 | **−4.0%** ($4,254 vs $4,432 base) | +177.2% | **PARTIAL** (PnL misses; lowest MDD −0.49% & highest WR hold) |
+| sip-afg-l5 | +3.3% | **−17.2%** ($1,714 vs $2,072 base) | +11.7% | **FAILS** (sign flip; all metrics below base OOS) |
 
-**Test window:** 2026-03-26 to 2026-04-06 (~8 trading days, shorter than train).  
-**Source:** `execution_algos/<algo-id>/results/backtest-results.json` → `performance_oos` field.  
+**Test window:** 2026-03-26 to 2026-04-06 (10 trading days, shorter than train; `sharpe_n_days = 10`).  
+**Source:** `oos-results/<algo-id>.json` → `performance_oos` (`evaluation_type: oos_local`); base files `oos-results/{vol-regime-sizer,position-tier-gate,aggressor-flow-gate}.json` for the vs-base recompute.  
 **Pipeline:** `snapshots/<algo-id>` branch push → GitHub Actions → S3 → Lambda → `evaluate` skill merges result.
 
-**Talking point on variance:** 8 days of OOS data produces wide Sharpe confidence intervals. Report direction and sign of PnL vs baseline first; treat exact magnitude as indicative, not definitive.
+**Talking point on variance:** 10 days of OOS data produces wide Sharpe confidence intervals, and the whole window runs hot (every base posts a higher Sharpe OOS than in-sample). Report direction and sign of PnL-vs-base first; treat exact Sharpe magnitude as indicative, not definitive. Note `sip-vrs-l7` OOS is identical to `sip-vrs-l5` — the rediscovery, not an independent confirmation.
