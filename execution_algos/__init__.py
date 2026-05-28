@@ -165,6 +165,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.vrs-pc-r2",
         "get_execution_algorithm",
     ),
+    "vrs-pc-r3": (
+        "execution_algos.vrs-pc-r3",
+        "get_execution_algorithm",
+    ),
 }
 
 
