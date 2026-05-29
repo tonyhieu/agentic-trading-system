@@ -7,37 +7,34 @@
         1.0
       ]
     },
-    "win_rate": {
+    "timing": {
       "bins": 5,
       "range": [
-        0.3,
-        0.7
+        0.2,
+        0.95
       ]
     }
   },
   "cells": {
-    "3_0": {
-      "algo_id": "afg-qd-l8",
-      "loop": 8,
+    "3_1": {
+      "algo_id": "afg-qd-s03",
       "descriptors": {
-        "selectivity": 0.7581,
-        "win_rate": 0.3573
+        "selectivity": 0.6398,
+        "timing": 0.4026
       },
-      "fitness": 1672.75,
+      "fitness": 3947.75,
       "objectives": {
-        "realized_pnl": 1672.75,
-        "max_drawdown_pct": -0.032299806201162795,
-        "sharpe_ratio": 7.36558093540625,
-        "trade_count": 103664
-      },
-      "timestamp": "2026-05-29T01:52:00Z"
+        "realized_pnl": 3947.75,
+        "max_drawdown_pct": -0.017399904300526348,
+        "sharpe_ratio": 16.544817250064803,
+        "trade_count": 87477
+      }
     },
-    "4_0": {
+    "4_1": {
       "algo_id": "afg-qd-l4",
-      "loop": 4,
       "descriptors": {
         "selectivity": 0.8041,
-        "win_rate": 0.3546
+        "timing": 0.4011
       },
       "fitness": 1013.25,
       "objectives": {
@@ -45,8 +42,91 @@
         "max_drawdown_pct": -0.039974790132351806,
         "sharpe_ratio": 4.352407056925627,
         "trade_count": 109944
+      }
+    },
+    "1_1": {
+      "algo_id": "afg-qd-s01",
+      "descriptors": {
+        "selectivity": 0.2178,
+        "timing": 0.4071
       },
-      "timestamp": "2026-05-29T01:52:00Z"
+      "fitness": 2011.75,
+      "objectives": {
+        "realized_pnl": 2011.75,
+        "max_drawdown_pct": -0.006674899876501853,
+        "sharpe_ratio": 17.742605996616152,
+        "trade_count": 29785
+      }
+    },
+    "2_1": {
+      "algo_id": "afg-qd-s02",
+      "descriptors": {
+        "selectivity": 0.4834,
+        "timing": 0.4055
+      },
+      "fitness": 3586.25,
+      "objectives": {
+        "realized_pnl": 3586.25,
+        "max_drawdown_pct": -0.010199949000254999,
+        "sharpe_ratio": 18.254808736685305,
+        "trade_count": 66100
+      }
+    },
+    "0_3": {
+      "algo_id": "afg-qd-s06",
+      "descriptors": {
+        "selectivity": 0.151,
+        "timing": 0.709
+      },
+      "fitness": 2100.75,
+      "objectives": {
+        "realized_pnl": 2100.75,
+        "max_drawdown_pct": -0.003949370075472963,
+        "sharpe_ratio": 32.09361280241917,
+        "trade_count": 20653
+      }
+    },
+    "1_3": {
+      "algo_id": "afg-qd-s07",
+      "descriptors": {
+        "selectivity": 0.2948,
+        "timing": 0.7088
+      },
+      "fitness": 3295.0,
+      "objectives": {
+        "realized_pnl": 3295.0,
+        "max_drawdown_pct": -0.0073484182529710475,
+        "sharpe_ratio": 29.608963449006477,
+        "trade_count": 40310
+      }
+    },
+    "0_4": {
+      "algo_id": "afg-qd-s09",
+      "descriptors": {
+        "selectivity": 0.1168,
+        "timing": 0.8502
+      },
+      "fitness": 1788.75,
+      "objectives": {
+        "realized_pnl": 1788.75,
+        "max_drawdown_pct": -0.0017499969375053591,
+        "sharpe_ratio": 34.094505500863086,
+        "trade_count": 15975
+      }
+    },
+    "1_4": {
+      "algo_id": "afg-qd-s10",
+      "descriptors": {
+        "selectivity": 0.2357,
+        "timing": 0.8507
+      },
+      "fitness": 884.0,
+      "objectives": {
+        "realized_pnl": 884.0,
+        "max_drawdown_pct": -0.006149890839437599,
+        "sharpe_ratio": 15.452612180262836,
+        "trade_count": 32230
+      }
     }
   }
 }

@@ -9,6 +9,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.simple_execution_strategy",
         "get_execution_algorithm",
     ),
+    **{
+        f"afg-qd-s{n:02d}": (f"execution_algos.afg-qd-s{n:02d}", "get_execution_algorithm")
+        for n in range(1, 16)
+    },
     "afg-qd-l1": (
         "execution_algos.afg-qd-l1",
         "get_execution_algorithm",

@@ -98,13 +98,26 @@ quality_diversity:
     selectivity:
       bins: 5
       range: [0.0, 1.0]
-    # Axis 2 — realized quality per executed trade. The oracle's raw win rate
-    # is ~0.37 at sigma=6; gates that skip adverse regimes push it up.
-    win_rate:
+    # Axis 2 — WHEN it trades: concentration of open-fills across the session,
+    # measured as the Gini of open-fill counts in 15-min buckets over the
+    # session span. 0 = spread evenly all day; →1 = all fills in one burst.
+    # Computed at run time from results/<date>/fills.csv (gitignored) and
+    # persisted into the committed loop JSON. Replaces win_rate, which was
+    # near-invariant to execution gating at sigma=6 (see research/NOTES.md):
+    # gating changes HOW MANY adverse trades are taken, not the win rate of
+    # those taken, so it could not span the axis. timing_concentration IS
+    # controllable (via a trading-window schedule) and orthogonal to
+    # selectivity (flow-gating skips uniformly through the day, leaving Gini
+    # ~0.25 regardless of threshold — verified across the 8 parameter-only
+    # loops). Empirical ladder on this dataset: all-day≈0.23, 12-20h≈0.45,
+    # 13-17h≈0.63, 14-16h≈0.73, 14-15h≈0.82.
+    timing_concentration:
       bins: 5
-      range: [0.30, 0.70]
+      range: [0.20, 0.85]
   # Recorded per cell for the post-hoc Pareto front; NOT used for cell
   # competition. mean_slippage is excluded everywhere — the current fill model
   # reports zero slippage on every backtest (see research/NOTES.md), so any
   # slippage axis is uninformative.
   secondary_objectives: [max_drawdown_pct, sharpe_ratio, trade_count]
+  # win_rate is retained as a recorded secondary metric (it just is not a map
+  # axis): the oracle's raw win rate is ~0.37 at sigma=6 and barely moves.

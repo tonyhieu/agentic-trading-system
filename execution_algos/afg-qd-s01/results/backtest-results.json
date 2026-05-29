@@ -1,0 +1,58 @@
+{
+  "algo_name": "afg-qd-s01",
+  "backtest_date": "2026-05-29T07:46:50Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 2011.75,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 17.742605996616152,
+    "sharpe_n_days": 12,
+    "max_drawdown_pct": -0.006674899876501853,
+    "win_rate": 0.3710256840691623,
+    "trade_count": 29785,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.20117500000000002,
+    "is_weighted_bps": 0.037608500631487594,
+    "is_total_price": 1536.5,
+    "vs_baseline_pnl_pct": 1189.5833333333335,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -3.276430677757315
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "execution_algos/afg-qd-s01/results/20260308",
+    "execution_algos/afg-qd-s01/results/20260309",
+    "execution_algos/afg-qd-s01/results/20260310",
+    "execution_algos/afg-qd-s01/results/20260311",
+    "execution_algos/afg-qd-s01/results/20260312",
+    "execution_algos/afg-qd-s01/results/20260313",
+    "execution_algos/afg-qd-s01/results/20260315",
+    "execution_algos/afg-qd-s01/results/20260316",
+    "execution_algos/afg-qd-s01/results/20260317",
+    "execution_algos/afg-qd-s01/results/20260318",
+    "execution_algos/afg-qd-s01/results/20260319",
+    "execution_algos/afg-qd-s01/results/20260320"
+  ]
+}

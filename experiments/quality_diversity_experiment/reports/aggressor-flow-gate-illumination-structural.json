@@ -1,0 +1,60 @@
+{
+  "experiment": "quality_diversity_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "pass": "structural",
+  "axis2": "timing",
+  "loops_run": 23,
+  "total_cells": 25,
+  "coverage": 0.32,
+  "qd_score": 18627.5,
+  "qd_score_vs_base": 9197.25,
+  "base_pnl": 1255.5,
+  "best_cell": {
+    "cell_key": "3_1",
+    "algo_id": "afg-qd-s03",
+    "fitness": 3947.75
+  },
+  "pareto_front": [
+    {
+      "algo_id": "afg-qd-s03",
+      "cell_key": "3_1",
+      "realized_pnl": 3947.75,
+      "max_drawdown_pct": -0.017399904300526348,
+      "sharpe_ratio": 16.544817250064803
+    },
+    {
+      "algo_id": "afg-qd-s02",
+      "cell_key": "2_1",
+      "realized_pnl": 3586.25,
+      "max_drawdown_pct": -0.010199949000254999,
+      "sharpe_ratio": 18.254808736685305
+    },
+    {
+      "algo_id": "afg-qd-s07",
+      "cell_key": "1_3",
+      "realized_pnl": 3295.0,
+      "max_drawdown_pct": -0.0073484182529710475,
+      "sharpe_ratio": 29.608963449006477
+    },
+    {
+      "algo_id": "afg-qd-s06",
+      "cell_key": "0_3",
+      "realized_pnl": 2100.75,
+      "max_drawdown_pct": -0.003949370075472963,
+      "sharpe_ratio": 32.09361280241917
+    },
+    {
+      "algo_id": "afg-qd-s09",
+      "cell_key": "0_4",
+      "realized_pnl": 1788.75,
+      "max_drawdown_pct": -0.0017499969375053591,
+      "sharpe_ratio": 34.094505500863086
+    }
+  ],
+  "insertion_tally": {
+    "added": 8,
+    "replaced": 5,
+    "rejected": 10
+  },
+  "timestamp": "2026-05-29T00:00:00Z"
+}

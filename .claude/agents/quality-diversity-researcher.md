@@ -82,13 +82,38 @@ selectivity = clamp(performance.trade_count / simple_trade_count, 0.0, 1.0)
 
 `simple_trade_count` = sum over the train dates of the cached `simple` baseline `trade_count`, read from `execution_algos/simple_execution_strategy/results/<date>/metrics.json` (the same source `--use-cached-baseline` reads). `simple` executes every order, so it is the natural "full participation" reference; a gate that skips adverse trades lands below 1.0. If the cached `simple` counts are unavailable, fall back to `selectivity = clamp(algo_trade_count / base_algo_trade_count, 0, 1)` and write a `research/NOTES.md` DATA ISSUE note recording the substitution.
 
-### Axis 2 — win_rate (quality per executed trade)
+### Axis 2 — timing_concentration (WHEN it trades)
 
 ```
-win_rate = performance.win_rate
+timing_concentration = mean over train dates of
+    Gini( open-fill counts per 15-min bucket, on a FIXED 96-bucket 24h grid )
 ```
 
-Straight from the metrics block. The oracle's raw win rate is ~0.37; gates that skip adverse regimes push the executor's realized win rate up — the default range `[0.30, 0.70]` brackets that.
+Computed at run time from `results/<date>/fills.csv` (open fills only:
+`is_reduce_only == False`), **not** from the aggregated `performance` block —
+it is the one descriptor that needs fill-level data. 0 = open-fills spread
+evenly across the session; →1 = all concentrated in one bucket (a burst).
+Persist the computed value into the loop JSON, because `fills.csv` is
+git-ignored and not reproducible from git later.
+
+**Use a FIXED 24h reference grid (96 buckets), not the observed fill span.**
+Bucketing over `min(ts)..max(ts)` makes a narrow trading window look *uniform*
+(low Gini) instead of concentrated — the bug that the first structural pass
+caught. The bucket index is `hour*4 + minute//15` over the full day.
+
+> **win_rate is NOT an axis** (it is recorded as a secondary metric). The first
+> arm used it and found it near-invariant to execution gating at sigma=6
+> (realized win_rate 0.352–0.357 across the whole sweep): gating changes *how
+> many* adverse trades are taken, not the win rate of those taken. See
+> `research/NOTES.md`. timing_concentration is controllable (via a trading-window
+> schedule) and orthogonal to selectivity (flow-gating skips uniformly through
+> the day, leaving Gini ≈0.25 regardless of threshold).
+>
+> **Known structural coupling:** concentrating trading into a short window also
+> caps how much of the day's flow can be executed, so the
+> high-timing × high-selectivity corner is *physically* hard to reach — an empty
+> cell there is a genuine tradeoff frontier, not a search failure. Report it as
+> such (do not fabricate coverage by rescaling axes to scatter noise).
 
 ### Cell mapping
 
@@ -96,7 +121,7 @@ For each axis with `bins=B` and `range=[lo, hi]`:
 ```
 idx = clamp( floor( (value - lo) / (hi - lo) * B ), 0, B-1 )
 ```
-`cell_key = "<sel_idx>_<wr_idx>"`.
+`cell_key = "<sel_idx>_<a2_idx>"`.
 
 ### Descriptor recalibration
 

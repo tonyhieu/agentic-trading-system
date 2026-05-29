@@ -169,3 +169,57 @@ trade_count. To actually test the QD thesis (does diversity beat greedy?), the
 next run needs structural mutations spanning selectivity ~0.1–0.8.
 
 ⚠ NOTE WRITTEN: research/NOTES.md — quality_diversity afg arm: mutations too weak to span behavior space (2/25 cells)
+
+---
+
+## [2026-05-29 01:05] RESULT: quality_diversity afg STRUCTURAL pass — 2-D map fills to 8/25 cells; timing replaces win_rate as axis 2
+
+**Detail**: Follow-up to the 2026-05-28 collapsed (2/25) parameter-only pass.
+Built a parameterized QD-AFG template (`execution_algos/_qd_afg_template.py`)
+with two STRUCTURAL dials and ran 15 variants (`afg-qd-s01..s15`) over the full
+12-date train window:
+- Axis 1 selectivity: deterministic 1-in-N submission fraction. Realized
+  selectivity spanned **0.061–0.971** (vs 0.758–0.832 parameter-only).
+- Axis 2 timing_concentration: trading-window schedule. Realized Gini
+  **0.40–0.96**. Replaces win_rate, which was near-invariant (0.352–0.357).
+  Verified win_rate's intended replacement long_fraction would also be dead
+  (0.487–0.503) — timing is the only genuinely controllable orthogonal axis.
+Archive over (selectivity × timing), 5×5, fitness=realized_pnl, including the 8
+earlier `afg-qd-l*` points (23 algos total): **coverage 8/25 = 32%**,
+qd_score 18627.5, qd_vs_base 9197.25, insertion added=8/replaced=5/rejected=10.
+Filled cells: 0_3, 0_4, 1_1, 1_3, 1_4, 2_1, 3_1, 4_1. (Independently recomputed
+from each algo's on-disk backtest-results.json — matches archive.json exactly.)
+**Best elite afg-qd-s03** (sel 0.640, timing 0.403): pnl **3947.8**, sharpe
+16.5, **+214.4% vs base** (afg=1255.5). Pareto front (pnl↑,mdd↑,sharpe↑) =
+{s03, s07 (3295,+162%), s06 (2101,+67%), s09 (1789,sharpe34), s12 (1209,sharpe45,mdd−0.007)}.
+**Two metric bugs found & fixed during this pass** (both honesty-relevant):
+(1) timing-Gini must bucket over a FIXED 96-bucket 24h grid, not the observed
+fill span — span-relative bucketing made narrow windows look uniform (the
+4-corner probe initially showed windowed variants at Gini 0.02). (2) long_count/
+short_count live only in per-date metrics.json, not the aggregated performance
+block.
+**Why it matters / honest caveats**:
+- The QD thesis is now actually testable (the parameter pass could not test it —
+  it collapsed to greedy). Headline QD finding: the best algorithm
+  (s03, moderately selective + spread-all-day, +214%) lives in a DIFFERENT cell
+  from the parameter pass's greedy optimum (afg-qd-l8, sel 0.758, +33%). Keeping
+  diverse selectivity stepping-stones surfaced a peak ~3× higher than greedy
+  refinement from the seed reached. This is the stepping-stone effect the
+  experiment exists to demonstrate.
+- **Empty cells are largely a real tradeoff frontier, not pure search failure**:
+  the high-timing×high-selectivity region is structurally unreachable —
+  concentrating trading into a short window mechanically caps how much of the
+  day's flow can be executed (high timing ⇒ low selectivity by construction), so
+  the upper-right of the grid cannot be populated. That said, 8/25 is honest and
+  NOT close to a feasible maximum: the entire t-b0 column except via the all-day
+  variants and several mid cells are simply unsampled — 15 hand-placed variants
+  is a coarse sampling of a 25-cell grid, not an exhausted one. A real agent-run
+  to the 24-loop budget with cell-targeted mutations would fill more. Filled
+  today: 0_3,0_4,1_1,1_3,1_4,2_1,3_1,4_1. The map is a ridge down the t-b1
+  (≈all-day) column plus a high-timing/low-selectivity arm — consistent with the
+  tradeoff, but coverage is sampling-limited too, not only frontier-limited.
+- Sharpe values here are train-only over 12 dates (small-N, ~0.4 SE); treated as
+  secondary per OBJECTIVE §8. P&L is the fitness. All numbers above are read
+  directly from on-disk backtest-results.json (12/12 dates each).
+
+⚠ NOTE WRITTEN: research/NOTES.md — quality_diversity afg structural pass: 2-D map 8/25, best s03 +214% in a different cell than greedy
