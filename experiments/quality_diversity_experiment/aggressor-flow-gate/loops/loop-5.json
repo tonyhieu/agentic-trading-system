@@ -1,0 +1,32 @@
+{
+  "experiment": "quality_diversity_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 5,
+  "algo_id": "afg-qd-l5",
+  "parent_algo_id": "afg-qd-l1",
+  "status": "completed",
+  "target_intent": "selectivity->full",
+  "mutation": "w=10,t=8",
+  "achieved_cell": "4_0",
+  "insertion_result": "rejected",
+  "descriptors": {
+    "selectivity": 0.8318,
+    "win_rate": 0.3535
+  },
+  "fitness": 816.5,
+  "metrics": {
+    "realized_pnl": 816.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 3.3723262396848073,
+    "max_drawdown_pct": -0.045049763488741686,
+    "win_rate": 0.3535,
+    "trade_count": 113733,
+    "vs_base_pnl_pct": -34.97,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "timestamp": "2026-05-29T01:52:00Z"
+}

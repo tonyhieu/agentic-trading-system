@@ -83,3 +83,28 @@ refinement:
     max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
     min_winrate_delta_pp:   2.0    # percentage points
     min_mdd_delta_pp:      -1.0    # negative = less drawdown
+
+quality_diversity:
+  # Controlled variables for the quality_diversity_experiment (MAP-Elites
+  # illumination search). Driven by the `quality-diversity-researcher` agent.
+  # Unlike the other experiments, this does NOT keep a single P&L champion —
+  # it maintains an archive holding the best algo found in each behavior cell.
+  budget: 24                       # loops per base_algo before the agent refuses
+  fitness: realized_pnl            # per-cell competition metric (raw, train-aggregated)
+  descriptors:
+    # Axis 1 — how much of the order flow the algo actually executes.
+    # selectivity = algo.trade_count / simple.trade_count, clamped to [0,1].
+    # `simple` executes every order, so it is the full-participation reference.
+    selectivity:
+      bins: 5
+      range: [0.0, 1.0]
+    # Axis 2 — realized quality per executed trade. The oracle's raw win rate
+    # is ~0.37 at sigma=6; gates that skip adverse regimes push it up.
+    win_rate:
+      bins: 5
+      range: [0.30, 0.70]
+  # Recorded per cell for the post-hoc Pareto front; NOT used for cell
+  # competition. mean_slippage is excluded everywhere — the current fill model
+  # reports zero slippage on every backtest (see research/NOTES.md), so any
+  # slippage axis is uninformative.
+  secondary_objectives: [max_drawdown_pct, sharpe_ratio, trade_count]

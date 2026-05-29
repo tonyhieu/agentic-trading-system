@@ -1,0 +1,52 @@
+{
+  "grid": {
+    "selectivity": {
+      "bins": 5,
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    "win_rate": {
+      "bins": 5,
+      "range": [
+        0.3,
+        0.7
+      ]
+    }
+  },
+  "cells": {
+    "3_0": {
+      "algo_id": "afg-qd-l8",
+      "loop": 8,
+      "descriptors": {
+        "selectivity": 0.7581,
+        "win_rate": 0.3573
+      },
+      "fitness": 1672.75,
+      "objectives": {
+        "realized_pnl": 1672.75,
+        "max_drawdown_pct": -0.032299806201162795,
+        "sharpe_ratio": 7.36558093540625,
+        "trade_count": 103664
+      },
+      "timestamp": "2026-05-29T01:52:00Z"
+    },
+    "4_0": {
+      "algo_id": "afg-qd-l4",
+      "loop": 4,
+      "descriptors": {
+        "selectivity": 0.8041,
+        "win_rate": 0.3546
+      },
+      "fitness": 1013.25,
+      "objectives": {
+        "realized_pnl": 1013.25,
+        "max_drawdown_pct": -0.039974790132351806,
+        "sharpe_ratio": 4.352407056925627,
+        "trade_count": 109944
+      },
+      "timestamp": "2026-05-29T01:52:00Z"
+    }
+  }
+}

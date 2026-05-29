@@ -119,3 +119,53 @@ the spread-filter nearly achieved ($1622.50, +2.25%).
 **Why**: Operator ran the agent on the bare host instead of inside `docker compose run dev`. The repo's tooling assumes the Docker context where `awscli` is baked in.
 **Alternatives**: (a) `brew install awscli` and re-run on host; (b) install Docker and use `docker compose run --rm dev`; (c) pre-seed `data-cache/` from another machine for an offline iteration.
 **Impact**: No program_database.json entry was written (no attempt was actually executed). No algorithm code was created. The iteration budget was not consumed. Operator decision required before the next invocation.
+---
+
+## [2026-05-28 19:10] RESULT WARNING: quality_diversity afg arm — parameter mutations too weak to span the behavior space (archive collapsed to 2 cells)
+
+**Detail**: In the quality_diversity_experiment afg arm (8 loops, MAP-Elites,
+agent `quality-diversity-researcher`), the 8 candidates' realized **selectivity**
+(trade_count / simple_trade_count, simple_tc=136734) spanned only **0.758–0.832**
+and realized **win_rate** only **0.3522–0.3573**. Against the configured 5×5 grid
+(selectivity [0,1], win_rate [0.30,0.70]) every candidate fell in win_rate bin 0
+and only selectivity bins 3–4 ⇒ **only 2 of 25 cells filled (3_0, 4_0)**.
+Per-loop realized P&L vs base (aggressor-flow-gate, pnl=1255.5), all from
+on-disk backtest-results.json over 12/12 train dates:
+- l1 seed(w10,t2) sel=0.784 pnl=1255.5 (+0.0%) cell 3_0
+- l2 (w10,t1)     sel=0.771 pnl=1386.0 (+10.4%) cell 3_0
+- l3 (w20,t1)     sel=0.764 pnl=1521.2 (+21.2%) cell 3_0
+- l6 (w30,t0.5)   sel=0.762 pnl=1664.8 (+32.6%) cell 3_0
+- l8 (w60,t1)     sel=0.758 pnl=1672.8 (+33.2%) cell 3_0   <- best elite
+- l4 (w10,t4)     sel=0.804 pnl=1013.2 (-19.3%) cell 4_0
+- l7 (w5,t3)      sel=0.814 pnl=946.8 (-24.6%) cell 4_0
+- l5 (w10,t8)     sel=0.832 pnl=816.5 (-35.0%) cell 4_0
+Archive: best elite **afg-qd-l8** (cell 3_0, pnl 1672.8, sharpe 7.37, mdd
+-0.0323, +33.2% vs base). Pareto front (pnl↑, mdd↑, sharpe↑) = {afg-qd-l8}
+(single point dominates). coverage 2/25=8%, qd_score 2686.0, qd_vs_base 417.25,
+insertion tally added=2 / replaced=4 / rejected=2.
+**Why**: I varied only two parameters (flow_threshold 0.5→8, window 5→60s).
+That moved realized selectivity by ~0.07 — nowhere near enough to reach the
+low-selectivity cells (b0–b2). At oracle sigma=6 the realized per-trade win_rate
+is also nearly invariant to gating (gating changes *how many* adverse trades are
+taken, driving P&L and selectivity — not the win rate of those taken), so the
+win_rate axis carries almost no signal. The QD machinery (archive, per-cell
+elitism, Pareto, insertion tally) is correct; the *variation operator* was the
+limitation.
+**Alternatives**: (a) Use **structural** mutations (add a spread filter, a
+position cap, a time-of-day gate, combine signals), not just parameter tweaks,
+to push selectivity across the full [0,1] range. (b) Widen the sweep far past
+threshold 8 / below 0.5. (c) Recalibrate win_rate range to ≈[0.34,0.39] or
+replace axis 2 with intraday timing-concentration (Gini of fills), orthogonal to
+selectivity but needs per-date fill-log parsing. All are operator decisions —
+the agent spec forbids auto-rebinning.
+**Impact**: Honest negative result for this run: the illumination map did not
+illuminate — it collapsed to a 2-cell ridge and the run effectively performed
+greedy refinement (best afg-qd-l8 sits in the *same* cell 3_0 as the seed). The
+directional finding is real and monotone: **more gating (lower threshold, longer
+window) → lower realized selectivity → higher P&L**; pushing toward full
+participation (sel→0.83) is worst (−35%). Knob direction is intuitive here
+(lower threshold ⇒ fewer trades ⇒ lower selectivity), confirmed by realized
+trade_count. To actually test the QD thesis (does diversity beat greedy?), the
+next run needs structural mutations spanning selectivity ~0.1–0.8.
+
+⚠ NOTE WRITTEN: research/NOTES.md — quality_diversity afg arm: mutations too weak to span behavior space (2/25 cells)

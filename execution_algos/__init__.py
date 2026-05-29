@@ -9,6 +9,38 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.simple_execution_strategy",
         "get_execution_algorithm",
     ),
+    "afg-qd-l1": (
+        "execution_algos.afg-qd-l1",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l2": (
+        "execution_algos.afg-qd-l2",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l3": (
+        "execution_algos.afg-qd-l3",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l4": (
+        "execution_algos.afg-qd-l4",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l5": (
+        "execution_algos.afg-qd-l5",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l6": (
+        "execution_algos.afg-qd-l6",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l7": (
+        "execution_algos.afg-qd-l7",
+        "get_execution_algorithm",
+    ),
+    "afg-qd-l8": (
+        "execution_algos.afg-qd-l8",
+        "get_execution_algorithm",
+    ),
     "streak-spread-tight": (
         "execution_algos.streak-spread-tight",
         "get_execution_algorithm",

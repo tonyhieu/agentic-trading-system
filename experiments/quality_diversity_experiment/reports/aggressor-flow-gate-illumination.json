@@ -1,0 +1,59 @@
+{
+  "experiment": "quality_diversity_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loops_run": 8,
+  "grid": {
+    "selectivity": {
+      "bins": 5,
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    "win_rate": {
+      "bins": 5,
+      "range": [
+        0.3,
+        0.7
+      ]
+    }
+  },
+  "total_cells": 25,
+  "coverage": 0.08,
+  "qd_score": 2686.0,
+  "qd_score_vs_base": 417.25,
+  "base_pnl": 1255.5,
+  "best_cell": {
+    "cell_key": "3_0",
+    "algo_id": "afg-qd-l8",
+    "fitness": 1672.75,
+    "descriptors": {
+      "selectivity": 0.7581,
+      "win_rate": 0.3573
+    }
+  },
+  "axis_marginals": {
+    "selectivity": {
+      "3": 1672.8,
+      "4": 1013.2
+    },
+    "win_rate": {
+      "0": 1672.8
+    }
+  },
+  "pareto_front": [
+    {
+      "algo_id": "afg-qd-l8",
+      "cell_key": "3_0",
+      "realized_pnl": 1672.75,
+      "max_drawdown_pct": -0.032299806201162795,
+      "sharpe_ratio": 7.36558093540625
+    }
+  ],
+  "insertion_tally": {
+    "added": 2,
+    "replaced": 4,
+    "rejected": 2
+  },
+  "timestamp": "2026-05-29T01:52:00Z"
+}
