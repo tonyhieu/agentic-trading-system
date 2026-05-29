@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-0",
+  "base_algo":           "position-tier-gate",
+  "generation":          1,
+  "loop_in_generation":  2,
+  "algo_id":             "ptg-isl-g1l2",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         5394.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         23.168155462598747,
+    "max_drawdown_pct":     -0.006099905451465502,
+    "win_rate":             0.3805929980874724,
+    "trade_count":          87319,
+    "vs_base_pnl_pct":      26.551320046946274,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Layered a third OPEN-gate on top of g1l1's (position-cap + rolling-spread-p75): side-dependent queue-imbalance gate that skips BUY OPENs when q=bid_size/(bid_size+ask_size) < 0.30 and SELL OPENs when q > 0.70.",
+    "outcome":    "pnl +26.55% vs position-tier-gate (5394.25 vs 4262.50), sharpe 23.17, trade_count 87319, drawdown -0.0061 — bit-for-bit identical to g1l1 on every reported metric. Null hypothesis result: the queue-imbalance gate produced zero incremental effect on top of the spread+cap stack. The +26.55% lift is inherited from g1l1's spread gate, not new signal from imbalance gating. mean_slippage 0.0 on both sides (sim fills at top-of-book — slippage delta undefined, reported 0.0).",
+    "hypothesis": "Spread (top width) and imbalance (which side is being eaten) should be orthogonal microstructure axes; an imbalance gate after the spread gate should catch a residual slice of direction-wrong opens that the spread filter misses.",
+    "next":       "Highest-leverage move: add instrumentation counters (skipped_buy_imb, skipped_sell_imb, evaluated_count) before doing more gate work — current loop cannot distinguish 'gate never fires' from 'gate fires but is EV-neutral' from 'silent implementation bug'. Then either (a) tighten imbalance thresholds toward [0.40, 0.60] if gate is too loose, or (b) pivot to a genuinely different orthogonal axis like short-horizon realized vol or trade-intensity bursts if imbalance is redundant with the spread gate on this strategy. Other islands evaluating this lineage should not assume the imbalance gate added value — it did not on this base."
+  },
+  "timestamp": "2026-05-24T03:31:27Z"
+}

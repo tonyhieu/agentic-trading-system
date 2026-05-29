@@ -1,0 +1,90 @@
+[
+  {
+    "loop":                 1,
+    "algo_id":              "vrs-m-l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      24.2454,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         3.90986686175057,
+    "trade_count":          125873,
+    "context_chars_in":     0,
+    "timestamp":            "2026-05-22T20:20:10Z"
+  },
+  {
+    "loop":                 2,
+    "algo_id":              "vrs-m-l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      41.7247,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.434556837386733,
+    "trade_count":          124497,
+    "context_chars_in":     79,
+    "timestamp":            "2026-05-23T22:55:53Z"
+  },
+  {
+    "loop":                 3,
+    "algo_id":              "vrs-m-l3",
+    "status":               "completed",
+    "vs_base_pnl_pct":      51.0448,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.703422386752132,
+    "trade_count":          123457,
+    "context_chars_in":     159,
+    "timestamp":            "2026-05-24T05:12:28Z"
+  },
+  {
+    "loop":                 4,
+    "algo_id":              "vrs-m-l4",
+    "status":               "completed",
+    "vs_base_pnl_pct":      76.2295,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.447181864172553,
+    "trade_count":          99833,
+    "context_chars_in":     239,
+    "timestamp":            "2026-05-24T19:11:28Z"
+  },
+  {
+    "loop":                 5,
+    "algo_id":              "vrs-m-l5",
+    "status":               "completed",
+    "vs_base_pnl_pct":      79.3788,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.491744107017674,
+    "trade_count":          100209,
+    "context_chars_in":     322,
+    "timestamp":            "2026-05-24T20:01:04Z"
+  },
+  {
+    "loop":                 6,
+    "algo_id":              "vrs-m-l6",
+    "status":               "completed",
+    "vs_base_pnl_pct":      71.8723,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.3277451248780645,
+    "trade_count":          101021,
+    "context_chars_in":     398,
+    "timestamp":            "2026-05-24T20:38:19Z"
+  },
+  {
+    "loop":                 7,
+    "algo_id":              "vrs-m-l7",
+    "status":               "completed",
+    "vs_base_pnl_pct":      74.8059,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.3857869881571245,
+    "trade_count":          99979,
+    "context_chars_in":     477,
+    "timestamp":            "2026-05-24T21:12:04Z"
+  },
+  {
+    "loop":                 8,
+    "algo_id":              "vrs-m-l8",
+    "status":               "completed",
+    "vs_base_pnl_pct":      77.5237,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.544144351095687,
+    "trade_count":          99797,
+    "context_chars_in":     557,
+    "timestamp":            "2026-05-24T21:46:13Z"
+  }
+]

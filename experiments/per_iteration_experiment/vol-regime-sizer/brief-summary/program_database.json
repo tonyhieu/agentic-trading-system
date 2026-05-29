@@ -1,0 +1,90 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "vrs-b-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -92.6661,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.17035794975278176,
+    "trade_count": 111488,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-24T07:07:55Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "vrs-b-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -88.9129,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.25643941410226306,
+    "trade_count": 111416,
+    "context_chars_in": 1063,
+    "timestamp": "2026-05-25T17:30:00Z"
+  },
+  {
+    "loop": 3,
+    "algo_id": "vrs-b-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": 62.8128,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.8316791538632873,
+    "trade_count": 103040,
+    "context_chars_in": 4314,
+    "timestamp": "2026-05-25T17:40:45Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "vrs-b-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": 87.5324,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.426692625912472,
+    "trade_count": 102252,
+    "context_chars_in": 7288,
+    "timestamp": "2026-05-25T18:18:09Z"
+  },
+  {
+    "loop": 5,
+    "algo_id": "vrs-b-l5",
+    "status": "completed",
+    "vs_base_pnl_pct": 105.7808,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.807309772878504,
+    "trade_count": 101747,
+    "context_chars_in": 10312,
+    "timestamp": "2026-05-25T19:30:00Z"
+  },
+  {
+    "loop": 6,
+    "algo_id": "vrs-b-l6",
+    "status": "completed",
+    "vs_base_pnl_pct": 110.6557,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 5.051417740994172,
+    "trade_count": 101505,
+    "context_chars_in": 13380,
+    "timestamp": "2026-05-25T20:00:00Z"
+  },
+  {
+    "loop": 7,
+    "algo_id": "vrs-b-l7",
+    "status": "completed",
+    "vs_base_pnl_pct": 142.1484,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 6.063523638749462,
+    "trade_count": 99059,
+    "context_chars_in": 16527,
+    "timestamp": "2026-05-25T20:30:00Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "vrs-b-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": 204.8317,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 8.179311516871646,
+    "trade_count": 96095,
+    "context_chars_in": 22562,
+    "timestamp": "2026-05-25T22:00:00Z"
+  }
+]

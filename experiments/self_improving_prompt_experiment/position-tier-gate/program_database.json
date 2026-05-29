@@ -1,0 +1,98 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "sip-ptg-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "trade_count": 90433,
+    "prompt_chars_in": 1487,
+    "prompt_action": "kept",
+    "timestamp": "2026-05-25T18:44:37Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "sip-ptg-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -11.460410557184751,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 19.21487648861719,
+    "trade_count": 81557,
+    "prompt_chars_in": 6478,
+    "prompt_action": "kept",
+    "timestamp": "2026-05-25T20:22:26Z"
+  },
+  {
+    "loop": 3,
+    "algo_id": "sip-ptg-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": -26.527859237536656,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 12.569282715197527,
+    "trade_count": 126678,
+    "prompt_chars_in": 7385,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-25T21:06:00Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "sip-ptg-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": -33.71847507331378,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 12.976676703041521,
+    "trade_count": 98270,
+    "prompt_chars_in": 6410,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-25T21:35:56Z"
+  },
+  {
+    "loop": 5,
+    "algo_id": "sip-ptg-l5",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.34021164021164,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "trade_count": 136734,
+    "prompt_chars_in": 6410,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-26T01:40:00Z"
+  },
+  {
+    "loop": 6,
+    "algo_id": "sip-ptg-l6",
+    "status": "completed",
+    "vs_base_pnl_pct": -9.724325581395349,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.09029213591002,
+    "trade_count": 83604,
+    "prompt_chars_in": 6410,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-26T02:05:00Z"
+  },
+  {
+    "loop": 7,
+    "algo_id": "sip-ptg-l7",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.3402,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "trade_count": 136734,
+    "prompt_chars_in": 6410,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-26T03:31:07Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "sip-ptg-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.7081761006289309,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 18.81,
+    "trade_count": 75262,
+    "prompt_chars_in": 6410,
+    "prompt_action": null,
+    "timestamp": "2026-05-26T04:00:00Z"
+  }
+]

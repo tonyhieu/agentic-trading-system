@@ -1,4 +1,8 @@
 {
+  "env": {
+    "BASH_DEFAULT_TIMEOUT_MS": "2400000",
+    "BASH_MAX_TIMEOUT_MS": "3600000"
+  },
   "hooks": {
     "SubagentStop": [
       {
@@ -19,7 +23,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:ssrn.com)",
       "Bash(git add research/overview.csv)",
-      "Bash(git add experiments/*)"
+      "Bash(git add experiments/*)",
+      "Bash(git add execution_algos/*)"
     ],
     "deny": [
       "Read(./strategies)",

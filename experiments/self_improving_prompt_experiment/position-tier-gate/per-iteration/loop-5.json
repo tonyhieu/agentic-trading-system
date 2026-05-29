@@ -1,0 +1,28 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 5,
+  "algo_id": "sip-ptg-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 156.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "max_drawdown_pct": -0.05289973550132249,
+    "win_rate": 0.3506443167025027,
+    "trade_count": 136734,
+    "vs_base_pnl_pct": -96.34021164021164,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 6410,
+  "trace_path": "reasoning-traces/loop-5-trace.md",
+  "critic_summary": "The active method (prompt-l1.md) required an empirical pre-check that validated event-class frequency (N=7,535 fires/day for cap=2 paired OPENs — correctly non-vacuous) but had no gate for effect direction. The cap=2 hypothesis produced -96.3% PnL vs base because increasing the position cap from 1 to 2 causes the netting OMS to simultaneously hold opposing LONG and SHORT positions, which cancel each other's alpha rather than compound it. The method's static-artifact count from orders.csv confirmed the branch fires but could not expose this OMS-dynamic failure mode. The proposed method adds a mandatory one-date probe backtest at Step 4 before full implementation: the researcher implements a stub algo, runs it for one median-volume training date, checks both the branch fire count AND the probe-date PnL delta vs base, and aborts if either fails. It also explicitly bans position cap relaxation (any cap > 1) and requires the researcher to explicitly state whether the proposed modification creates simultaneous opposing positions in the netting OMS. If the probe had been run for loop 5, the -96.3% result on that single date would have aborted the hypothesis immediately. On revert: running best is loop 2 (prompt-l1.md), so .current_prompt.md is restored to prompt-l1.md.",
+  "prompt_out": "prompts/proposed/loop-5-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": null,
+  "duration_seconds": null,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-26T01:40:00Z"
+}

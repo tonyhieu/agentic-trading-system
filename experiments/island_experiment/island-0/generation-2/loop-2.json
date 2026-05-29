@@ -1,0 +1,36 @@
+{
+  "experiment": "island_experiment",
+  "island_id": "island-0",
+  "base_algo": "position-tier-gate",
+  "generation": 2,
+  "loop_in_generation": 2,
+  "algo_id": "ptg-isl-g2l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3774.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 21.012389386327904,
+    "max_drawdown_pct": -0.004999926251087796,
+    "win_rate": 0.3736720867208672,
+    "trade_count": 73800,
+    "vs_base_pnl_pct": -11.460410557184517,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": {
+    "input": 1,
+    "output": 751,
+    "cache_creation": 377,
+    "cache_read": 41803,
+    "total": 42932
+  },
+  "duration_seconds": 132.6,
+  "summary_out": {
+    "changed": "Replaced g2l1's boolean chop-skip (threshold=2.0) with a probabilistic exponential-decay submission gate (chop_neutral=1.5, sensitivity=1.0, min_prob=0.05) ported verbatim from vrs-isl-g1l1; kept position-cap + rolling-spread-p75 unchanged; preserved instrumentation counters and added chop_p_submit_lt_1_count.",
+    "outcome": "pnl 3774.00 (-11.46% vs base position-tier-gate 4262.5; +15.19% vs prior g2l1 3276.25; -30.04% vs island-0 best g1l1 5394.25); sharpe 21.01 (base 17.62, g2l1 17.86, g1l1 23.17); trade_count 73800 (+2.4% vs g2l1, -15.5% vs g1l1); max_drawdown -0.50% (still tight vs base -1.73%); slippage 0.0 on both sides (simulator construction).",
+    "hypothesis": "PARTIALLY CONFIRMED. Probabilistic decay outperformed the boolean port (sharpe recovered 75% of g2l1's loss; +15.2% pnl improvement) but the (chop_neutral=1.5, sensitivity=1.0) parameters proved too steep for ptg \u2014 only ~1.7k extra trades were re-admitted relative to boolean. Chop is partially transferable to ptg but at lower marginal value than predicted. The algo still regresses vs base (-11.46%), and island-0's best (g1l1, +26.55%) remains chop-free, indicating chop adds net residual cost at this dosage even in probabilistic form.",
+    "next": "Pivot away from chop for g3l1: the chop investigation has answered its core question \u2014 chop is partially transferable but the dosage trades against a known-better chop-free baseline (g1l1 +26.55% vs g2l2 -11.46%). Build on g1l1 (spread-p75 + position-cap) by adding a book-flow / signed-volume imbalance gate as the third orthogonal axis (gen-1 migration explicitly named this as the alternative if chop failed). If g3l1 also underperforms g1l1, the verdict is that ptg's edge is saturated by spread+cap and the remaining headroom is in *quantity modulation* (probabilistic sizing instead of skip) rather than additional skip gates."
+  },
+  "timestamp": "2026-05-24T12:10:00Z"
+}

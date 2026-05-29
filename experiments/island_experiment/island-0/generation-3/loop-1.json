@@ -1,0 +1,36 @@
+{
+  "experiment": "island_experiment",
+  "island_id": "island-0",
+  "base_algo": "position-tier-gate",
+  "generation": 3,
+  "loop_in_generation": 1,
+  "algo_id": "ptg-isl-g3l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3196.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 15.95832706999559,
+    "max_drawdown_pct": -0.007899917050870967,
+    "win_rate": 0.36787249750293133,
+    "trade_count": 69081,
+    "vs_base_pnl_pct": -25.014668826979957,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 7642,
+  "context_tokens_estimated": 1910,
+  "tokens_used": {
+    "input": 1,
+    "output": 1089,
+    "cache_creation": 111,
+    "cache_read": 46519,
+    "total": 47720
+  },
+  "duration_seconds": 178.2,
+  "summary_out": {
+    "changed": "Branched from ptg-isl-g1l1 (chop-free best) and added a third orthogonal axis: an aggressor-flow / signed-volume imbalance skip-gate (window_seconds=10.0, flow_threshold=3.0 contracts; retuned 50% higher than afg's default 2.0 to account for ptg's pre-filtered surviving population). Composition: OR-skip across position-cap (cap=1) + rolling-spread-p75 (window=60s, q=0.75, min_samples=50) + aggressor-flow. Subscribed to trade ticks in addition to quote ticks; maintained O(1) net-flow deque pruned at order time. Per-gate instrumentation counters added.",
+    "outcome": "pnl 3196.25 (-25.01% vs base position-tier-gate 4262.5; -40.75% vs island-0 best g1l1 5394.25; -15.31% vs prior g2l2 3774.0); sharpe 15.96 (base 17.62, g1l1 23.17, g2l2 21.01 \u2014 worst sharpe in island-0 history); trade_count 69081 (-23.6% vs base 90433, -20.9% vs g1l1 87319); max_drawdown -0.79% (tighter than base -1.73%); slippage 0.0 on both sides (simulator construction). Clean REGRESSION: the worst third-axis result in island-0's generation 2 + g3l1 sequence.",
+    "hypothesis": "REJECTED. The cross-island gen-2 insight that 'spread + flow' transfers from afg to ptg does NOT hold even after operating-point retune (threshold 2.0 \u2192 3.0). Mechanism: ptg's surviving population after position-cap + spread-p75 is already EV-filtered along the dimension most correlated with afg's flow gate (wide-spread / liquidity-vacuum trades are where flow signal is strongest). Operating on the residual, the flow gate degenerates into noise and cuts EV-positive trades roughly in proportion to EV-negative ones \u2014 confirmed by the -20.9% trade_count drop accompanying a -40.75% pnl drop. Combined with g2l1/g2l2 (chop, also regressed), this is now TWO independent third-axis approaches that have failed on ptg's base \u2014 strong evidence for three-axis saturation.",
+    "next": "g3l2 should NOT add a fourth gate axis. Two diagnostic options ranked by expected value: (1) RETUNE g1l1's existing spread-p75 operating point \u2014 sweep q \u2208 {0.70, 0.80, 0.85} or window \u2208 {30s, 90s, 120s}; gen-2 migration ranked operating-point retuning above mechanism porting and this is the only axis with empirical EV-positivity on ptg's base. (2) Switch from skip-axis to quantity-modulation axis (gen-2 migration `base_specific` ptg note: 'gate-stacking plateaued; explore quantity tier modulation') \u2014 e.g., open at 50% qty when spread is in p50\u2013p75 band rather than full skip; preserves intraday_flat and converts binary EV cut to continuous EV haircut. Choose option 1 for g3l2 (lower-risk, higher-prior-evidence); reserve option 2 for g4 if option 1 also fails to beat g1l1."
+  },
+  "timestamp": "2026-05-24T14:29:46Z"
+}

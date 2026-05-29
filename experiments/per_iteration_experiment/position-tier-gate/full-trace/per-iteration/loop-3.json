@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 3,
+  "algo_id": "ptg-f-l3",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3525.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.400602735308254,
+    "max_drawdown_pct": -0.01384992382541896,
+    "win_rate": 0.37002479613487055,
+    "trade_count": 78238,
+    "vs_base_pnl_pct": -17.284457478005866,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 13981,
+  "context_tokens_estimated": 3495,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 3 of the position-tier-gate / full-trace arm. Prior context: loops 1-2 full_reasoning + NOTES.md.\n\nLoop 1 finding: cap=2 = simple (binary cliff). Loop 2 finding: loss-streak gate = no-op (redundant with cap=1).\n\nLoop 3 hypothesis: Combine position-tier gate (cap=1) with aggressor-flow gate (window=30s, threshold=1.0). The reasoning: cap changes and oracle-time filters are no-ops; a flow-based filter from subscribed trade ticks can act BETWEEN oracle signals and filter adverse-microstructure entries. The afg arm found window=30s, threshold=1.0 gives +32.59% vs its base.\n\nResult: ptg-f-l3 pnl=$3,525.75 (-17.28% vs ptg base). Trade count dropped from 90,433 to 78,238 (-13.5%). P&L dropped -17.28% \u2014 worse than the trade count reduction alone, implying the flow gate filtered MORE good trades than bad from the already-selected ptg subset.\n\nKey finding: The position-tier gate at cap=1 has already selected the highest-quality oracle entries. The flow gate then applies a SECOND filter to this already-filtered set, and the remaining entries are NOT predominantly adverse-flow entries \u2014 they are a balanced mix. The flow gate's edge (filtering adverse flow) was demonstrated by the afg arm against the SIMPLE baseline (where it had enormous room to improve). Against the ptg baseline (which already trades a high-quality 90k-trade subset), the flow gate removes entries without corresponding P&L improvement.\n\nImplication: Additional microstructure filters (flow, spread, etc.) are unlikely to improve vs the ptg base because the ptg base has already selected the \"good\" entries via position serialization. Future loops should explore mechanisms that improve ENTRY QUALITY within the already-serialized trades, not additional filters that remove trades.",
+  "timestamp": "2026-05-23T20:20:30Z"
+}

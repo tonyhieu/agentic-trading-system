@@ -28,5 +28,929 @@
         "total": 2758349
       }
     }
+  },
+  {
+    "id": "vrs-m-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 3 \u2014 built on vrs-m-l2 by tightening the vol-regime probability filter (sensitivity 4.0 -> 5.0). Hypothesis: prior loops (l1=+24.2%, l2=+41.7% vs base_algo) showed monotonic improvement from reducing submission probability when vol_ratio > 1; a further single-step tightening tests whether the curve is still convex.",
+    "algorithm_path": "execution_algos/vrs-m-l3/",
+    "scores": {
+      "sharpe": 4.7034,
+      "realized_pnl": 1138.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 629.8077,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 123457,
+      "passed": true
+    },
+    "notes": "PASS -- 12-date Sun-Fri train window (2026-03-08..2026-03-20): vrs-m-l3 $1138.50/123457 trades vs simple $156.00/136,734 trades; delta_pnl=+629.81%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.70 vs 0.60. IS bps 363.77e-4 vs baseline (delta_is_bps=-6.44%). Vs base_algo vol-regime-sizer ($753.75): delta_pnl=+51.04%, trade_count -0.84%. Refinement of vrs-m-l2 (sensitivity 4.0 -> 5.0). Slippage zero on both sides (zero fill-cost model, see research/NOTES.md). Per_iteration_experiment loop \u2014 NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T05:16:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 1238.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 1586,
+        "cache_creation": 1229,
+        "cache_read": 94898,
+        "total": 97714
+      }
+    }
+  },
+  {
+    "id": "vrs-m-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 4 \u2014 built on vrs-m-l3 by tightening the vol-regime probability filter one more notch (sensitivity 5.0 -> 6.0). Metrics-only context across prior three loops (l1=+24.2%, l2=+41.7%, l3=+51.0% vs base_algo) showed monotonic but decelerating PnL improvement with no slippage regression; the hypothesis tests whether one more single-step tightening continues the convex region or turns it over.",
+    "algorithm_path": "execution_algos/vrs-m-l4/",
+    "scores": {
+      "sharpe": 4.4472,
+      "realized_pnl": 1021.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2261.2717,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99833,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l4 $1021.25/99833 trades vs simple $43.25/132,228 trades; delta_pnl=+2261.27%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.45 (vs base_algo 4.70 on its own 12 dates). Vs base_algo vol-regime-sizer on the matched 11 dates ($579.50): delta_pnl=+76.23%, trade_count -19.1% (-23,624). Refinement of vrs-m-l3 (sensitivity 5.0 -> 6.0). Mechanical step-curve on matched 11-date basis: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2%. PnL still rising but Sharpe trend inverted for first time (4.70 -> 4.45). Per_iteration_experiment loop \u2014 NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T19:11:28Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 184.0,
+      "tokens_used": {
+        "input": 1,
+        "output": 1252,
+        "cache_creation": 249,
+        "cache_read": 47310,
+        "total": 48812
+      }
+    }
+  },
+  {
+    "id": "vrs-m-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 5 \u2014 built on vrs-m-l4 by raising the submission-probability floor min_prob 0.05 -> 0.10 while holding sensitivity=6.0. Metrics-only context across prior four loops showed PnL still rising (l1=+24.2% / l2=+41.7% / l3=+51.0% / l4=+76.2% vs base_algo) but the L3->L4 step inverted Sharpe (4.70 -> 4.45) with a 23x larger trade-count drop; raising the floor tests whether the Sharpe loss is recoverable by re-admitting some high-vol parents without further bumping sensitivity.",
+    "algorithm_path": "execution_algos/vrs-m-l5/",
+    "scores": {
+      "sharpe": 4.4917,
+      "realized_pnl": 1039.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2303.4682,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 100209,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l5 $1039.50/100209 trades vs simple $43.25/132228 trades; delta_pnl=+2303.47%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.4917 (vs L4 4.4472, +0.045). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+79.38%, trade_count +0.38% vs L4 (+376). Refinement of vrs-m-l4 (min_prob 0.05 -> 0.10, sensitivity held at 6.0). Step-curve on matched 11d: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2% / L5+79.4%. Sharpe recovery vs L4 modest (+0.045) -- min_prob floor binds rarely at this sensitivity. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T20:01:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 432.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 1,
+        "cache_creation": 338,
+        "cache_read": 73217,
+        "total": 73557
+      }
+    }
+  },
+  {
+    "id": "vrs-m-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 6 \u2014 built on vrs-m-l5 by doubling the submission-probability floor min_prob 0.10 -> 0.20 while holding sensitivity=6.0. Metrics-only context across prior five loops showed PnL still rising (l1=+24.2% / l2=+41.7% / l3=+51.0% / l4=+76.2% / l5=+79.4% vs base_algo); L4->L5 confirmed the floor lever direction but trade_count barely moved (+376). L6 doubles the floor again to determine whether the floor lever is mechanically inert at this sensitivity or genuinely useful.",
+    "algorithm_path": "execution_algos/vrs-m-l6/",
+    "scores": {
+      "sharpe": 4.3277,
+      "realized_pnl": 996.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2202.8902,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 101021,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l6 $996.00/101021 trades vs simple $43.25/132228 trades; delta_pnl=+2202.89%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.3277 (vs L5 4.4917, -0.164). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+71.87%, trade_count +0.81% vs L5 (+812). Refinement of vrs-m-l5 (min_prob 0.10 -> 0.20, sensitivity held at 6.0). Step-curve on matched 11d: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2% / L5+79.4% / L6+71.9%. Floor lever direction now confirmed: raising past 0.10 hurts both PnL and Sharpe. PnL curve appears to peak near min_prob=0.10. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T20:38:19Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 359.8,
+      "tokens_used": {
+        "input": 1,
+        "output": 1,
+        "cache_creation": 459,
+        "cache_read": 70371,
+        "total": 70832
+      }
+    }
+  },
+  {
+    "id": "vrs-m-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 7 \u2014 built on vrs-m-l6 by probing the OTHER side of the apparent local maximum: min_prob 0.20 -> 0.07 (between L4's 0.05 and L5's 0.10), holding sensitivity=6.0. Metrics-only context across prior six loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% with L5 the apparent apex; L7 tests the rising flank to refine the peak's location.",
+    "algorithm_path": "execution_algos/vrs-m-l7/",
+    "scores": {
+      "sharpe": 4.3858,
+      "realized_pnl": 1013.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2242.1965,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99979,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l7 $1013.00/99979 trades vs simple $43.25/132228 trades; delta_pnl=+2242.20%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.3858 (vs L5 4.4917, -0.106 / vs L6 4.3277, +0.058). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+74.81%, trade_count -0.23% vs L5 (-230). Refinement of vrs-m-l6 (min_prob 0.20 -> 0.07, sensitivity held at 6.0). Step-curve on matched 11d: L1+27.4% / L2+50.5% / L3+60.3% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8%. L7 at 0.07 lands between L4 (0.05, +76.2%) and L5 (0.10, +79.4%), slightly below L4. Confirms apex is near min_prob=0.10 NOT below 0.07; curve is concave with sharper drop above 0.10 than below. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T21:12:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 315.5,
+      "tokens_used": {
+        "input": 1,
+        "output": 20,
+        "cache_creation": 482,
+        "cache_read": 71466,
+        "total": 71969
+      }
+    }
+  },
+  {
+    "id": "vrs-m-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / metrics-only / loop 8 (FINAL) \u2014 built on vrs-m-l7 by pushing sensitivity 6.0 -> 7.0 and adopting L5's apex min_prob=0.10 (vs L7's 0.07). Metrics-only context across prior seven loops showed pnl_vs_base trajectory L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8%. The sensitivity ramp historically delivered ~17pp/unit (L1->L4); min_prob sweep showed concave curve apex near 0.10. L8 tests whether sensitivity has headroom past 6.0 with min_prob held at the known-best 0.10.",
+    "algorithm_path": "execution_algos/vrs-m-l8/",
+    "scores": {
+      "sharpe": 4.5441,
+      "realized_pnl": 1028.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2278.6127,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99797,
+      "passed": true
+    },
+    "notes": "PASS -- 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides): vrs-m-l8 $1028.75/99797 trades vs simple $43.25/132228 trades; delta_pnl=+2278.61%, well above +5.0% gate. Slippage 0.0/0.0 (no regression). Sharpe 4.5441 (arm-best; vs L5 4.4917, +0.052 / vs L7 4.3858, +0.158). Vs base_algo vol-regime-sizer on matched 11 dates ($579.50): delta_pnl=+77.52%, trade_count -412 vs L5. Two-parameter change vs L7 (sensitivity 6.0->7.0, min_prob 0.07->0.10). Step-curve on matched 11d: L1+24.2% / L2+41.7% / L3+51.0% / L4+76.2% / L5+79.4% / L6+71.9% / L7+74.8% / L8+77.5%. Sensitivity ramp confirmed saturated: L4->L8 (sens 6->7) net +1.3pp on PnL vs L1->L4 (sens 3->6) average ~17pp/unit. Best arm point on PnL remains L5 (sens=6.0, min_prob=0.10) at +79.4%; L8 is Sharpe leader but trails L5 on PnL. Final loop in the 8-loop arm. Per_iteration_experiment loop -- NOT snapshotted per arm protocol (experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T21:46:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 289.9,
+      "tokens_used": {
+        "input": 1,
+        "output": 2,
+        "cache_creation": 902,
+        "cache_read": 51847,
+        "total": 52752
+      }
+    }
+  },
+  {
+    "id": "afg-b-l1",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo aggressor-flow-gate by replacing the base's absolute imbalance gate (|net_flow| >= 2.0 over a 10s window) with a volume-normalized ratio gate (r = net_flow / max(abs_vol_window, min_abs_baseline=2.0); fires when |r| >= 0.35). Window length, anti-cascade flat-flag semantics, and reduce-only-always-submit semantics preserved. Intent: improve gate selectivity in busy windows (where 2 absolute contracts is noise) while keeping behavior in quiet windows. Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/afg-b-l1/",
+    "scores": {
+      "sharpe": 2.0907791868319876,
+      "realized_pnl": 453.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 948.5549132947976,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 101241,
+      "passed": true
+    },
+    "notes": "PASS vs simple gate -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed during DBN decode and dropped from BOTH sides by the runner): afg-b-l1 $453.50/101,241 trades vs simple $43.25/111,489 trades; delta_pnl_pct=+948.55 (well above +5.0 PASS gate). Sharpe 2.091. Slippage 0.0/0.0 (no regression; zero fill-cost model, see research/NOTES.md). Win rate 35.13%. Max DD -4.41%. is_weighted_bps 0.053 vs simple 0.673 (delta_is_bps=+24.42, better arrival-mid capture). However, vs base_algo aggressor-flow-gate on the same 11 dates ($970.00/87,760 trades): delta_pnl=-53.25%, trade_count +15.4% (+13,481 trades). Per-date pnl is WORSE than the base on 10 of 11 dates (only 20260308 is marginally +$7; largest drags 20260320 -$118.25 and 20260316 -$108.75). The ratio gate is RELAXED relative to the absolute gate in busy windows (35% imbalance is easier to clear there than the absolute 2-contract test), and the extra admitted orders are systematically money-losing (~$47 pnl drag per 1k extra trades). Hypothesis CONTRADICTED -- the absolute threshold is, in practice, the binding selectivity floor; the ratio reformulation alone is not viable. PASS verdict applies only to the simple baseline gate; vs base_algo refinement comparison (informational here, since this is loop 1 of the arm) is materially worse. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T08:50:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 202.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 1130,
+        "cache_creation": 227,
+        "cache_read": 47689,
+        "total": 49047
+      }
+    }
+  },
+  {
+    "id": "afg-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 -- built on afg-b-l1 by replacing the pure-ratio gate with a CONJUNCTION: skip iff (|net_flow| >= 2.0) AND (|net_flow|/max(2.0, abs_vol_window) >= 0.35). Brief-summary context across prior loop (l1=-53.25% vs base) indicated absolute threshold is the binding selectivity floor in busy windows; conjunction was intended as a strict intersection that could not regress on either operand. Result: contradicted -- asymmetric gate means ANDing the ratio onto base RELAXES busy-window selectivity rather than tightening.",
+    "algorithm_path": "execution_algos/afg-b-l2/",
+    "scores": {
+      "sharpe": 2.058159480661388,
+      "realized_pnl": 464.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 973.4104046242775,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 102005,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+973.41% pnl gate, +5.0% threshold) BUT WORSE than base_algo aggressor-flow-gate on the matched 11 dates (-52.14% pnl, +16.2% trade_count). 11-date train window (20260319 OOM-dropped on both sides). Brief-summary loop 2; uses only afg-b-l1's summary_out block as prior context plus mechanical inspection of afg-b-l1 source. Conjunction asymmetry: ANDing a ratio test on top of base's absolute gate RELAXES rather than tightens because the ratio condition is the binding one in busy windows; +14.2k extra admits drove the deficit (consistent with L1's $47/1k extra admit destruction). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-24T18:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 376.1,
+      "tokens_used": {
+        "input": 1,
+        "output": 4,
+        "cache_creation": 683,
+        "cache_read": 75652,
+        "total": 76340
+      }
+    }
+  },
+  {
+    "id": "afg-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 -- built on afg-b-l2 by replacing the CONJUNCTION with a DISJUNCTION: skip iff (|net_flow| >= 2.0) OR (|r| >= 0.35 AND abs_vol >= 5.0). Brief-summary context across prior two loops (l1=-53.25%, l2=-52.14% vs base) indicated the path forward is to ADD skips on top of base's set; disjunction makes the skip set a strict superset of base's by construction. New busyness floor (min_busy_abs_vol=5.0) on the ratio leg avoids the L1 warm-up degenerate where a single 2-contract trade gives r=1.0 trivially. Result: contradicted -- algo collapsed to base EXACTLY (0.0% pnl diff, 0 trade diff) because the chosen parameters (flow=2, ratio=0.35, busy_floor=5) make the ratio leg structurally dominated by the absolute leg on this oracle.",
+    "algorithm_path": "execution_algos/afg-b-l3/",
+    "scores": {
+      "sharpe": 4.580877323065416,
+      "realized_pnl": 970.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2142.774566473988,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 87760,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2142.77% pnl, +5.0% gate cleared by wide margin) but EXACTLY IDENTICAL to base_algo aggressor-flow-gate on the matched 11 dates (pnl=$970.00=base, trades=87,760=base, 0 differences). 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 3; uses only afg-b-l1 and afg-b-l2 summary_out blocks as prior context plus mechanical inspection of those algos' source for class shape. Collapse-to-base diagnosis: for any order where the absolute leg is silent (|net_flow|<2) and the busyness floor is met (abs_vol>=5), the ratio |net_flow|/abs_vol is mechanically <0.35 (since |net_flow|<2 / abs_vol>=~5.7 -> |r|<0.35 for net in {0,1,1.5}). So the ratio leg adds zero new skips on this oracle with these parameters. L1+L2+L3 collectively triangulate that the ratio reformulation cannot beat base on this oracle no matter how composed. Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T01:35:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 450.2,
+      "tokens_used": {
+        "input": 1,
+        "output": 21,
+        "cache_creation": 804,
+        "cache_read": 80024,
+        "total": 80850
+      }
+    }
+  },
+  {
+    "id": "afg-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 -- built on afg-b-l3 by REMOVING the ratio leg entirely and TIGHTENING the absolute threshold from 2.0 -> 1.0 contracts (10s window). Brief-summary context across L1+L2+L3 indicated the ratio reformulation cannot beat base on this oracle no matter how composed; L1 also established a monotone rule (~$47/1k extra admits beyond base cost pnl). Read in reverse, marginal SKIPS beyond base should YIELD pnl at the same rate. Logically the way to ADD skips on top of base's set is to LOWER the absolute threshold (not raise it as L3's next text had textually prescribed). Hypothesis CONFIRMED.",
+    "algorithm_path": "execution_algos/afg-b-l4/",
+    "scores": {
+      "sharpe": 5.360031757285958,
+      "realized_pnl": 1088.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2415.606936416185,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86089,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2415.61% pnl, +5.0% gate cleared by very wide margin) AND GENUINELY BEATS base_algo aggressor-flow-gate on the matched 11 dates (+12.16% pnl: $1088.00 vs $970.00; -1,671 trades / -1.90%; sharpe 5.36 vs 4.58). This is the FIRST loop in the afg-b lineage to beat the base on this oracle (L1: -53%, L2: -52%, L3: 0%, L4: +12.16%). 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 4; uses only afg-b-l1/l2/l3 summary_out blocks as prior context plus mechanical inspection of those algos' source for class shape and parameter shape. Mechanism: 1,671 fewer admits (orders with |net_flow| in [1, 2) now skipped); those marginal-imbalance orders are weakly anti-informative, yielding ~$70.6 per 1k extra skips (modestly above L1's $47/1k for the inverse direction). Sharpe rose from 4.58 to 5.36 with comparable max_dd. Validates the L1 monotone arithmetic and pivots the search axis to the absolute-threshold sweep (next loop should test threshold 0.5 to bracket the optimum). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T02:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 371.2,
+      "tokens_used": {
+        "input": 1,
+        "output": 43,
+        "cache_creation": 833,
+        "cache_read": 75523,
+        "total": 76400
+      }
+    }
+  },
+  {
+    "id": "afg-b-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 5 -- built on afg-b-l4 by FURTHER TIGHTENING the absolute threshold from 1.0 -> 0.5 contracts (10s window, ratio leg still absent). Brief-summary context across L1+L2+L3+L4 indicated the L1 monotone-yield rule (~$47-$70/1k extra skips) along the absolute-threshold axis; L4's 'next' explicitly prescribed testing 0.5 to probe whether the monotone rule continues DOWN or whether L4@1.0 had crossed the optimum. Hypothesis was that pnl would continue rising (if the rule holds) or stall/drop (if optimum crossed). ACTUAL: bit-for-bit identical to L4 -- the change was a mechanical no-op because net_flow only takes integer values (trade sizes are integer contracts on this oracle), so |net|>=0.5 and |net|>=1.0 are equivalent predicates (interval (0,1) is empty). Hypothesis CONTRADICTED at the meta level: the lever has integer resolution.",
+    "algorithm_path": "execution_algos/afg-b-l5/",
+    "scores": {
+      "sharpe": 5.360031757285958,
+      "realized_pnl": 1088.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2415.606936416185,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86089,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2415.61% pnl, +5.0% gate cleared by very wide margin; slippage tied at 0.0) and beats base_algo aggressor-flow-gate on the matched 11 dates (+12.16% pnl: $1088.00 vs $970.00; -1,671 trades / -1.90%; sharpe 5.36 vs 4.58). BUT this is BIT-FOR-BIT IDENTICAL to L4 -- every metric matches to all decimals (pnl=$1088, sharpe=5.360, trade_count=86,089, win_rate=0.35399, max_dd=-0.03235). Refinement targets vs L4: ALL FAIL (all deltas exactly 0.0). 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 5; uses only afg-b-l1/l2/l3/l4 summary_out blocks as prior context plus mechanical inspection of those algos' source for class shape. Root-cause diagnosis (filed honestly per OBJECTIVE.md \u00a78 honesty rules): net_flow is the signed sum of trade sizes which are INTEGER contract counts on this oracle, so the predicate set {|net|>=0.5} equals {|net|>=1.0} -- the open interval (0, 1) contains no integers. L5 is L4 in disguise. Critical lesson encoded for future loops: flow_threshold has INTEGER RESOLUTION; decimal-fraction tweaks below 1.0 are inert. Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND a tied PASS is not a snapshot candidate anyway.",
+    "timestamp": "2026-05-25T03:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 422.2,
+      "tokens_used": {
+        "input": 1,
+        "output": 29,
+        "cache_creation": 740,
+        "cache_read": 84174,
+        "total": 84944
+      }
+    }
+  },
+  {
+    "id": "afg-b-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 6 -- built on afg-b-l5 (effective L4) by LOOSENING the absolute threshold from 1.0 -> 3.0 contracts (one integer step BEYOND base's 2.0 in the loose direction; 10s window, ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved). Brief-summary context across L1+L2+L3+L4+L5 plus the L5 integer-resolution finding established the threshold lever has integer resolution; only integer steps are informative. L5's 'next' explicitly prescribed threshold=3.0 to test whether the L1 monotone-yield rule extrapolates to the loose side. Hypothesis CONFIRMED: pnl dropped to $832 (vs base $970, vs L4 $1088), trade count rose to 89,157 (+1,397 vs base), giving ~$98.8 per 1k newly admitted near-margin orders -- same sign and similar magnitude to L1's $47/1k and L4's $70.6/1k inverse readings. The absolute-threshold axis is now fully bracketed (1.0:1088, 2.0:970, 3.0:832) and confirmed monotone with integer optimum at L4=1.0.",
+    "algorithm_path": "execution_algos/afg-b-l6/",
+    "scores": {
+      "sharpe": 3.827320152939977,
+      "realized_pnl": 832.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 1823.699421965318,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 89157,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+1823.70% pnl, +5.0% gate cleared by ~365x; slippage tied at 0.0) but REGRESSED vs base_algo aggressor-flow-gate on the matched 11 dates (-14.23% pnl: $832.00 vs $970.00; +1,397 trades / +1.59%; sharpe 3.83 vs 4.58) and vs the in-arm leaders L4=L5 (-23.5% pnl, -28.6% sharpe, +3,068 trades vs $1088/86,089/5.36). Refinement targets vs L4: ALL FAIL. 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 6; uses only afg-b-l1/l2/l3/l4/l5 summary_out blocks as prior context plus mechanical inspection of L4/L5 source for class shape. Mechanism: orders with |net_flow|=2 (which base would skip) are newly ADMITTED under threshold=3.0; those marginal-imbalance orders are weakly anti-informative, costing ~$98.8 per 1k extra admits (consistent with L1's $47/1k and L4's $70.6/1k inverse readings -- the L1 monotone-yield rule extrapolates to the loose side). Absolute-threshold axis is now bracketed and exhausted (smooth monotone curve, integer optimum at L4=1.0). Next loop should pivot to the orthogonal window_seconds axis (10s -> 5s at flow_threshold=1.0). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND a regression vs L4 is not a snapshot candidate anyway.",
+    "timestamp": "2026-05-25T04:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 428.1,
+      "tokens_used": {
+        "input": 1,
+        "output": 24,
+        "cache_creation": 197,
+        "cache_read": 86161,
+        "total": 86383
+      }
+    }
+  },
+  {
+    "id": "afg-b-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 7 -- built on afg-b-l4 (the in-arm leader at $1088 / 86,089 trades / sharpe 5.36) by a single ORTHOGONAL parameter change: window_seconds 10.0 -> 5.0 with flow_threshold PINNED at L4 integer optimum 1.0; ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. Brief-summary context across L1+L2+L3+L4+L5+L6 plus L6 brief_summary explicitly prescribed pivoting to the orthogonal window axis at flow=1.0 because the absolute-threshold axis was fully bracketed and monotone (1:1088, 2:970, 3:832). Hypothesis: shorter window = less stale flow = potentially more selective skips; or alternately, shorter window misses slow-developing flow imbalance. CONTRADICTED (directional): pnl regressed to $950.50 vs L4 $1088 (-12.64%) and slightly below base (-2.01%). Newly admitted orders (the ones L4 skipped on 5-10s-stale flow imbalance) were NET ANTI-INFORMATIVE at ~-$155/k extra admits. The 5-10s flow memory IS informative for the 30s oracle horizon -- not stale noise.",
+    "algorithm_path": "execution_algos/afg-b-l7/",
+    "scores": {
+      "sharpe": 4.529771278300076,
+      "realized_pnl": 950.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2097.6878612716764,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 86973,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2097.69% pnl, +5.0% gate cleared by ~419x; slippage tied at 0.0/0.0) but slightly REGRESSED vs base_algo aggressor-flow-gate on the matched 11 dates (-2.01% pnl: $950.50 vs $970.00; -787 trades / -0.90%; sharpe 4.53 vs 4.58 essentially tied) and materially REGRESSED vs in-arm leaders L4=L5 (-12.64% pnl: $950.50 vs $1088.00; +884 trades; sharpe 4.53 vs 5.36 / -15.5%). Refinement targets vs L4: ALL FAIL. PARTIAL recovery from L6 (-14.23% -> -2.01% vs base), driven almost entirely by reverting flow_threshold from L6 3.0 back to L4 integer optimum 1.0; the residual -2.01% gap is the COST of the orthogonal window cut 10s -> 5s. 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 7; uses only afg-b-l1/l2/l3/l4/l5/l6 summary_out blocks as prior context plus mechanical inspection of L4 source for class shape. Mechanism: cutting the deque window from 10s to 5s makes the absolute predicate fire less often (deque sees fewer trades, sums smaller), so L7 SKIPS FEWER orders than L4 (+884 admits); those newly-admitted orders are the ones L4 was correctly skipping on 5-10s-old flow imbalance, and they are net anti-informative on this oracle (-$155 per 1k extra admits). Read: the 5-10s flow memory is genuinely informative, not stale noise; the oracle 30s forecast horizon (config.yaml) supports flow look-back up to ~10s as a productive signal. Window-axis data now: 5s:950, 10s:1088 -- gradient at 10s is NEGATIVE going down. Next loop should probe window=20s at flow=1.0 to bracket the window optimum (oracle horizon 30s is the natural ceiling for any window > 20s). Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND a regression vs L4 is not a snapshot candidate anyway.",
+    "timestamp": "2026-05-25T04:32:21Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 507.5,
+      "tokens_used": {
+        "input": 1,
+        "output": 27,
+        "cache_creation": 594,
+        "cache_read": 87824,
+        "total": 88446
+      }
+    }
+  },
+  {
+    "id": "afg-b-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 8 (FINAL loop in the 8-loop arm) -- built on afg-b-l4 (the prior in-arm leader at $1088 / 86,089 trades / sharpe 5.36) by a single ORTHOGONAL parameter change in the OPPOSITE direction from L7's window cut: window_seconds 10.0 -> 20.0 with flow_threshold PINNED at L4 integer optimum 1.0; ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. Brief-summary context across L1+L2+L3+L4+L5+L6+L7; L7 brief_summary explicitly prescribed probing window=20s at flow=1.0 to bracket the window-axis optimum after L7's 5s probe (window axis 2 of 3 needed points: 5s:$950.50, 10s:$1088, gradient at 10s NEGATIVE going down). Oracle horizon=30s (config.yaml) makes 20s the natural ceiling -- ~2/3 of the predictive horizon. Hypothesis: 10-20s flow either GENUINELY MORE informative than 5-10s (pnl > L4), mostly NOISE (pnl < L4), or ~ matches (pnl ~ L4). Weakly leaned toward 'more informative' given L7's finding that 5-10s flow is informative not stale. CONFIRMED DECISIVELY: pnl rose to $1216 vs L4 $1088 (+11.76%) with sharpe 5.81 vs 5.36 (+0.45) and 775 fewer trades. -$165 per 1k extra skips vs L4, mirrored almost exactly to L7's -$155 per 1k extra admits. L8 is the NEW IN-ARM LEADER.",
+    "algorithm_path": "execution_algos/afg-b-l8/",
+    "scores": {
+      "sharpe": 5.813982949415382,
+      "realized_pnl": 1216.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2711.5606936416184,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 85314,
+      "passed": true
+    },
+    "notes": "PASS vs simple baseline (+2711.56% pnl, +5.0% gate cleared by ~542x; slippage tied at 0.0/0.0) AND genuinely beats base_algo aggressor-flow-gate on the matched 11 dates (+25.36% pnl: $1216.00 vs $970.00; -2,446 trades / -2.79%; sharpe 5.81 vs 4.58 / +27%) AND beats the prior in-arm leader L4=L5 (+11.76% pnl: $1216.00 vs $1088.00; -775 trades / -0.90%; sharpe 5.81 vs 5.36 / +0.45 absolute, +8.5%). Refinement targets vs L4: pnl PASS by ~5.9x (+11.76% vs +2.0% target); sharpe CLOSE (delivered +0.454 vs +0.5 target, off by 0.046); slippage TIED at 0.0/0.0; win_rate +0.18pp MISS (target +2.0pp); max_dd -0.14pp WORSE MISS (target -1.0pp better, within close margin). L8 is the NEW IN-ARM LEADER on pnl AND sharpe AND trade selectivity. 11-date train window (2026-03-08..2026-03-20, 20260319 OOM-dropped on both sides). Brief-summary loop 8 (FINAL); uses only afg-b-l1/l2/l3/l4/l5/l6/l7 summary_out blocks + headline metrics as prior context plus mechanical inspection of L4 and L7 source for class shape. Mechanism: widening the deque window from 10s to 20s makes the absolute predicate fire MORE often (deque sees more trades, sums larger in magnitude when adverse), so L8 SKIPS MORE orders than L4 (-775 admits); the newly-skipped orders (those L4 was admitting because their 10-20s-old flow imbalance was invisible to the 10s deque) are net anti-informative on this oracle. Window-axis data now bracketed on 3 points at flow=1.0: 5s:$950.50, 10s:$1088, 20s:$1216 (NEW LEADER). The gradient at 20s going up is still POSITIVE (~$12.80/s) -- the curve is monotone INCREASING up to 20s, QUALITATIVELY DIFFERENT from the strictly-convex threshold axis (which bracketed at L4=1.0 with both sides regressing). A hypothetical L9 (arm exhausts at L8) would naturally probe window=25-30s at flow=1.0 since 30s is the oracle's horizon_seconds ceiling. 8-loop trajectory: L1 $453.50 (-53% vs base) -> L2 $464.25 (-52%) -> L3 $970 (+0%) -> L4 $1088 (+12.16%) -> L5 $1088 (=L4, integer resolution) -> L6 $832 (-14.23%, closed threshold axis) -> L7 $950.50 (-2.01%, opened window axis short side) -> L8 $1216 (+25.36%, NEW LEADER, opened window axis long side). Pnl leader: L8. Sharpe leader: L8. Slippage 0.0/0.0 (zero fill-cost model). Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T05:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 397.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 1724,
+        "cache_creation": 303,
+        "cache_read": 85245,
+        "total": 87273
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l1",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo vol-regime-sizer by gating the base's probabilistic vol skip on a signed mid-drift EWM (half-life 40 ticks, threshold 0.05). Intent: skip only when fast-vol is elevated AND recent mid drift is moving against the order side; submit at p=1.0 when drift aligns with order side. Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/vrs-b-l1/",
+    "scores": {
+      "sharpe": 0.1704,
+      "realized_pnl": 42.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": -1.7341,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 111488,
+      "passed": false
+    },
+    "notes": "FAIL -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l1 $42.50/111488 trades vs simple $43.25/111489 trades; delta_pnl_pct=-1.73 (below +5.0 PASS gate AND outside the +3-+5 CLOSE band). Sharpe 0.17 vs 0.17 (delta -1.88%). Slippage 0.0/0.0 (no regression, zero fill-cost model; see research/NOTES.md). Vs base_algo vol-regime-sizer on the same 11 dates ($579.50/104372 trades): delta_pnl=-92.67%, trade_count +6.82%. The drift gate fired on essentially one order out of 111,488: the chosen drift_threshold=0.05 with drift_halflife=40 is almost never crossed by the signed-mid EWM (most ticks are no quote change or one tick), so the algorithm collapses to the simple baseline and forfeits the base's ~$580 over-baseline gain. Hypothesis cannot be considered tested -- the drift gate did not meaningfully fire. Per_iteration_experiment loop -- NOT snapshotted (FAIL and per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside the docker subprocess during from_dbn_file decode; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-24T07:07:55Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 2821.5,
+      "tokens_used": {
+        "input": 1,
+        "output": 4,
+        "cache_creation": 372,
+        "cache_read": 180086,
+        "total": 180463
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 \u2014 built on vrs-b-l1 by a single config-default edit: drift_threshold 0.05 -> 0.008 (~6x smaller). Brief-summary context from loop-1.json only; L1 reported the drift gate fired on ~1 of 111,488 orders, so the directional-adverse-selection hypothesis was effectively untested. This loop recalibrates the threshold to mid-range of L1's recommended 0.005-0.01 band; all other mechanics (fast/slow halflives, sensitivity, min_prob, drift_halflife=40, gate semantics: skip iff vol elevated AND drift adverse; aligned drift forces p=1.0; reduce-only path; SHA256 deterministic draw) preserved verbatim.",
+    "algorithm_path": "execution_algos/vrs-b-l2/",
+    "scores": {
+      "sharpe": 0.2564,
+      "realized_pnl": 64.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 48.5549,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 111416,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+48.55% pnl gate +5.0%), BUT materially WORSE than base_algo vol-regime-sizer on same 11 dates (-88.91% pnl, +6.75% trade_count). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l2 $64.25/111,416 trades vs simple $43.25/111,489 trades vs base_algo vol-regime-sizer $579.50/104,372 trades. Trade_count delta vs L1 (which was $42.50/111,488): -72 trades (effectively identical). Even at threshold 0.008, the gate fires only ~72 more times than L1's ~0 \u2014 the asymmetric override architecture (admit on aligned drift, restrict skip to adverse) is structurally a strict liability against base's symmetric vol-skip. Per OBJECTIVE \u00a78 honesty: the formal pass_gate.baseline is 'simple' (PASS), but the per_iteration_experiment arm-level objective is improving on the base_algo, on which this is a -89% regression. Flagging 'PASS vs simple, FAIL vs base' pattern explicitly. Per_iteration_experiment loop \u2014 NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T17:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 480.9,
+      "tokens_used": {
+        "input": 1,
+        "output": 24,
+        "cache_creation": 757,
+        "cache_read": 91187,
+        "total": 91969
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 \u2014 built on vrs-b-l2 by INVERTING the gate semantics per L2's `next` text. Brief-summary context from loop-1.json + loop-2.json only (no NOTES.md prose, no L1/L2 implementation analysis beyond mechanical copy). Three coordinated edits, one structural intent: (1) removed L2's aligned-drift override path so every OPEN order runs through the vol-draw (no more p=1.0 short-circuit); (2) added `adverse_multiplier=0.5` so `p_final = base_p * 0.5` on adverse-drift orders, else `p_final = base_p`; (3) lowered `drift_threshold` 0.008 -> 0.005 per L2 next-hint. Net effect: L3's admit set is a STRICT SUBSET of base vol-regime-sizer's admit set (always apply base skip, plus extra skip on adverse-drift orders). This is the disjunctive structural inversion L2's brief_summary cross-referenced from afg-b-l3 \u2014 worst case = base parity, best case = base + the directional refinement's EV.",
+    "algorithm_path": "execution_algos/vrs-b-l3/",
+    "scores": {
+      "sharpe": 3.8317,
+      "realized_pnl": 943.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2081.5029,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 103040,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+2081.50% pnl, gate +5.0%) AND BREAKTHROUGH vs base_algo vol-regime-sizer on same 11 dates (+62.81% pnl, -1.28% trade_count). First L1-L3 loop in this arm to beat base by any margin (L1 -92.67%, L2 -88.91%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l3 $943.50/103,040 trades vs simple $43.25/111,489 trades vs base_algo vol-regime-sizer $579.50/104,372 trades. Trade_count delta vs base: -1,332 trades (~-1.28%); per-extra-skip EV is ~$273 ($943.50 - $579.50 = $364 over 1,332 extra skips), >3x base's per-skip EV (~$75) -- strong evidence the adverse-drift subset of base's would-be admits is materially worse than the aligned-drift subset, exactly as L1's original directional-adverse-selection hypothesis posited. The architectural lever was decisive: same drift signal and threshold band as L1/L2, only the gate topology changed (superset-on-aligned -> subset-via-extra-adverse-skip). Sharpe 3.83 vs simple 0.42 (delta +815%). Slippage 0.0/0.0 (no regression). Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base). Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T17:40:45Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": null,
+      "tokens_used": null
+    }
+  },
+  {
+    "id": "vrs-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 \u2014 built on vrs-b-l3 by a single config-default edit: adverse_multiplier 0.5 -> 0.25 (deepen the breakthrough lever per L3's `next` text). Brief-summary context from loop-1.json + loop-2.json + loop-3.json only (changed/outcome/hypothesis/brief_summary/next + metrics; no NOTES.md prose, mechanical copy of L3's execution_algorithm.py). Everything else preserved verbatim from L3: same gate topology (always apply base skip + extra multiplicative skip on adverse), same drift_threshold (0.005), same drift_halflife (40), same vol EWM params. min_prob=0.05 floor applies to base_p only; p_final may dip to 0.0125 on adverse-drift floor cases (vs 0.025 in L3). Intent: compound the working lever (L3 confirmed adverse-drift subset is materially worse than aligned-drift subset), do NOT re-architect. Two outcomes predicted: (i) per-skip EV roughly uniform across adverse subset -> pnl rises to $1100-1300; (ii) mult=0.5 already caught the worst admits -> pnl flat or slightly down. Worst case still strict-subset architecture: bounded downside.",
+    "algorithm_path": "execution_algos/vrs-b-l4/",
+    "scores": {
+      "sharpe": 4.4267,
+      "realized_pnl": 1086.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2412.7168,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 102252,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+2412.72% pnl, gate +5.0%) AND widened the breakthrough vs base_algo vol-regime-sizer on same 11 dates (+87.53% pnl vs base's $579.50, up 24.7 pp from L3's +62.81%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l4 $1086.75/102,252 trades vs L3 $943.50/103,040 trades vs base $579.50/104,372 trades vs simple $43.25/111,489 trades. Trade_count delta vs base: -2,120 (-2.03%); vs L3: -788 trades (-0.76%) -- L4's marginal extra skips beyond L3's. Marginal per-skip EV vs L3: $143.25 / 788 = ~$0.18/skip (positive; mildly below the ~$0.27/skip seen on L3's extras vs base, consistent with leading-edge diminishing returns but lever still productive). L4 beat L3 on 9 of 11 dates; the two losses (20260308 -$13.75, 20260309 -$24.75) are low-trade-count early dates where noise dominates and the multiplier only moves a handful of orders. Sharpe 4.43 vs L3 3.83 vs base ~3.06 (delta +44.7% vs base). Max drawdown improved to -3.93% (vs L3 -4.03%, base -4.60%). Slippage 0.0/0.0 (no regression). Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base), and a clear improvement-on-improvement vs L3. Architecture L3's L3 established (always apply base skip + multiplicative skip on adverse-drift) holds; the single-knob deepening worked exactly as L3's `next` predicted (best-case scenario). Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess on signal 9; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T18:18:09Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 2426.6,
+      "tokens_used": {
+        "input": 1,
+        "output": 1906,
+        "cache_creation": 156,
+        "cache_read": 186681,
+        "total": 188744
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 5 \u2014 built on vrs-b-l4 by a single config-default edit: adverse_multiplier 0.25 -> 0.10 (deepen the breakthrough lever per L4's `next` text). Brief-summary context from loop-1.json + loop-2.json + loop-3.json + loop-4.json only (changed/outcome/hypothesis/brief_summary/next + metrics; no NOTES.md prose, mechanical copy of L4's execution_algorithm.py). Everything else preserved verbatim from L4: same gate topology (always apply base skip + extra multiplicative skip on adverse), same drift_threshold (0.005), same drift_halflife (40), same vol EWM params. min_prob=0.05 floor applies to base_p only; p_final may dip to 0.005 on adverse-drift floor cases (vs 0.0125 in L4). Intent: compound the working lever (L4 confirmed adverse-drift extra-selectivity continues paying off), do NOT re-architect. Two outcomes predicted: (i) best case marginal EV ~$0.09/skip * ~470 new skips -> total ~$1,150-1,200; (ii) failure case per-skip EV inverts on new tail -> pnl regresses toward L3's $943 but strict-subset architecture caps the downside.",
+    "algorithm_path": "execution_algos/vrs-b-l5/",
+    "scores": {
+      "sharpe": 4.8073,
+      "realized_pnl": 1192.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2657.2254,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 101747,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+2657.23% pnl, gate +5.0%) AND new arm leader vs base_algo vol-regime-sizer on same 11 dates (+105.78% pnl vs base's $579.50, up 18.2 pp from L4's +87.53%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l5 $1192.50/101,747 trades vs L4 $1086.75/102,252 trades vs L3 $943.50/103,040 trades vs base $579.50/104,372 trades vs simple $43.25/111,489 trades. Trade_count delta vs base: -2,625 (-2.51%); vs L4: -505 trades (-0.49%) -- L5's marginal extra skips beyond L4. Marginal per-skip EV vs L4: $105.75 / 505 = ~$0.21/skip -- NOTABLY ABOVE L4-extrapolated $0.09/skip slope, only mildly below L4's own marginal-vs-L3 of $0.18/skip. The diminishing-returns slope L4 predicted did NOT materialize; the newly-skipped tail at u in (0.10*base_p, 0.25*base_p) was nearly as bad as L4's earlier marginal admits, possibly because that tail concentrates in extreme-vol regimes (base_p ~ floor 0.05) where the adverse-drift signal carries more information. L5 outcome ($1192.50) sat right at upper bound of L4's $1,150-1,200 prediction band. Sharpe 4.81 (vs L4 4.43, L3 3.83, base ~3.06) -- new arm best. Max drawdown -3.94% (vs L4 -3.93%, L3 -4.03%, base -4.60%). Slippage 0.0/0.0 (no regression). Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base), and a clear improvement-on-improvement vs L4 -- new leader for the vrs brief-summary arm. Architecture L3 established (always apply base skip + multiplicative skip on adverse-drift) holds; the single-knob deepening worked. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess on signal 9; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T19:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 344.2,
+      "tokens_used": {
+        "input": 1,
+        "output": 29,
+        "cache_creation": 470,
+        "cache_read": 76068,
+        "total": 76568
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 6 \u2014 built on vrs-b-l5 by a single config-default edit: adverse_multiplier 0.10 -> 0.025 (deepen the breakthrough lever per L5's `next` text, ~2 geometric halvings). Brief-summary context from loop-1.json + loop-2.json + loop-3.json + loop-4.json + loop-5.json only (changed/outcome/hypothesis/brief_summary/next + metrics; no NOTES.md prose, mechanical copy of L5's execution_algorithm.py). Everything else preserved verbatim from L5: same gate topology (always apply base skip + multiplicative skip on adverse-drift), drift_threshold=0.005, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.00125 on adverse-drift floor cases vs 0.005 in L5). Intent: compound the working lever (L5 showed marginal $0.21/skip ABOVE L4-extrapolated $0.09/skip; slope had not yet flattened), one more data point on the slope before exploring the alternative drift_threshold widening. Two outcomes predicted (per L5 `next`): (i) best case marginal EV $0.08-0.18/skip -> ~$40-100 incremental pnl -> total $1,230-1,290; (ii) failure case per-skip EV inverts on new tail -> regress toward L5's $1192 but strict-subset architecture caps the downside.",
+    "algorithm_path": "execution_algos/vrs-b-l6/",
+    "scores": {
+      "sharpe": 5.0514,
+      "realized_pnl": 1220.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 2722.5434,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 101505,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+2722.54% pnl, gate +5.0%) AND new arm leader vs base_algo vol-regime-sizer on same 11 dates (+110.66% pnl vs base's $579.50, up 4.9 pp from L5's +105.78%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l6 $1220.75/101,505 trades vs L5 $1192.50/101,747 trades vs L4 $1086.75/102,252 trades vs L3 $943.50/103,040 trades vs base $579.50/104,372 trades vs simple $43.25/111,489 trades. Trade_count delta vs base: -2,867 (-2.75%); vs L5: -242 trades (-0.24%) -- L6's marginal extra skips beyond L5. Marginal per-skip EV vs L5: $28.25 / 242 = ~$0.117/skip -- BELOW L5's marginal $0.21/skip and BELOW L4's marginal $0.18/skip; the diminishing-returns slope L4 originally predicted and L5 didn't see has now finally bent. L6 beat L5 on 7/11 dates, tied on 2, lost on 2 (20260309 -$8.50, 20260310 -$25.25, both mid-week strong-base days where the newly-skipped tail at u in (0.025*base_p, 0.10*base_p) was marginally positive-EV). Sharpe 5.05 (vs L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best. Max drawdown -3.90% (vs L5 -3.94%, slight tightening). Slippage 0.0/0.0 (no regression). L6 outcome ($1220.75) sat just below the lower edge of L5's $1,230-1,290 prediction band by ~$10. Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base), and a clear improvement-on-improvement vs L5 -- new leader for the vrs brief-summary arm. Architecture from L3 (always apply base skip + multiplicative skip on adverse-drift) continues to hold; the mult-deepening lever is now approaching saturation -- still positive marginal but the slope clearly bent. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess on signal 9; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T20:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 393.6,
+      "tokens_used": {
+        "input": 1,
+        "output": 29,
+        "cache_creation": 638,
+        "cache_read": 95837,
+        "total": 96505
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 7 \u2014 built on vrs-b-l6 by a single config-default edit: drift_threshold 0.005 -> 0.003 (WIDEN the adverse-drift subset per L6's `next` text, holding adverse_multiplier at L6's 0.025). Brief-summary context from loop-1.json + loop-2.json + loop-3.json + loop-4.json + loop-5.json + loop-6.json only (changed/outcome/hypothesis/brief_summary/next + metrics; no NOTES.md prose, mechanical copy of L6's execution_algorithm.py). Everything else preserved verbatim from L6: same gate topology (always apply base skip + multiplicative skip on adverse-drift), adverse_multiplier=0.025, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only. Intent: open a fresh ORTHOGONAL lever (subset width vs subset depth) -- the mult-depth dimension saturated at L6 (marginal $0.117/skip vs L5 $0.21/skip and L4 $0.18/skip; further deepening risked negative marginal EV); widening the threshold brings NEW borderline-drift orders (|drift_ewm| in [0.003, 0.005]) into the multiplier zone. Two outcomes predicted (per L6 `next`): (i) best case marginal EV ~$0.117/skip if borderline-drift admits comparable to current -> $1,260-1,310; (ii) weak-subset case marginal EV $0.04-0.08/skip if borderline less informative -> $1,240-1,280; (iii) failure: per-skip EV inverts -> regression toward L6 $1,220 (strict-subset cap).",
+    "algorithm_path": "execution_algos/vrs-b-l7/",
+    "scores": {
+      "sharpe": 6.0635,
+      "realized_pnl": 1403.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 3144.5087,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 99059,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+3144.51% pnl, gate +5.0%) AND new arm leader vs base_algo vol-regime-sizer on same 11 dates (+142.15% pnl vs base's $579.50, up 31.5 pp from L6's +110.66%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l7 $1403.25/99,059 trades vs L6 $1220.75/101,505 trades vs L5 $1192.50/101,747 trades vs L4 $1086.75/102,252 trades vs L3 $943.50/103,040 trades vs base $579.50/104,372 trades vs simple $43.25/111,489 trades. Trade_count delta vs base: -5,313 (-5.09%); vs L6: -2,446 trades (-2.41%) -- L7's marginal borderline-drift skips beyond L6. Marginal per-borderline-skip EV vs L6: $182.50 / 2,446 = ~$0.0746/skip -- landed inside L6's predicted WEAK-subset band of $0.04-0.08/skip. The borderline-drift subset (|drift_ewm| in [0.003, 0.005]) carries somewhat less directional information than the [>0.005] subset (per-skip EV ~64% of L6's $0.117/skip), BUT the borderline subset is ~10x LARGER than L6's marginal subset (2,446 vs 242 skips), so total pnl contribution +$182.50 EXCEEDED L6's best-case predicted band ($1,230-1,310) by ~$93. L7 beat L6 on 8/11 dates, lost on 3 (20260308 -$12.50, 20260309 -$14.00, 20260318 -$16.00) -- losses scattered and small relative to wins on volatile mid-week dates (20260312 +$60.00, 20260313 +$68.75). Sharpe 6.06 (vs L6 5.05, L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best, with the LARGEST sharpe jump in the lineage (+1.01 vs L6's +0.24 over L5, L5's +0.38 over L4). Max drawdown improved to -3.61% (vs L6 -3.90%, L5 -3.94%, L4 -3.93%, base -4.60%). Slippage 0.0/0.0 (no regression). L7 outcome ($1403.25) EXCEEDED L6's best-case prediction band ($1,260-1,310) by ~$93. Per OBJECTIVE \u00a78 honesty: this is a clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base), and an improvement-on-improvement vs L6 -- new leader for the vrs brief-summary arm and the largest single-step gain in the lineage since L3 -> L4 (+$143.25). Architecture from L3 (always apply base skip + multiplicative skip on adverse-drift) continues to hold; opening a fresh orthogonal lever (subset width vs subset depth) was the most productive single change in the lineage since L3. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess on signal 9; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates.",
+    "timestamp": "2026-05-25T20:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 513.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 38,
+        "cache_creation": 652,
+        "cache_read": 100124,
+        "total": 100815
+      }
+    }
+  },
+  {
+    "id": "vrs-b-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 8 (FINAL LOOP) \u2014 built on vrs-b-l7 by a single config-default edit: drift_threshold 0.003 -> 0.002 (further-WIDEN the adverse-drift subset per L7's `next` text, holding adverse_multiplier at L6/L7's 0.025; second data point on the fresh-and-productive threshold dimension L7 opened). Brief-summary context from loop-1.json through loop-7.json only (changed/outcome/hypothesis/brief_summary/next + metrics; no NOTES.md prose, mechanical copy of L7's execution_algorithm.py). Everything else preserved verbatim from L7: same gate topology (always apply base vol-skip + multiplicative skip on adverse-drift), adverse_multiplier=0.025, drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only. Intent: extend the fresh-and-productive threshold dimension for a second probe (L7 delivered the largest single-step jump in the lineage on this dimension; only one data point existed). Three outcomes predicted (per L7 `next`): (i) best case per-skip EV ~$0.07/skip on ~1,000-1,400 new skips -> incremental pnl $80-110 -> total $1,480-1,520; (ii) weaker-subset case per-skip EV $0.04-0.05/skip -> incremental pnl $50-70 -> total $1,450-1,490; (iii) failure case per-skip EV inverts -> regress toward L7's $1,403 (strict-subset architecture caps the downside on the new borderline subset only).",
+    "algorithm_path": "execution_algos/vrs-b-l8/",
+    "scores": {
+      "sharpe": 8.1793,
+      "realized_pnl": 1766.5,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 3984.3931,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 96095,
+      "passed": true
+    },
+    "notes": "PASS vs configured baseline simple (+3984.39% pnl, gate +5.0%) AND FINAL ARM LEADER on every primary metric vs base_algo vol-regime-sizer on same 11 dates (+204.83% pnl vs base's $579.50, up 62.7 pp from L7's +142.15%). 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): vrs-b-l8 $1766.50/96,095 trades vs L7 $1403.25/99,059 trades vs L6 $1220.75/101,505 trades vs L5 $1192.50/101,747 trades vs L4 $1086.75/102,252 trades vs L3 $943.50/103,040 trades vs base $579.50/104,372 trades vs simple $43.25/111,489 trades. Trade_count delta vs base: -8,277 (-7.93%); vs L7: -2,964 trades (-2.99%) -- L8's marginal further-borderline-drift skips beyond L7. Marginal per-borderline-skip EV vs L7: $363.25 / 2,964 = $0.1225/skip -- ABOVE L7's marginal $0.0746/skip AND ABOVE L6's marginal $0.117/skip. The drift signal at |drift_ewm| in [0.002, 0.003] turned out to carry MORE per-skip directional information than at [0.003, 0.005], not less as L7's `next` predicted. Total incremental pnl +$363.25 vs L7 EXCEEDED L7's best-case predicted band ($1,480-1,520) by ~$246 -- the LARGEST single-step pnl jump in the entire lineage (vs L6->L7 +$182.50, L3->L4 +$143.25). L8 beat L7 on 8/11 dates, lost on 3 (20260310 -$31.25, 20260311 -$3.75, plus marginal noise). Sharpe 8.18 (vs L7 6.06, L6 5.05, L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- arm best with +2.12 jump, the LARGEST sharpe jump in the entire lineage (vs L6->L7 +1.01, L4->L5 +0.38, L5->L6 +0.24). Max drawdown improved to -3.15% (vs L7 -3.61%, L6 -3.90%, base -4.60%). Slippage 0.0/0.0 (no regression). Per OBJECTIVE \u00a78 honesty: clear PASS by both the formal gate (vs simple) AND the arm-level objective (vs base); improvement-on-improvement vs L7 by the largest margin in the lineage. Architecture from L3 (always apply base vol-skip + multiplicative skip on adverse-drift) held across all 6 PASS loops (L3-L8). The threshold dimension is NOT yet saturated at 0.002. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...). Data note: 20260319 (690 MB DBN partition) OOM-killed inside docker subprocess on signal 9; runner correctly dropped it from both sides, so the comparison is fair over the 11 remaining dates. FINAL LOOP of the 8-loop vol-regime-sizer brief-summary arm.",
+    "timestamp": "2026-05-25T22:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 428.0,
+      "tokens_used": {
+        "input": 1,
+        "output": 2252,
+        "cache_creation": 1781,
+        "cache_read": 91397,
+        "total": 95431
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l1",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 1 \u2014 built on base_algo position-tier-gate by adding a 5-second position-age override: when the position cap is hit by a reversal OPEN, admit it if the currently held position is at least 5s old; otherwise preserve the base's blanket skip. Reduce-only orders always submit. Intent: distinguish noisy 1-tick flip-flops (still gated) from matured genuine reversals (now executed). Loop 1 of brief-summary arm has no prior loops to summarize, so context_chars_in=0; the hypothesis derives from base_algo alone.",
+    "algorithm_path": "execution_algos/ptg-b-l1/",
+    "scores": {
+      "sharpe": 4.299371377784174,
+      "realized_pnl": 879.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 1932.9479768786125,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 83581,
+      "passed": true
+    },
+    "notes": "PASS vs simple gate -- 11-date apples-to-apples train aggregate (Sun-Fri 2026-03-08..2026-03-20, with 20260319 OOM-killed and dropped from BOTH sides by the runner): ptg-b-l1 $879.25/83581 trades vs simple $43.25/111489 trades; delta_pnl_pct=+1932.95 (well above +5.0 PASS gate). Sharpe 4.30. Slippage 0.0/0.0 (no regression, zero fill-cost model; see research/NOTES.md). Win rate 35.6%. Max DD -3.89%. is_weighted_bps 0.043 vs simple 0.673 (delta_is_bps=+0.673, better arrival-mid capture). However, vs base_algo position-tier-gate on the same 11 dates ($3,564.25/73,802 trades): delta_pnl=-75.33%, trade_count +13.25%. Per-date pnls are WORSE than the base on all 11 dates (range -$32 to -$450). The 5s age override admits ~9,779 extra reversal opens that are systematically money-losing -- with a 30s oracle horizon, a 5s position is still mid-forecast and flipping it realizes a worse entry than holding. Hypothesis CONTRADICTED. PASS verdict applies only to the simple baseline gate; vs base_algo refinement comparison (informational here, since this is loop 1 of the arm) is materially worse. Per_iteration_experiment loop -- NOT snapshotted (per arm protocol; experiments/per_iteration_experiment/...).",
+    "timestamp": "2026-05-24T07:47:48Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 287.3,
+      "tokens_used": {
+        "input": 1,
+        "output": 51,
+        "cache_creation": 618,
+        "cache_read": 75162,
+        "total": 75832
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l2",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 2 - built on ptg-b-l1 (age-override) by dropping the age dimension entirely and replacing it with an adverse-move signal-strength override: admit a reversal OPEN through the position cap only when the mid-price has moved adversely against the existing position by >= 1 MES tick since the position was opened; same-direction adds at/above cap remain skipped; reduce-only always submits.",
+    "algorithm_path": "execution_algos/ptg-b-l2/",
+    "scores": {
+      "sharpe": 10.077723736051514,
+      "realized_pnl": 2092.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 4737.57225433526,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 81034,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+4737.57% pnl, gate is +5%); slippage 0.0/0.0; sharpe 10.08 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates (564.25 / 73,802 trades), l2 is -41.30% pnl on +9.80% trade_count -- all 11 per-date pnls underperform base; three dates flip from positive to negative (20260313, 20260316, 20260317). The adverse-move predicate is materially better than L1's age predicate (+34 pp recovery from -75.3% to -41.3%), confirming the signal-strength axis is correct, but adverse_threshold_ticks=1 is too low a bar -- 7,232 extra admitted reversals are net money-losing. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-25T00:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 418.0,
+      "tokens_used": {
+        "input": 1,
+        "output": 492,
+        "cache_creation": 684,
+        "cache_read": 82750,
+        "total": 83927
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l3",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 3 - built on ptg-b-l2 (adverse-move override at 1 tick) by a single mechanical change: raised adverse_threshold_ticks default from 1.0 to 3.0 ($0.25 -> $0.75 of adverse mid-move required to admit a reversal OPEN through the position cap). Everything else (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L2. Intent: 1 tick is bid-ask oscillation; 3 ticks is three full-spread displacements, sufficient to filter the noise floor that L2 was admitting.",
+    "algorithm_path": "execution_algos/ptg-b-l3/",
+    "scores": {
+      "sharpe": 13.933634237755003,
+      "realized_pnl": 2769.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 6304.046242774567,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 75587,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+6304.05% pnl, gate is +5%); slippage 0.0/0.0; sharpe 13.93 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l3 is -22.29% pnl on +2.42% trade_count (+1,785 trades) -- WORSE than base on 11/11 dates in absolute dollars (range -$12.50 to -$147). vs L2: +32.38% pnl on -6.72% trades (-5,447 fewer reversal admits -> +$677 aggregate). The convex monotonic lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% vs base shows the adverse-mid axis is the right axis with monotonic returns to tightening, but at 3 ticks the predicate still admits net-loss reversals. Per L2's branching rule: L3 has +trade_count vs base -> L4 should test 5 ticks. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T04:30:04Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 389.1,
+      "tokens_used": {
+        "input": 1,
+        "output": 75,
+        "cache_creation": 1100,
+        "cache_read": 87255,
+        "total": 88431
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l4",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 4 - built on ptg-b-l3 (adverse-move override at 3 ticks) by a single mechanical change: raised adverse_threshold_ticks default from 3.0 to 5.0 ($0.75 -> $1.25 of adverse mid-move required to admit a reversal OPEN through the position cap). Everything else (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L3. Intent: 5 ticks is five full-spread displacements, demanding a meaningfully larger adverse regime than 3 ticks; a position 5 ticks underwater is likely on the wrong side of a real micro-trend rather than oscillating. L3 next text identified this as the natural single-step probe under L2's branching rule (+trade_count vs base -> tighten further).",
+    "algorithm_path": "execution_algos/ptg-b-l4/",
+    "scores": {
+      "sharpe": 15.320778516538454,
+      "realized_pnl": 3140.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7161.849710982659,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 74420,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7161.85% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.32 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l4 is -11.88% pnl on +0.84% trade_count (+618 trades, -$423.50) -- WORSE than base on 11/11 dates in absolute dollars (range -$6.00 to -$112.00). The convex monotonic lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% vs base shows the adverse-mid axis has monotonic returns to tightening with diminishing margins (+33, +19, +10 pp per single step). trade_count is now within +/-1% of base (well inside the calibration band L3's next text identified), but the residual +618 admits are still on average money-losing. The adverse-mid axis appears to have ~90% closed the gap to base but cannot fully close it on its own. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T05:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 398.0,
+      "tokens_used": {
+        "input": 1,
+        "output": 3,
+        "cache_creation": 222,
+        "cache_read": 82092,
+        "total": 82318
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l5",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 5 - built on ptg-b-l4 (adverse-move override at 5 ticks) by a single targeted change: added a 5-second hold-time floor on the existing position as a CONJUNCTION with the existing 5-tick adverse-mid override. Concretely: L4 admit predicate `adverse_mid >= 5 ticks` becomes L5 admit predicate `adverse_mid >= 5 ticks AND age >= 5 seconds`. All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips) byte-identical to L4. Intent: L1 (age-only at 5s) and L4 (adverse-only at 5 ticks) each individually underperformed base. The hypothesis was that the failure modes compound: age was wrong as the SOLE predicate (positions mid-forecast at 5s), but at BOTH 5s AND 5-ticks-adverse the position has matured AND been wrong, which is exactly the conjunction the base's blanket skip is too coarse to capture. Strict subset of L4 admits.",
+    "algorithm_path": "execution_algos/ptg-b-l5/",
+    "scores": {
+      "sharpe": 15.659482979030653,
+      "realized_pnl": 3224.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7354.913294797687,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 74239,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7354.91% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.66 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), l5 is -9.54% pnl on +0.59% trade_count (+437 trades, -$340.00) -- WORSE than base on 11/11 dates in absolute dollars (range -$3.25 to -$84.25). Vs L4 ($3140.75 / 74,420 trades): +2.66% pnl (+$83.50) on -0.24% trade_count (-181 trades); 8/11 dates improved vs L4. The conjunction direction was correct but magnitude was much weaker than expected (~25% of the predicted +$100-350 gain) because adverse-mid accumulation and position age are strongly positively correlated -- most L4 admits already cleared the 5s age threshold. Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% vs base shows continued recovery but at $83.50 marginal vs the L3->L4 step's $371. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T05:30:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 506.5,
+      "tokens_used": {
+        "input": 1,
+        "output": 2,
+        "cache_creation": 2237,
+        "cache_read": 106488,
+        "total": 108728
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l6",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 6 - built on ptg-b-l5 (adverse-AND-age conjunction at 5 ticks AND 5s) by a single targeted change: added a tight-spread guard at the admit moment as a third CONJUNCTION condition. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick`. All other logic byte-identical to L5. Intent: spread is a fill-cost axis orthogonal to signal-strength axes (adverse-mid) and time axes (age). Crossing a wide spread to flip a position pays the mid-edge to the spread-crossing cost; admitting reversals only at the tightest book should filter the residual money-losing admits L5 still admits. 1-tick threshold = tightest possible MES spread = strictest possible single-step probe of the orthogonality hypothesis.",
+    "algorithm_path": "execution_algos/ptg-b-l6/",
+    "scores": {
+      "sharpe": 16.03579159896312,
+      "realized_pnl": 3496.25,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7983.815028901734,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73953,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7983.82% pnl, gate is +5%); slippage 0.0/0.0; sharpe 16.04 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L6 is -1.91% pnl on +0.20% trade_count (+151 trades, -$68.00 aggregate). Worse than base on 10/11 dates, exact parity on 1/11 (20260308); biggest single-date miss is -$16 on 20260313 (a low-base-pnl day). Vs L5 ($3224.25 / 74,239 trades): +8.43% pnl (+$272.00) on -0.39% trade_count (-286 trades); 10/11 dates improved over L5, 1/11 (20260320) exactly matched. The spread axis is demonstrated to be GENUINELY orthogonal to (adverse, age): the +$272 gain came from filtering admits that the first two conditions silently let through (wide-spread reversal flips), ruling out the explicit failure mode the hypothesis bet against (spread correlated with adverse-mid at admit time). Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% -> L6: -1.91% vs base. Marginal pnl per loop: $1213, $677, $371, $83.50, $272 -- L6 broke the diminishing-returns pattern of L4->L5 decisively. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T06:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 411.7,
+      "tokens_used": {
+        "input": 1,
+        "output": 1,
+        "cache_creation": 860,
+        "cache_read": 95805,
+        "total": 96667
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l7",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 7 - built on ptg-b-l6 (adverse-AND-age-AND-tight-spread three-condition conjunction) by a single targeted change: added a fourth condition - aggressor flow over the most recent 1 second of trade ticks must AGREE with the proposed NEW reversal direction at >= 60% same-side volume. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick AND flow_agreement >= 60%`. All other logic byte-identical to L6 except a new on_trade_tick handler maintains a rolling signed-flow deque (BUYER=+size, SELLER=-size, NO_AGGRESSOR=0). Empty / all-no-aggressor window -> SKIP (absence of evidence is not evidence of presence; mirrors L6 no-quote behavior). Intent: signed flow is mathematically distinct from price displacement (adverse-mid), time (age), and quote thickness (spread); the most plausibly orthogonal remaining axis to close the residual -1.91% gap to base.",
+    "algorithm_path": "execution_algos/ptg-b-l7/",
+    "scores": {
+      "sharpe": 16.183781189900014,
+      "realized_pnl": 3538.75,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 8082.080924855491,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73861,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+8082.08% pnl, gate is +5%); slippage 0.0/0.0; sharpe 16.18 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L7 is -0.72% pnl on +0.08% trade_count (+59 trades, -$25.50 aggregate) -- the smallest gap of the entire 7-loop lineage. Vs L6 ($3496.25 / 73,953 trades): +1.22% pnl (+$42.50) on -0.12% trade_count (-92 trades; $0.46/removed-trade ratio matches L5 age-conjunction exactly). The flow axis behaved as PARTIALLY orthogonal to (adverse, age, spread) -- providing real-but-small incremental information without throwing out beneficial admits. L7's +$42.50 lands at the upper end of the +$0 to +$50 range L6's next text explicitly predicted for the (i)-aggressor-flow outcome. Lineage L1: -75.33% -> L2: -41.30% -> L3: -22.29% -> L4: -11.88% -> L5: -9.54% -> L6: -1.91% -> L7: -0.72% vs base. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50. Residual gap to base is now within the noise floor of dropping a single bad date. Per_iteration_experiment loop -- NOT snapshotted per arm protocol.",
+    "timestamp": "2026-05-26T06:21:09Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 599.4,
+      "tokens_used": {
+        "input": 1,
+        "output": 255,
+        "cache_creation": 443,
+        "cache_read": 108548,
+        "total": 109247
+      }
+    }
+  },
+  {
+    "id": "ptg-b-l8",
+    "status": "pass",
+    "baseline": "simple",
+    "hypothesis": "per_iteration_experiment / brief-summary / loop 8 (FINAL LOOP) - built on ptg-b-l7 (four-condition adverse-AND-age-AND-tight-spread-AND-flow-agreement predicate) by a single targeted KNOB change: relaxed `max_spread_ticks` default from 1.0 to 2.0. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 2 ticks AND flow_agreement >= 60%`. All other logic byte-identical to L7 modulo class/config renames. L8 admit set is a STRICT SUPERSET of L7. Intent (per L7's brief-summary next text): re-admit ~150-250 of L5->L6's removed wide-spread reversals at near-zero net pnl, banking on the now-in-place flow-agreement guard to screen the worst flow-disagree admits in the re-admitted batch; hypothetical $143 gain > $25.50 residual gap, only theoretically-grounded mechanism for crossing base in the final loop.",
+    "algorithm_path": "execution_algos/ptg-b-l8/",
+    "scores": {
+      "sharpe": 15.830833803595018,
+      "realized_pnl": 3471.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 7925.433526011561,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 73917,
+      "passed": true
+    },
+    "notes": "PASS vs configured simple baseline (+7925.43% pnl, gate is +5%); slippage 0.0/0.0; sharpe 15.83 over 11 days (small-N artifact -- treat as directional only). HONESTY: vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades), L8 is -2.62% pnl (-$93.25) on +0.16% trade_count (+115 trades) -- REGRESSED vs L7's -0.72% (which remains the in-arm pnl AND sharpe best). Vs L7 ($3538.75 / 73,861 trades): -1.91% pnl (-$67.75) on +0.08% trades (+56 new admits, the spread-(1,2] re-admits this loop bet on), sharpe -0.353 (-2.18%). The 56 newly-admitted trades lost -$1.21/trade -- materially worse than L7's flow-removal ratio of $0.46/trade and ~30% worse than L5->L6 wide-spread removal ratio of $0.95/trade. Hypothesis CONTRADICTED by sign: re-admits lost money rather than breaking even. Mechanism failure: wide-spread reversals (1.25-2 ticks) coincide with aggressive directional flow that PASSES the 60% agreement test because aggressive same-side flow is precisely what widens the spread by removing one book side; the flow filter cannot rescue wide-spread admits in this regime. L6's 1-tick spread guard was at or near the arm's true optimum. 8-loop trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% -> L7 -0.72% -> L8 -2.62%. Marginal pnl per loop: $1213, $677, $371, $83.50, $272, $42.50, -$67.75. Arm closed 99.3% of L1's gap by L7 but never crossed base; the final L8 spread-axis probe confirms 1-tick guard was at or near optimum. FINAL LOOP of the 8-loop position-tier-gate brief-summary arm; L7 is the arm leader. Per_iteration_experiment loop -- NOT snapshotted per arm protocol AND L8 is not the arm leader anyway.",
+    "timestamp": "2026-05-26T06:53:13Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 205.8,
+      "tokens_used": {
+        "input": 1,
+        "output": 501,
+        "cache_creation": 507,
+        "cache_read": 95438,
+        "total": 96447
+      }
+    }
+  },
+  {
+    "id": "sip-ptg-l7",
+    "status": "fail",
+    "baseline": "simple",
+    "hypothesis": "Deferred pair OPEN via on_order_filled: when a pair OPEN arrives while net_qty >= cap=1 (close submitted but not yet filled), store the order and submit it inside on_order_filled() after the corresponding close fills and the OMS cache updates to flat. The oracle's directional signal at pair-time is 1\u20134 seconds earlier than the next solo OPEN; if pair-time direction persists, the earlier entry captures more of the predicted price move. Builds on position-tier-gate (PTG) structural foundation.",
+    "algorithm_path": "execution_algos/sip-ptg-l7/",
+    "scores": {
+      "sharpe": 0.6,
+      "realized_pnl": 156.0,
+      "mean_slippage": 0.0,
+      "vs_baseline_pnl_pct": 0.0,
+      "vs_baseline_slippage_pct": 0.0,
+      "trade_count": 136734,
+      "passed": false
+    },
+    "notes": "FAIL -- 12-date train window (20260308-20260320): sip-ptg-l7 pnl=$156.0/136734 trades == simple baseline $156.0; delta_pnl=0.0%, below 5.0% PASS gate and 3.0% CLOSE threshold. The deferred pair OPEN mechanism produced zero net alpha. Static pre-check in NOTES.md predicted 51.4% of deferred OPENs would be direction-opposite, costing ~$1048/day on 20260313 median date; confirmed \u2014 deferred OPENs cancel to produce simple-baseline PnL. Per-date variance high: 20260313=\u2212$512.75, 20260316=\u2212$521.50, 20260317=\u2212$246.75 offset early-week gains. Config: sigma=6, seed=42, horizon=30s.",
+    "timestamp": "2026-05-25T12:00:00Z",
+    "strategy_kwargs_hash": "sha256:35e971933feb",
+    "oos_retrieved_at": null,
+    "meta": {
+      "duration_seconds": 237.6,
+      "tokens_used": {
+        "input": 1,
+        "output": 1081,
+        "cache_creation": 455,
+        "cache_read": 58115,
+        "total": 59652
+      }
+    }
   }
 ]

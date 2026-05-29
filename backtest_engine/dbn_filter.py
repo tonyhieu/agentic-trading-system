@@ -62,6 +62,11 @@ def _require_zstd() -> str:
     return zstd
 
 
+def _have_zstd_cli() -> bool:
+    """Return True if the `zstd` CLI is available on PATH."""
+    return shutil.which("zstd") is not None
+
+
 def _read_exact(stream, n: int) -> bytes:
     """Read exactly `n` bytes from a pipe, looping over short reads."""
     chunks: list[bytes] = []
@@ -157,19 +162,56 @@ def instrument_id_for_symbol(metadata: bytes, symbol: str, version: int) -> set[
     return ids
 
 
-def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
-    """Write a single-symbol copy of DBN partition `src` to `dst`.
-
-    Streams `src` (a `.dbn.zst` file) through `zstd`, keeps only the records
-    for `symbol`, and writes them — behind the original's verbatim header —
-    to `dst` (also `.dbn.zst`). Returns the number of records kept.
-
-    Peak memory is bounded by one ~1 MB read buffer regardless of `src` size.
-    The write is atomic: `dst` only appears once fully written. Raises if the
-    symbol is absent from the file or if zero records are kept (either would
-    otherwise surface much later as a confusing empty backtest).
+def _filter_record_stream(
+    read_stream,
+    write_callable,
+    ids: set[int],
+    src_name: str,
+) -> int:
+    """Pump the decompressed record stream `read_stream` through the
+    instrument-id filter and call `write_callable(bytes)` for each kept
+    chunk. Returns the number of records kept. Does NOT write the DBN
+    header — the caller is responsible for that.
     """
-    src, dst = Path(src), Path(dst)
+    kept = 0
+    buf = b""
+    while True:
+        chunk = read_stream.read(_CHUNK)
+        if not chunk:
+            break
+        buf += chunk
+        i, n = 0, len(buf)
+        out: list[bytes] = []
+        while i + _REC_HEADER_LEN <= n:
+            rec_len = buf[i] * 4
+            if rec_len < _REC_HEADER_LEN:
+                raise ValueError(
+                    f"corrupt DBN record at byte {i}: length={rec_len}"
+                )
+            if i + rec_len > n:
+                break  # record split across chunk boundary
+            iid = int.from_bytes(
+                buf[i + _INSTRUMENT_ID_OFFSET : i + _INSTRUMENT_ID_OFFSET + 4],
+                "little",
+            )
+            if iid in ids:
+                out.append(buf[i : i + rec_len])
+                kept += 1
+            i += rec_len
+        if out:
+            write_callable(b"".join(out))
+        buf = buf[i:]
+
+    if buf:
+        raise ValueError(
+            f"trailing {len(buf)} bytes in {src_name} — file truncated "
+            f"or record stream misaligned"
+        )
+    return kept
+
+
+def _filter_via_cli(src: Path, dst: Path, symbol: str) -> int:
+    """zstd-CLI implementation of filter_dbn_partition."""
     zstd = _require_zstd()
 
     decomp = subprocess.Popen([zstd, "-dc", str(src)], stdout=subprocess.PIPE)
@@ -186,44 +228,9 @@ def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
         try:
             assert comp.stdin is not None
             comp.stdin.write(header)
-
-            buf = b""
-            while True:
-                chunk = decomp.stdout.read(_CHUNK)
-                if not chunk:
-                    break
-                buf += chunk
-                i, n = 0, len(buf)
-                out: list[bytes] = []
-                while i + _REC_HEADER_LEN <= n:
-                    rec_len = buf[i] * 4
-                    if rec_len < _REC_HEADER_LEN:
-                        raise ValueError(
-                            f"corrupt DBN record at byte {i}: length={rec_len}"
-                        )
-                    if i + rec_len > n:
-                        break  # record split across chunk boundary
-                    iid = int.from_bytes(
-                        buf[i + _INSTRUMENT_ID_OFFSET : i + _INSTRUMENT_ID_OFFSET + 4],
-                        "little",
-                    )
-                    if iid in ids:
-                        out.append(buf[i : i + rec_len])
-                        kept += 1
-                    i += rec_len
-                if out:
-                    comp.stdin.write(b"".join(out))
-                buf = buf[i:]
-
-            if buf:
-                raise ValueError(
-                    f"trailing {len(buf)} bytes in {src.name} — file truncated "
-                    f"or record stream misaligned"
-                )
+            kept = _filter_record_stream(decomp.stdout, comp.stdin.write, ids, src.name)
             comp.stdin.close()
         except BaseException:
-            # zstd may already be gone (e.g. broken pipe) — close best-effort
-            # so we never mask the original error with a teardown error.
             try:
                 comp.stdin.close()
             except OSError:
@@ -250,3 +257,62 @@ def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
         if decomp.poll() is None:
             decomp.kill()
             decomp.wait()
+
+
+def _filter_via_zstandard(src: Path, dst: Path, symbol: str) -> int:
+    """Python-zstandard implementation of filter_dbn_partition.
+
+    Used as a fallback when the `zstd` CLI is not on PATH (e.g. Windows
+    hosts where installing the CLI separately is awkward). `zstandard`
+    is a pip-installable Python binding for libzstd; the streaming
+    decoder/encoder used here keeps peak memory bounded the same way
+    the CLI version does.
+    """
+    import zstandard as zstd_mod  # local import: optional dependency
+
+    tmp = dst.with_suffix(dst.suffix + ".tmp")
+    kept = 0
+    try:
+        with open(src, "rb") as fin, open(tmp, "wb") as fout:
+            dctx = zstd_mod.ZstdDecompressor()
+            cctx = zstd_mod.ZstdCompressor()
+            with dctx.stream_reader(fin) as decomp, cctx.stream_writer(fout) as comp:
+                header, version, metadata = _read_header_block(decomp)
+                ids = instrument_id_for_symbol(metadata, symbol, version)
+                comp.write(header)
+                kept = _filter_record_stream(decomp, comp.write, ids, src.name)
+        if kept == 0:
+            tmp.unlink(missing_ok=True)
+            raise ValueError(
+                f"no records for symbol {symbol!r} in {src.name} "
+                f"(instrument ids {sorted(ids)})"
+            )
+        os.replace(tmp, dst)
+        return kept
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
+def filter_dbn_partition(src: Path, dst: Path, symbol: str) -> int:
+    """Write a single-symbol copy of DBN partition `src` to `dst`.
+
+    Streams `src` (a `.dbn.zst` file), keeps only the records for `symbol`,
+    and writes them — behind the original's verbatim header — to `dst`
+    (also `.dbn.zst`). Returns the number of records kept.
+
+    Prefers the `zstd` CLI when available (lowest overhead). Falls back to
+    the Python `zstandard` module when the CLI is not on PATH — useful on
+    Windows hosts. The output is byte-equivalent either way because both
+    paths share the same record-filter helper and write the original DBN
+    header verbatim.
+
+    Peak memory is bounded by one ~1 MB read buffer regardless of `src` size.
+    The write is atomic: `dst` only appears once fully written. Raises if the
+    symbol is absent from the file or if zero records are kept (either would
+    otherwise surface much later as a confusing empty backtest).
+    """
+    src, dst = Path(src), Path(dst)
+    if _have_zstd_cli():
+        return _filter_via_cli(src, dst, symbol)
+    return _filter_via_zstandard(src, dst, symbol)

@@ -1,0 +1,98 @@
+[
+  {
+    "generation":           1,
+    "loop_in_generation":   1,
+    "algo_id":              "afg-isl-g1l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -43.129032258064516,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         3.0567923750265296,
+    "trade_count":          115099,
+    "context_chars_in":     0,
+    "timestamp":            "2026-05-24T02:52:20Z"
+  },
+  {
+    "generation":           1,
+    "loop_in_generation":   2,
+    "algo_id":              "afg-isl-g1l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -21.146156511350858,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.200833621525238,
+    "trade_count":          111034,
+    "context_chars_in":     3187,
+    "timestamp":            "2026-05-24T03:47:20Z"
+  },
+  {
+    "generation":           2,
+    "loop_in_generation":   1,
+    "algo_id":              "afg-isl-g2l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      70.29071285543608,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         9.86136996267321,
+    "trade_count":          105609,
+    "context_chars_in":     5400,
+    "timestamp":            "2026-05-24T10:31:16Z"
+  },
+  {
+    "generation":           2,
+    "loop_in_generation":   2,
+    "algo_id":              "afg-isl-g2l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      173.95459976105136,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         14.44518788948764,
+    "trade_count":          100125,
+    "context_chars_in":     5400,
+    "timestamp":            "2026-05-24T13:00:26Z"
+  },
+  {
+    "generation":           3,
+    "loop_in_generation":   1,
+    "algo_id":              "afg-isl-g3l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      170.7686180804461,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         14.424513354188813,
+    "trade_count":          100173,
+    "context_chars_in":     5400,
+    "timestamp":            "2026-05-24T15:20:20Z"
+  },
+  {
+    "generation":           3,
+    "loop_in_generation":   2,
+    "algo_id":              "afg-isl-g3l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      233.0545599362804,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         17.804881168878616,
+    "trade_count":          96472,
+    "context_chars_in":     5400,
+    "timestamp":            "2026-05-24T17:43:50Z"
+  },
+  {
+    "generation":           4,
+    "loop_in_generation":   1,
+    "algo_id":              "afg-isl-g4l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      232.95898845081637,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         17.766452279406632,
+    "trade_count":          96463,
+    "context_chars_in":     5400,
+    "timestamp":            "2026-05-24T20:30:00Z"
+  },
+  {
+    "generation":           4,
+    "loop_in_generation":   2,
+    "algo_id":              "afg-isl-g4l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      231.00358422939467,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         17.683520556557777,
+    "trade_count":          96283,
+    "context_chars_in":     5400,
+    "timestamp":            "2026-05-24T23:00:21Z"
+  }
+]

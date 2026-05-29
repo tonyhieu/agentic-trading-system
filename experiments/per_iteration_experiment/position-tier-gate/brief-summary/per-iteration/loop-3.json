@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 3,
+  "algo_id": "ptg-b-l3",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 2769.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 13.933634237755003,
+    "max_drawdown_pct": -0.0188999055004725,
+    "win_rate": 0.36884649476761877,
+    "trade_count": 75587,
+    "vs_base_pnl_pct": -22.2908,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 4354,
+  "context_tokens_estimated": 1088,
+  "tokens_used": {
+    "input": 1,
+    "output": 75,
+    "cache_creation": 1100,
+    "cache_read": 87255,
+    "total": 88431
+  },
+  "duration_seconds": 389.1,
+  "summary_out": {
+    "changed": "Single mechanical change vs L2: raised adverse_threshold_ticks default from 1.0 to 3.0 ($0.25 -> $0.75 of adverse mid-move required to admit a reversal OPEN through the position cap). All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L2.",
+    "outcome": "pnl +6304.05% vs simple baseline ($2769.75 vs $43.25 over 11 apples-to-apples dates), sharpe 13.93, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -22.29% pnl, +2.42% trade_count (+1,785 trades). Still WORSE than base on 11/11 dates in absolute dollars. But materially better than L2: +32.38% pnl on -6.72% trades (-5,447 fewer reversals admitted -> +$677 aggregate). Lineage trajectory L1: -75.33% -> L2: -41.30% -> L3: -22.29% vs base is monotonic improvement of +19 to +34 pp per loop. Sharpe 13.93 over 11 days is small-N inflated; realized_pnl is the bottom line and on that L3 has closed two-thirds of the L2-to-base gap.",
+    "hypothesis": "L2's next text proposed the natural single-step probe: raise adverse_threshold_ticks 1 -> 3, on the reasoning that 1 tick is bid-ask oscillation while 3 ticks ($0.75) is three full-spread displacements that constitute an adverse regime rather than noise. I predicted L3 would land between L2 and base on trade_count, skewed toward base, and ideally above base in pnl. The trade_count direction and the pnl direction were both correct (trade_count moved 81,034 -> 75,587 toward base's 73,802; pnl moved 2,092 -> 2,770 toward base's 3,564). The 'above base in pnl' version did NOT happen; +1,785 trade-count delta vs base is admitting reversals that are still net money-losing on average. PARTIALLY VINDICATED; the right axis with still-too-permissive a threshold.",
+    "brief_summary": "ptg-b-l3 (position-tier-gate brief-summary loop 3) raised adverse_threshold_ticks 1->3 ($0.25->$0.75 adverse-mid floor for the reversal-override). Result: PASS vs simple (+6304.05% pnl) and a substantial recovery from L2 (-41.30% -> -22.29% vs base, +19 pp), but still WORSE than base on 11/11 dates. vs L2: +32.38% pnl on -6.72% trades (-5,447 fewer reversal admits -> +$677), confirming each L2-admitted reversal at 1 tick was on average money-losing. vs base: still +1,785 trade-count delta -> the override is still admitting net-loss reversals. Hypothesis PARTIALLY VINDICATED: the right axis (signal-strength via adverse mid), correctly tightened direction, but threshold still too permissive. Convex monotonic L1->L2->L3 trajectory (-75.33%, -41.30%, -22.29% vs base) with decreasing marginal returns is exactly what the L2 next text described as the in-flight diagnostic for the +trade_count branch.",
+    "next": "Raise adverse_threshold_ticks from 3 to 5 ($1.25 in price, five full-spread displacements). L2's next text was explicit: 'if L3 still has +trade_count vs base, the predicate is still admitting too many reversals and L4 should test 5 ticks.' L3 has +2.42% trade_count vs base, so that branch fires. 5 ticks demands a meaningfully larger adverse regime than 3 ticks -- empirically, a position 5 ticks underwater is likely on the wrong side of a real micro-trend rather than oscillating. In-flight diagnostic for L4: if pnl improves further with trade_count within ~+1% of base, predicate calibration is closing on optimum. If at 5 ticks trade_count drops *below* base (gate too strict, collapsing to ~no admitted reversals) or pnl regresses, L5 should bracket back to 4. If pnl is still below base at 5 ticks with +trade_count, the adverse-mid proxy is exhausted as a conditioning variable -- L5 should pivot to a different axis (signed aggressor imbalance, spread vs rolling median, hold-time floor on reduce-only). Avoid: any return to age-only filters; any threshold below 3; any change other than the threshold constant (to preserve the clean single-axis sweep)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-26T04:30:04Z"
+}

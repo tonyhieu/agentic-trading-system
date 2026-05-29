@@ -1,0 +1,90 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "afg-b-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -53.2474,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 2.0907791868319876,
+    "trade_count": 101241,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-24T08:50:00Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "afg-b-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -52.1392,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 2.058159480661388,
+    "trade_count": 102005,
+    "context_chars_in": 2313,
+    "timestamp": "2026-05-24T18:00:00Z"
+  },
+  {
+    "loop": 3,
+    "algo_id": "afg-b-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.580877323065416,
+    "trade_count": 87760,
+    "context_chars_in": 4682,
+    "timestamp": "2026-05-25T01:35:00Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "afg-b-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": 12.1649,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 5.360031757285958,
+    "trade_count": 86089,
+    "context_chars_in": 7532,
+    "timestamp": "2026-05-25T02:30:00Z"
+  },
+  {
+    "loop": 5,
+    "algo_id": "afg-b-l5",
+    "status": "completed",
+    "vs_base_pnl_pct": 12.1649,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 5.360031757285958,
+    "trade_count": 86089,
+    "context_chars_in": 9612,
+    "timestamp": "2026-05-25T03:30:00Z"
+  },
+  {
+    "loop": 6,
+    "algo_id": "afg-b-l6",
+    "status": "completed",
+    "vs_base_pnl_pct": -14.2268,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.827320152939977,
+    "trade_count": 89157,
+    "context_chars_in": 11783,
+    "timestamp": "2026-05-25T04:00:00Z"
+  },
+  {
+    "loop": 7,
+    "algo_id": "afg-b-l7",
+    "status": "completed",
+    "vs_base_pnl_pct": -2.0103,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.529771278300076,
+    "trade_count": 86973,
+    "context_chars_in": 16573,
+    "timestamp": "2026-05-25T04:32:21Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "afg-b-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": 25.3608,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 5.813982949415382,
+    "trade_count": 85314,
+    "context_chars_in": 20779,
+    "timestamp": "2026-05-25T05:30:00Z"
+  }
+]

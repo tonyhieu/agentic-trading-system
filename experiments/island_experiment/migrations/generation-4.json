@@ -1,0 +1,79 @@
+{
+  "experiment": "island_experiment",
+  "generation": 4,
+  "timestamp": "2026-05-25T00:30:00Z",
+  "contributing_islands": [
+    {
+      "island_id": "island-0",
+      "base_algo": "position-tier-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation": 1,
+          "algo_id": "ptg-isl-g4l1",
+          "vs_base_pnl_pct": 30.703812316715542,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 25.112356784082234
+        },
+        {
+          "loop_in_generation": 2,
+          "algo_id": "ptg-isl-g4l2",
+          "vs_base_pnl_pct": 30.419413235759425,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 25.078472653315004
+        }
+      ],
+      "island_summary": "Generation 4 delivered island-0's most important methodological finding of the entire experiment: the saturation that pinned the ptg lineage flat from g1l1 through g3l2 was an artifact of the MECHANISM CLASS (binary skip-axis composition), not of the base algo's expressive limit. g4l1 acted on the gen-3 migration's base_specific (1) directive to pivot from skip-axis stacking to quantity-modulation: it replaced g1l1's binary spread-p75 hard-cut with a PROBABILISTIC submit-decay across the [p50, p75] band (admission probability decays linearly from 1.0 at p50 to 0.05 at p75; deterministic SHA-256 draw per order; all other knobs frozen at g1l1 values). Result: pnl=5571.25 (+30.70% vs base; +3.28% vs the g1l1 saturation ceiling; +5.35% vs g3l2), sharpe 25.11 (g1l1 23.17), drawdown TIGHTER at -0.54% vs g1l1's -0.61% -- mechanistically, decay preferentially removes the high-cost edge of the admitted population. Trade count -1.08% vs g1l1, well inside the 10% falsification budget. g4l2 then tested whether the DECAY-CURVE SHAPE inside [p50, p75] matters: it swapped linear -> exponential decay holding band edges and min_prob floor (0.05) identical. Result: pnl 5559.25 (+30.42% vs base; -0.22% vs g4l1) -- a clean NULL inside the +/-2% band, with sharpe, drawdown, win-rate, and trade count all within rounding noise. Mechanistic verdict: the EV-vs-spread-rank curve inside [p50, p75] is approximately linear -- the SHAPE of the decay is not load-bearing; the MECHANISM CLASS is. Linear is therefore the canonical island-0 choice (no exp() call, no decay_sensitivity parameter, same EV). Next direction for island-0: BAND PLACEMENT shift ([p50, p75] -> [p60, p80]) -- the decay might salvage participation in the previously hard-cut [p75, p80] region that g3l2 proved EV-negative under binary cut; secondary, a min_prob floor sweep (0.0 vs 0.10)."
+    },
+    {
+      "island_id": "island-1",
+      "base_algo": "aggressor-flow-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation": 1,
+          "algo_id": "afg-isl-g4l1",
+          "vs_base_pnl_pct": 232.95898845081638,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 17.766452279406632
+        },
+        {
+          "loop_in_generation": 2,
+          "algo_id": "afg-isl-g4l2",
+          "vs_base_pnl_pct": 231.00358422939468,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 17.683520556557777
+        }
+      ],
+      "island_summary": "Generation 4 tested whether a structurally distinct fifth SKIP axis could clear the 4-axis ceiling that g3l2 established on afg (spread + chop + base-flow + size-asymmetry). g4l1 added a signed mid-price velocity gate on a 5s window (threshold 0.50 $/s, ~2 MES ticks/sec) -- structurally distinct from the four existing axes along multiple dimensions simultaneously (directional like flow but quote-derived, price-native like spread/chop but signed and rate-based). Result: pnl 4180.25 (+232.96% vs base; -0.04% vs g3l2 -- inside the +/-2% null band); the gate fired only 9 fewer trades on a ~96k base, consistent with the threshold sitting in the empty tail of the 4-gate-conditioned mid-drift distribution. g4l2 pivoted to a structurally distinct 5th candidate -- a recent-trade-side flow gate (1.5s window, 5 min trades, 0.70 dominance ratio) -- starting from g3l2 (NOT g4l1) so the velocity axis was cleanly dropped. Result: pnl 4155.50 (+231.00% vs base; -0.63% vs g3l2 -- NULL inside +/-2%); the gate fired meaningfully this time (189 trades removed) but the removed slice carried near-zero net EV, and drawdown widened 0.04 pp -- a weak regression, not a confirmation. Two structurally distinct fifth-axis candidates (signed quote velocity, recent-trade-side count) both failed to clear the +2% band: this is strong evidence that afg's g3l2 4-axis stack is at the empirical ceiling for binary AND-SKIP fifth-axis ADDITIONS on this base, regardless of mechanic class. Next direction for island-1: PIVOT from 'add axes' to 'tune existing axes' -- all four g3l2 thresholds were set at single-shot defaults at their respective introduction loops and have NEVER been swept. Recommended priority: size_asym_ratio sweep ({1.2, 1.8, 2.0}), then chop_neutral sweep ({1.0, 2.0}), then flow_threshold sweep ({1.0, 3.0})."
+    },
+    {
+      "island_id": "island-2",
+      "base_algo": "vol-regime-sizer",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation": 2,
+          "algo_id": "vrs-isl-g4l2",
+          "vs_base_pnl_pct": 525.8202122596084,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 19.09503126276296
+        },
+        {
+          "loop_in_generation": 1,
+          "algo_id": "vrs-isl-g4l1",
+          "vs_base_pnl_pct": 490.9784411356067,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 19.663796741110065
+        }
+      ],
+      "island_summary": "Generation 4 swept BOTH flanks of the size-asymmetry threshold on vrs's three-gate stack (chop + rolling-spread + size-asym) -- the highest-leverage diagnostic per the gen-3 migration's base_specific (3) prescription. g4l1 loosened size_asym_ratio 1.5 -> 2.0 (loose flank, top of the recommended [1.25, 2.0] band). Result: pnl 4454.50 (+490.98% vs base; -5.04% vs g3l2 4690.75 -- REGRESSION outside the +/-2% null band); trade_count +6.60% (4957 additional admitted), is_weighted_bps -5.89% (predicted bps narrowing materialized on surviving orders) -- but the additional [1.5, 2.0]-band trades carry net-negative EV, so the bps gain did not translate into PnL. Hypothesis 'loosening recovers headroom' FALSIFIED: 1.5 is on or near the size-asym EV peak, not over-restrictive. g4l2 then ran the symmetric tight flank: size_asym_ratio 1.5 -> 1.25. Result: pnl 4717.75 (+525.82% vs base; +0.58% vs g3l2 -- NULL inside +/-2%); trade_count -4.78%, win_rate +0.32 pp, sharpe essentially identical, max_dd marginally tighter. The two flanks together cleanly bound the EV peak: 1.5 IS the operating-point peak on this composition, the peak is broad (1.25 produces a null, 2.0 produces a regression), and further size_asym tuning is exhausted. The gen-3 migration's base_specific (3) prediction (vrs's lower-headroom 3-gate base would prefer a looser threshold) is empirically falsified in the OPPOSITE direction -- the same 1.5 threshold ports cleanly and is the local optimum across both afg's 4-gate and vrs's 3-gate compositions. Next direction for island-2: RETUNE A DIFFERENT existing axis's operating point (chop_neutral or rolling_spread_quantile, both single-shot at their introduction values) rather than add a new axis; spread_quantile is higher-information because gen-2 established it as the highest-leverage knob on this base."
+    }
+  ],
+  "cross_island_insights": {
+    "what_worked": "Probabilistic submit-decay (quantity-modulation) replacing a binary spread-skip cleanly broke the saturation that had pinned island-0's ptg lineage flat from g1l1 through g3l2 (ptg-isl-g4l1: +30.70% vs base, +3.28% vs the g1l1 ceiling). The mechanism is structurally distinct from skip-axis composition: instead of stacking more orthogonal hard-cut axes, it modulates ADMISSION PROBABILITY across the surviving region between two existing thresholds, preferentially removing high-cost orders at the band edge while preserving cheap orders. Confirmation in g4l2 (linear vs exponential decay) showed the curve shape is NOT load-bearing -- the MECHANISM CLASS does the work. Single-flank bounding of an operating-point peak via paired tight/loose sweeps proved reliable for the second generation in a row: vrs-isl-g4 cleanly bounded size_asym_ratio at 1.5 with g4l1 at 2.0 (regression) and g4l2 at 1.25 (null), confirming the gen-3 migration's prediction that paired-flank sweeps map local EV curvature with maximum information per loop. NULL results in the pre-declared +/-2% band continue to function as decisive structural verdicts when paired with mechanism-aware sweep design.",
+    "what_failed": "Adding a fifth orthogonal SKIP axis on top of a saturated 4-gate stack failed on TWO structurally distinct mechanic classes this generation on the same island (afg-isl-g4l1 signed quote velocity null; afg-isl-g4l2 recent-trade-side flow null with weak drawdown regression). Combined with afg-isl-g3l1's reordering null, this is now the third independent piece of evidence that further axis ADDITION on afg's 4-gate composition does not extract residual EV regardless of mechanic class. Operating-point retunes NEAR the local peak produced predictable null results on two islands (ptg-isl-g4l2 linear vs exponential decay shape: null; vrs-isl-g4l2 size_asym at 1.25 vs peak at 1.5: null) -- peaks are broad, and bisecting a confirmed-peak axis adds no new information. The gen-3 migration's base_specific (3) reading on vrs (predicting loosening would recover headroom) was empirically inverted -- vrs-isl-g4l1 regressed at the loose flank, exactly the opposite of the forecast.",
+    "generalizable": "(1) MECHANISM CLASS, not axis count, is the binding constraint at saturation. When a base lineage flatlines across multiple generations of axis additions and threshold retunes, the next productive move is to switch the COMPOSITION CLASS itself -- ptg's binary->probabilistic mechanism switch (ptg-isl-g4l1: +3.28% over a 3-generation plateau) is the canonical example. This generalizes the gen-3 finding ('axis mechanism, not axis count') one level higher: above the axis-mechanism layer sits a COMPOSITION-MECHANISM layer (binary skip vs probabilistic admission vs quantity sizing), and saturated lineages can break through by switching at the composition layer too. (2) Quantity-modulation / probabilistic admission is a new mechanism class confirmed live as a real alternative to skip-axis stacking on at least one base (ptg). It is also untested as a CROSS-ISLAND port: future generations should probe whether it transfers to afg or vrs the same way size-asymmetry transferred verbatim in gen-3. (3) Paired flank sweeps remain the highest-information diagnostic for bounding operating-point peaks; both vrs (size_asym at 1.5: bounded by 1.25 null and 2.0 regression) and the prior gen-3 ptg-isl-g3l2 q-quantile bounding confirm that two single-knob loops cleanly map a peak's local curvature. (4) Curve-shape retunes (linear vs exponential) inside a small band reliably produce nulls when the band is narrow and the underlying EV-vs-rank curve is approximately linear -- prefer mechanism-class switches over curve-shape retunes for break-the-ceiling loops.",
+    "base_specific": "(1) ptg is now UNSATURATED at the composition-mechanism layer: the probabilistic quantity-modulation mechanism (linear submit-decay across [p50, p75]) broke a 3-generation plateau with a single loop. The next island-0 direction is BAND PLACEMENT (shift the decay band to [p60, p80] to salvage participation in the previously hard-cut [p75, p80] region g3l2 showed was EV-negative under binary cut); secondary, min_prob floor sweep (0.0 hard edge vs 0.10 gentler floor). The curve-shape question is closed for this band -- linear is canonical. (2) afg's 4-gate stack is EMPIRICALLY CLOSED for further SKIP-axis addition: two structurally distinct 5th-axis mechanic classes (signed quote velocity, recent-trade-side count) both failed this generation. The next island-1 direction is OPERATING-POINT RETUNING OF THE EXISTING 4 AXES -- all four g3l2 thresholds are single-shot defaults that have never been swept. Recommended priority: size_asym_ratio sweep ({1.2, 1.8, 2.0}) first, then chop_neutral, then flow_threshold. Alternatively, the cross-island composition-mechanism finding (ptg's binary->probabilistic switch) is a candidate untested transfer: probabilistic admission across the [chop_neutral - eps, chop_neutral + eps] band or the size_asym ratio band may break the 4-gate ceiling the way it broke ptg's 2-axis ceiling. (3) vrs's 3-axis stack is CONFIRMED PEAKED at size_asym=1.5: both flanks of [1.25, 2.0] are now bounded as suboptimal, so further size_asym tuning is exhausted. The next island-2 direction is to retune a DIFFERENT existing axis -- spread_quantile (currently 0.75, gen-2's highest-leverage knob on this base) or chop_neutral (currently 1.5, base-agnostic per gen-3 but never re-probed against the locked 3-gate composition). (4) The same threshold for top-of-book size-asymmetry (ratio=1.5, latest-quote-only, AND-skip) is now the local optimum on TWO different bases at TWO different composition depths (afg 4-gate, vrs 3-gate) -- this is strong evidence the threshold is genuinely base-agnostic for this axis, and the gen-3 migration's 'working axes port at the same threshold' finding is reinforced. (5) chop_neutral=1.5 remains base-agnostic across all three islands; gen-4 produced no evidence to revisit it."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 2,
+  "algo_id": "afg-b-l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 464.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 2.058159480661388,
+    "max_drawdown_pct": -0.044024768869963433,
+    "win_rate": 0.35185530121072495,
+    "trade_count": 102005,
+    "vs_base_pnl_pct": -52.1392,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 2313,
+  "context_tokens_estimated": 578,
+  "tokens_used": {
+    "input": 1,
+    "output": 4,
+    "cache_creation": 683,
+    "cache_read": 75652,
+    "total": 76340
+  },
+  "duration_seconds": 376.1,
+  "summary_out": {
+    "changed": "Replaced the pure-ratio gate from afg-b-l1 with a CONJUNCTION: skip iff (|net_flow| >= 2.0 contracts) AND (|net_flow| / max(2.0, abs_vol_window) >= 0.35), 10s window. Intent: strict intersection of base + L1 admitted-order sets. Anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly.",
+    "outcome": "pnl +973.41% vs simple baseline ($464.25 vs $43.25 over 11 apples-to-apples dates), sharpe 2.06, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -52.14% pnl, +16.2% trade_count (+14,245). Hypothesis CONTRADICTED.",
+    "hypothesis": "I expected the conjunction to be a strict intersection of the base condition (|net_flow| >= 2.0) and the L1 condition (|r| >= 0.35), so admitted-order set would be a subset of both. The data shows trade_count rose to 102,005 (above BASE's 87,760 and nearly matching L1's 101,241). The asymmetry: ANDing a ratio test on top of an absolute test does NOT tighten -- whenever the ratio condition is the binding one (busy windows where 2-contract imbalance against 50+ contracts gives r ~= 0.04 << 0.35), the gate ADMITS what base would skip. The intersection-of-skip-sets reasoning failed because each operand defines its OWN skip set in conjunction with the other being satisfied; the joint skip set is the INTERSECTION of skip sets, hence the ADMITTED set is the UNION of admits, not the intersection. L1's $47/1k destruction predicts ~-$668 vs base from the +14.2k extra admits; observed -$505 is consistent.",
+    "brief_summary": "afg-b-l2 (aggressor-flow-gate brief-summary loop 2) replaced L1's pure-ratio gate with a CONJUNCTION of base + L1 conditions: skip iff (|net_flow| >= 2.0) AND (|r| >= 0.35). Result: PASS vs simple (+973.41% pnl) but materially WORSE than base on the same 11 dates (-52.14% pnl, +16.2% trades). Hypothesis CONTRADICTED: conjoining gates ADMITS the union of each operand's admits, not the intersection. Trade_count rose to 102,005 (above BASE 87,760, near L1 101,241), and the extra admits dragged pnl by ~$47/1k consistent with L1's measured destruction rate. Brief-summary lesson: to get a strictly tighter admitted set than base, the new condition must DISJOIN with base (skip if base OR ratio adverse), not CONJOIN.",
+    "next": "Try a DISJUNCTIVE gate: skip iff (|net_flow| >= 2.0) OR (|r| >= 0.35 AND abs_vol >= 5.0); the OR-of-skips yields strict superset of base's skips, so admitted-trades <= base. The abs_vol floor on the ratio leg avoids triggering the ratio test on near-empty warm-up windows where 2-contract imbalance trivially gives r=1.0. If this also fails to beat base on trade_count, fall back to tightening the BASE's absolute threshold (e.g., 2 -> 3 contracts) -- L1+L2 both indicate base under-skips on this oracle, so a monotone tightening should be a cheap test. Avoid: any further conjunctive variants of base + ratio (the asymmetric-gate trap is now well-characterized); pure-ratio gates (L1 already established they relax busy-window selectivity)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-24T18:00:00Z"
+}

@@ -89,7 +89,7 @@ def _find_researcher_transcript(main_transcript: Path) -> Path | None:
             meta = json.loads(meta_path.read_text())
         except (OSError, json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher", "pc-researcher"):
+        if not isinstance(meta, dict) or meta.get("agentType") not in ("researcher", "per-iteration-researcher", "island-researcher", "pc-researcher", "sip-researcher"):
             continue
         try:
             mtime = jsonl.stat().st_mtime
@@ -286,13 +286,16 @@ def main() -> None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Path 2: experiment loop file (per_iteration_experiment or pc-researcher agent).
+    # Path 2: experiment loop file (any experiment agent).
     # Triggered by a git-ignored pointer file the agent writes before committing.
+    # Each experiment writes its pointer to its own subdirectory; check all.
     loop_file: Path | None = None
     loop_file_rel: str | None = None
     _pointer_candidates = [
         Path(cwd) / "experiments" / "per_iteration_experiment" / ".current_loop.json",
+        Path(cwd) / "experiments" / "island_experiment" / ".current_loop.json",
         Path(cwd) / "experiments" / "proposer_criticizer_experiment" / ".current_loop.json",
+        Path(cwd) / "experiments" / "self_improving_prompt_experiment" / ".current_loop.json",
     ]
     pointer_path = next((p for p in _pointer_candidates if p.exists()), None)
     if pointer_path is not None:
@@ -303,9 +306,13 @@ def main() -> None:
                 candidate = Path(cwd) / rel
                 if candidate.exists():
                     loop_data = json.loads(candidate.read_text())
-                    if loop_data.get("tokens_used") is None:
+                    if loop_data.get("tokens_used") is None or (
+                        "critic_tokens_used" in loop_data
+                        and loop_data.get("critic_tokens_used") is None
+                    ):
                         loop_file = candidate
                         loop_file_rel = rel
+                        break  # first match wins; only one agent runs per SubagentStop
         except (OSError, json.JSONDecodeError, KeyError, TypeError):
             pass
 
@@ -347,10 +354,16 @@ def main() -> None:
     if loop_file is not None and loop_file_rel is not None:
         try:
             loop_data = json.loads(loop_file.read_text())
+            # For two-phase sip loops the same file is patched twice; route to
+            # critic_* fields when tokens_used is already populated.
+            if "critic_tokens_used" in loop_data and loop_data.get("tokens_used") is not None:
+                tokens_field, duration_field = "critic_tokens_used", "critic_duration_seconds"
+            else:
+                tokens_field, duration_field = "tokens_used", "duration_seconds"
             if token_totals is not None:
-                loop_data["tokens_used"] = token_totals
+                loop_data[tokens_field] = token_totals
             if duration is not None:
-                loop_data["duration_seconds"] = round(duration, 1)
+                loop_data[duration_field] = round(duration, 1)
             loop_file.write_text(json.dumps(loop_data, indent=2) + "\n")
             extra_files.append(loop_file_rel)
         except (OSError, json.JSONDecodeError):
@@ -367,11 +380,11 @@ def main() -> None:
         db_path.write_text(json.dumps(db, indent=2) + "\n")
         algo_id = str(last.get("id") or "unknown")
     elif loop_file_rel is not None:
-        # Prefer algo_id from the loop file itself; fall back to path-derived label.
+        # Read algo_id from the loop file itself; fall back to the path component.
         try:
             _ldata = json.loads((Path(cwd) / loop_file_rel).read_text())
             algo_id = str(_ldata.get("algo_id") or Path(loop_file_rel).parent.parent.name)
-        except (OSError, json.JSONDecodeError, KeyError):
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
             algo_id = Path(loop_file_rel).parent.parent.name
 
     # Advance the cursor only after a real backfill consumed this slice, and

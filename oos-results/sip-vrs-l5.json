@@ -1,0 +1,53 @@
+{
+  "algo_name": "sip-vrs-l5",
+  "evaluation_type": "oos_local",
+  "backtest_date": "2026-05-28T22:11:44Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance_oos": {
+    "realized_pnl": 3515.25,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 21.335680720010668,
+    "sharpe_n_days": 10,
+    "max_drawdown_pct": -0.005224566360992037,
+    "win_rate": 0.3642323999086039,
+    "trade_count": 157556,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.35152500000000003,
+    "is_weighted_bps": 0.008687458077553258,
+    "is_total_price": 1781.75,
+    "vs_baseline_pnl_pct": 129.08113391984358,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -45.25963227153971
+  },
+  "period": {
+    "test_dates": [
+      "2026-03-26",
+      "2026-03-27",
+      "2026-03-29",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-01",
+      "2026-04-02",
+      "2026-04-03",
+      "2026-04-05",
+      "2026-04-06"
+    ]
+  },
+  "run_dirs": [
+    "execution_algos/sip-vrs-l5/results/20260326",
+    "execution_algos/sip-vrs-l5/results/20260327",
+    "execution_algos/sip-vrs-l5/results/20260329",
+    "execution_algos/sip-vrs-l5/results/20260330",
+    "execution_algos/sip-vrs-l5/results/20260331",
+    "execution_algos/sip-vrs-l5/results/20260401",
+    "execution_algos/sip-vrs-l5/results/20260402",
+    "execution_algos/sip-vrs-l5/results/20260403",
+    "execution_algos/sip-vrs-l5/results/20260405",
+    "execution_algos/sip-vrs-l5/results/20260406"
+  ]
+}

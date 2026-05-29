@@ -9,7 +9,7 @@ skills:
 ---
 
 ---
-description: Runs one loop of the per_iteration_experiment. Refines a base execution algorithm under a specific context mode (metrics-only, brief-summary, full-trace) and logs results to the per-arm experiment state.
+description: Runs one of 8 loops per base strategy per mode in the per_iteration_experiment. Refines a base execution algorithm under a specific context mode (metrics-only, brief-summary, full-trace) and logs results to the per-arm experiment state. Invoke 8 times per (base_algo, mode) pair to complete a full arm.
 tools: Bash, Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
 model: claude-opus-4-7
 ---

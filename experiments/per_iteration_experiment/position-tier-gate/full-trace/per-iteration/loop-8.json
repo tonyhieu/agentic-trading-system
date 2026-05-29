@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 8,
+  "algo_id": "ptg-f-l8",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 4262.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "max_drawdown_pct": -0.017274913625431872,
+    "win_rate": 0.37204339123992347,
+    "trade_count": 90433,
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 29067,
+  "context_tokens_estimated": 7266,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 8 (final) of the position-tier-gate / full-trace arm. Prior context: loops 1-7 full_reasoning + NOTES.md.\n\nAll 7 prior loops show: the position-tier-gate at cap=1 is the near-optimal operating point for this mechanism. No modification improves it: cap=2 = simple; directional cap = simple; streak gate = no-op; cluster filter = no-op; flow gates (5s, 30s) = hurt (-17% to -23%); min-reentry (2s) = hurt (-9%). Loop 8 tests min_reentry=0.5s (very conservative, near-no-op since oracle fires at 1s intervals). Result: identical to base (pnl=$4,262.50, trades=90,433). As predicted: 0.5s reentry block doesn't catch any real oracle signal re-entries (oracle signals at 1s cadence, so elapsed time between CLOSE and next OPEN is always >= 1s > 0.5s).\n\nArm summary: The position-tier-gate base at cap=1 is the arm's optimal result (pnl=$4,262.50, sharpe=17.619). The full-trace context in this arm provided incrementally more insight per loop than metrics-only (which also failed to beat the base across all 8 loops). The key reason no improvement was found: the base mechanism (position serialization via cache lag on simultaneous CLOSE+OPEN) is an exact filter that specifically blocks the worst entries \u2014 the concurrent position expansions. Any modification either (a) widens the gap too much (cap>=2 = simple), (b) adds redundant filtering (streak, cluster, short reentry = no-op), or (c) removes good entries too (flow gates = hurt). The mechanism is already at its effective optimum given the oracle's simultaneous CLOSE+OPEN signal structure.",
+  "timestamp": "2026-05-23T21:16:44Z"
+}

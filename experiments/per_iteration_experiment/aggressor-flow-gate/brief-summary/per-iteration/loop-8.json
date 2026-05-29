@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 8,
+  "algo_id": "afg-b-l8",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1216.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.813982949415382,
+    "max_drawdown_pct": -0.03372480608236503,
+    "win_rate": 0.355779825116628,
+    "trade_count": 85314,
+    "vs_base_pnl_pct": 25.3608,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 20779,
+  "context_tokens_estimated": 5194,
+  "tokens_used": {
+    "input": 1,
+    "output": 1724,
+    "cache_creation": 303,
+    "cache_read": 85245,
+    "total": 87273
+  },
+  "duration_seconds": 397.4,
+  "summary_out": {
+    "changed": "Single ORTHOGONAL parameter change vs L4 (the prior in-arm leader at $1088), opposite direction from L7's window cut: LENGTHENED window_seconds from 10.0 -> 20.0 with flow_threshold PINNED at L4's integer optimum 1.0. Ratio leg absent (same as L4/L5/L6/L7), anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. All other code byte-identical to L4 (class renamed AfgBL4* -> AfgBL8*, default window in factory 10.0 -> 20.0). NOTE: vs L7 (the prior loop), the single change is window_seconds 5.0 -> 20.0 -- a 4x widening that brackets the OTHER side of the window-axis optimum from L7's probe.",
+    "outcome": "pnl +2711.56% vs simple baseline ($1216.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 5.814, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by ~542x. AND vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades / sharpe 4.58): +25.36% pnl ($1216 vs $970; +$246), -2,446 trades (-2.79%), sharpe 5.81 vs 4.58 (+1.23 absolute, +27%). AND vs prior in-arm leader L4=L5 ($1088.00 / 86,089 / sharpe 5.36): +11.76% pnl ($1216 vs $1088; +$128), -775 trades (-0.90%), sharpe 5.81 vs 5.36 (+0.45 absolute). Refinement targets vs L4: pnl PASS by ~5.9x, sharpe CLOSE (delivered +0.454 vs +0.5 target, off by 0.046), slippage TIED, win_rate +0.18pp MISS, max_dd -0.14pp MISS. L8 is the NEW IN-ARM LEADER on pnl AND sharpe AND trade-count (most selective).",
+    "hypothesis": "Pre-loop I bracketed three outcomes at flow=1.0 with window=20s: (a) 10-20s flow GENUINELY MORE informative than 5-10s flow -> additional skips of anti-informative orders -> pnl > L4's $1088; (b) 10-20s flow mostly NOISE (stale, resolved into price) -> skips of NOW-INFORMATIVE orders -> pnl < L4 (possibly toward L6's $832 territory); (c) 10-20s flow approximately as informative as 5-10s flow -> pnl approximately matches L4. The strict-superset analysis predicted L8 would skip AT LEAST as many orders as L4 (the 20s deque is a strict superset of the 10s deque at every decision time). I leaned WEAKLY toward (a) -- consistent with L7's finding that 5-10s flow is genuinely informative -- but flagged that magnitude was likely 'small in either direction.' OUTCOME: option (a) CONFIRMED DECISIVELY. -775 admits vs L4 (within the predicted few-hundred-to-few-thousand range) yielded +$128 pnl = ~$165 per 1k extra skips, very close in magnitude to L7's ~$155 per 1k extra admits (both observing the same window-information gradient from opposite sides). Sharpe +0.45 suggests the 20s window catches a class of trades whose adverse imbalance was MORE persistent (longer-lived adverse-flow events) than the 10s window alone could resolve, leading not just to higher pnl but a smoother equity curve. Directional lean was right; magnitude was stronger than my 'ties or small differences likely' weighting expected.",
+    "brief_summary": "afg-b-l8 (aggressor-flow-gate brief-summary loop 8 -- FINAL loop in the 8-loop experiment) LENGTHENED window_seconds from L4's 10.0 -> 20.0 with flow_threshold pinned at L4's integer optimum 1.0. Result: PASS vs simple (+2711.56% pnl) AND genuinely beats base_algo (+25.36% pnl: $1216 vs $970; -2,446 trades; sharpe 5.81 vs 4.58) AND becomes the NEW IN-ARM LEADER on pnl (+11.76% vs L4's $1088), sharpe (+0.45 vs L4's 5.36), AND trade selectivity (-775 vs L4). Refinement targets vs L4: pnl PASS by ~5.9x, sharpe CLOSE (off by 0.046). KEY FINDING: the window axis at flow=1.0 is monotone INCREASING up to 20s: 5s:$950.50 (L7), 10s:$1088 (L4), 20s:$1216 (L8). Gradient at 20s going UP is still POSITIVE (~$12.80 per second of added window). The window axis is NOT bracketed -- the optimum on the long side is somewhere in [20s, ?]. This is qualitatively DIFFERENT from the threshold axis (strictly convex around L4=1.0). 8-loop trajectory: L1 $453.50 (-53% vs base) -> L2 $464.25 (-52%) -> L3 $970 (+0%) -> L4 $1088 (+12.16%) -> L5 $1088 (=L4, integer resolution) -> L6 $832 (-14.23%, closes threshold axis) -> L7 $950.50 (-2.01%, opens window axis from short side) -> L8 $1216 (+25.36%, NEW LEADER, opens window axis from long side). Pnl leader: L8 ($1216). Sharpe leader: L8 (5.814). The brief-summary mode successfully completed the threshold-axis sweep (L4/L6) and bracketed two of three window-axis points (L7/L8); a hypothetical L9 would naturally probe window=25-30s to find the upper-side bracket near the oracle horizon.",
+    "next": "(EXPERIMENT TERMINATES AT L8 -- arm protocol = 8 loops max.) Were the arm to continue: probe window_seconds 20.0 -> 30.0 at fixed flow_threshold=1.0 to bracket the upper end of the window-axis curve, since the gradient at 20s going up is still POSITIVE (~$12.80/s) and 30s is the oracle's horizon_seconds ceiling (any window > 30s captures flow whose information content has had longer than the forecast horizon to resolve into price). Alternative L9 single-axis probes (in order of expected information yield): (1) window=25s at flow=1.0 (intermediate, less informative than 30s for boundary bracketing); (2) per-side asymmetric thresholds (BUY threshold vs SELL threshold) at the L8 setting -- introduces a NEW axis with no brief-summary motivation across L1..L8, but could distinguish persistent-direction flow regimes; (3) anti-cascade flat-flag semantics tweak -- highest-risk single change, save for last. Alternatives explicitly considered and rejected: reintroducing the ratio leg (L1/L2/L3 exhausted that axis structurally); intermediate threshold values like 1.5 (integer resolution lesson from L5: any value in (0,1) collapses to threshold=1, any non-integer >1 collapses to neighboring integers); a window > 30s probe (likely degrades because flow > horizon-age is post-hoc-resolved); time-of-day or session regime gating (introduces 2+ new parameters at once without single-axis bracketing); changing reduce-only semantics (would break intraday_flat invariant). The brief-summary-disciplined L9 (if it existed) would be window=30s at flow=1.0 to close the window axis."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T05:30:00Z"
+}

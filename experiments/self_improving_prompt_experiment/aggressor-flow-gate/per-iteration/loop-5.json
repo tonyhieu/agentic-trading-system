@@ -1,0 +1,40 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 5,
+  "algo_id": "sip-afg-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1002.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.9467434982969785,
+    "max_drawdown_pct": -0.029324882700469197,
+    "win_rate": 0.3538283062645012,
+    "trade_count": 78442,
+    "vs_base_pnl_pct": 3.2989690721649483,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l0.md",
+  "prompt_chars_in": 1488,
+  "trace_path": "reasoning-traces/loop-5-trace.md",
+  "critic_summary": "The single failure mode targeted: the seed prompt-l0 method finally produced a positive-delta winner via structural insight (cascade policy axis instead of decision-function axis), but committed BOTH new numeric parameters (relaxation_factor=1.5, max_consecutive_skips=2) from intuition with no measurement against train data \u2014 the trace explicitly states +3.30% does not validate either parameter and that the researcher cannot tell from aggregate output whether the relaxation is 'rarely binding', 'always binding', or 'selectively binding'. Same flaw the loop-1 critic targeted (uncalibrated quantitative parameters) but now manifested in a kept algorithm, where the parent is real and the calibration question is concrete rather than hypothetical. The proposed method (single-axis sibling calibration) inverts the prior architectures: instead of inventing a new mechanism, the researcher reads the most-recently-kept algorithm's structural axis, enumerates its uncalibrated parameters, picks the ONE that most directly governs mechanism firing rate, defines a calibration measurement (e.g. distribution of |net_flow| at arrival moments immediately after base skips for relaxation_factor; empirical skip-run-length distribution for max_consecutive_skips), runs EDA on 2 train dates to compute the current parameter's empirical firing rate vs a pre-committed target rate, and ships the calibrated value. Two terminal escalation branches: (a) zero uncalibrated parameters \u2192 null run, critique picks a different method next; (b) calibrated value within 10% of current \u2192 null run, parameter already optimal. If this method works in the next loop, I'd expect the reasoning trace to (a) cite a specific firing-rate number for the current parameter value, (b) cite a different firing-rate number that the calibrated value would produce, with the same measurement protocol applied to both, and (c) make a trade_count prediction derived as (target_firing_rate \u2212 current_firing_rate) \u00d7 baseline_arrival_count rather than guessed from intuition.",
+  "prompt_out": "prompts/prompt-l5.md",
+  "prompt_action": "kept",
+  "tokens_used": {
+    "input": 1,
+    "output": 1,
+    "cache_creation": 133,
+    "cache_read": 180898,
+    "total": 181033
+  },
+  "duration_seconds": 3284.3,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 683,
+    "cache_creation": 111,
+    "cache_read": 71770,
+    "total": 72565
+  },
+  "critic_duration_seconds": 256.2,
+  "timestamp": "2026-05-25T03:38:16Z"
+}

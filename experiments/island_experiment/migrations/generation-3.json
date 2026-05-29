@@ -1,0 +1,79 @@
+{
+  "experiment": "island_experiment",
+  "generation": 3,
+  "timestamp": "2026-05-24T19:00:00Z",
+  "contributing_islands": [
+    {
+      "island_id": "island-0",
+      "base_algo": "position-tier-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation": 2,
+          "algo_id": "ptg-isl-g3l2",
+          "vs_base_pnl_pct": 24.07038123167156,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 22.240380672350174
+        },
+        {
+          "loop_in_generation": 1,
+          "algo_id": "ptg-isl-g3l1",
+          "vs_base_pnl_pct": -25.014668826979957,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 15.95832706999559
+        }
+      ],
+      "island_summary": "Generation 3 closed the third-axis question on ptg with two clean diagnostic loops. g3l1 ported the gen-2 cross-island candidate aggressor-flow as an OR-skip axis on top of the g1l1 (position-cap + spread-p75) composition with a base-specific retune (flow_threshold 2.0->3.0); it regressed -25.01% vs base and -40.75% vs g1l1, with a -20.9% trade-count drop accompanying the -40.75% pnl drop -- mechanistic reading: wide-spread / liquidity-vacuum trades (where flow signal is strongest) are precisely what spread-p75 has already filtered, so flow operating on the residual degenerates into EV-neutral noise. Combined with gen-2's chop regression on the same composition, this is the SECOND independent third-axis approach falsified on ptg's base. g3l2 then ran a clean single-knob retune (spread_quantile 0.75->0.80) on the surviving two-axis composition and landed at +24.07% vs base / -1.96% vs g1l1 -- the [p75, p80] band carries enough adverse-selection premium that re-admitting it loses slightly more than it earns, confirming q=0.75 is on (not before) the EV peak and that the peak is a plateau rather than a sharp summit. Net verdict: g1l1 remains the durable island-0 tip; the two-axis composition is empirically saturated on this base. g4 should test a non-quantile knob on the same two-axis stack (spread_window_seconds sweep) before resorting to quantity-modulation as a structurally new axis."
+    },
+    {
+      "island_id": "island-1",
+      "base_algo": "aggressor-flow-gate",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation": 2,
+          "algo_id": "afg-isl-g3l2",
+          "vs_base_pnl_pct": 233.0545599362804,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 17.804881168878616
+        },
+        {
+          "loop_in_generation": 1,
+          "algo_id": "afg-isl-g3l1",
+          "vs_base_pnl_pct": 170.7686180804461,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 14.424513354188813
+        }
+      ],
+      "island_summary": "Generation 3 first closed the chop_neutral retune question on afg, then opened the four-axis frontier. g3l1 swept chop_neutral 1.5->1.7 on the g2l2 three-gate stack (spread + chop + flow): pnl -1.16% vs g2l2 (essentially flat), trade_count +0.048%, the 48 incremental admitted trades carrying -0.83 per-trade pnl vs the prior cohort's +34.35/trade -- mechanistically, between 1.5 and 1.7 the spread-pre-filtered chop_ratio distribution has near-zero mass, so neither threshold dominates. Combined with island-0 g2l2 (porting 1.5 to ptg admitted only ~1.7k trades) and island-2 g1l1 (1.5 is its lineage optimum), chop_neutral=1.5 appears base-robust across all three bases -- a falsification of the gen-2 migration's base_specific (1) chop-retune-per-base prescription. g3l2 then added a top-of-book size-asymmetry SKIP gate (ratio threshold 1.5, latest-quote-only, ported verbatim from island-0 g1l2's contract) as a fourth orthogonal axis on top of the three-gate stack: pnl +21.59% vs g2l2, sharpe +3.36 absolute, max_dd tightened 0.36 pp, trade_count -3.65% (well inside the 10% over-restrictive falsification line). The four-axis composition cleanly falsifies the gen-2 three-axis-ceiling hypothesis on this base; the gen-1 'queue imbalance is null' verdict is shown to be conditional on composition+threshold rather than base-agnostic. g4 should add a fifth structurally-distant axis (recent-trade-side flow or price-velocity) before retuning the now-4-dimensional operating-point surface."
+    },
+    {
+      "island_id": "island-2",
+      "base_algo": "vol-regime-sizer",
+      "loops_completed": 2,
+      "top_loops": [
+        {
+          "loop_in_generation": 2,
+          "algo_id": "vrs-isl-g3l2",
+          "vs_base_pnl_pct": 522.3050546566888,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 19.10941399224334
+        },
+        {
+          "loop_in_generation": 1,
+          "algo_id": "vrs-isl-g3l1",
+          "vs_base_pnl_pct": 170.6468305675074,
+          "vs_base_slippage_pct": 0.0,
+          "sharpe_ratio": 15.897192803684781
+        }
+      ],
+      "island_summary": "Generation 3 produced island-2's largest single-loop lineage gain and closed the flow-axis question on vrs. g3l1 retuned the aggressor-flow gate on top of g2l2's chop+spread+flow stack (flow_threshold 2.0->6.0, flow_window 10s->4s -- midpoints of the gen-2 migration's suggested bands): pnl -16.32% vs g2l1 lineage best, trade_count still -26.5% vs g2l1, is_weighted_bps WORSE than g2l1 instead of improving. A 3x threshold + 2.5x window retune closed only ~14 of the 30 pp g2l2 lost versus g2l1 -- mechanistically, flow is substantially redundant with chop+spread on vrs because wide-spread bursts and high-aggressor-flow events overlap heavily on MES, so adding flow on top of an already-aggressive chop+spread stack removes informative trades faster than adverse ones. This confirms the gen-2 migration's base_specific (3) forecast that vrs's flow redundancy is mechanical, not parametric. g3l2 then pivoted to a structurally distinct third axis: top-of-book size-asymmetry (ratio 1.5, ported verbatim from island-1 g3l2) layered on g2l1's chop+spread two-gate (NOT on g3l1's falsified flow stack): pnl +92.42% vs g2l1 lineage best (+129.94% vs g3l1, +522.30% vs base) -- the largest gen-3 lineage gain. Sharpe +2.16 absolute, max_dd tightened 1.08 pp, win_rate +3.34 pp; trade_count -28.25% (outside the pre-declared <=10% drop band but PnL/sharpe/drawdown confirmed by wide margins). Candid regression: is_weighted_bps +88.1% vs g2l1 -- the gain is in trade SELECTION, not trade EXECUTION. The 1.5 threshold ported cleanly across bases without per-base retune. g4 should sweep size_asym_ratio in [1.25, 2.0] specifically against the chop+spread base (which has more headroom than afg's three-gate composition) before adding a fourth axis."
+    }
+  ],
+  "cross_island_insights": {
+    "what_worked": "Top-of-book size-asymmetry as an additional SKIP axis transferred cleanly across two structurally different bases at the SAME threshold (ratio=1.5, latest-quote-only, side-aware): +21.59% vs prior on afg's three-gate stack (g3l2) and +92.42% vs lineage best on vrs's two-gate stack (g3l2 -- the largest single-loop gain of generation 3). The mechanism is book-DEPTH state, structurally orthogonal to spread (quote-DISTANCE), chop (price-PATH), and flow (signed-trade pressure) -- which is why it adds residual EV-positive signal where flow does not. Single-knob spread-quantile retunes on a saturated composition (ptg g3l2: 0.75->0.80) produce small, monotonic, predictable moves that bound the operating-point peak even when they fail to beat lineage best -- the diagnostic value is high relative to the small downside, consistent with the gen-2 migration's operating-point-retune prescription.",
+    "what_failed": "Aggressor-flow as a third or fourth SKIP axis stacked on a chop+spread or position-cap+spread base failed cleanly on TWO independent bases this generation: ptg g3l1 (port+threshold-retune from afg, -25.01% vs base / -40.75% vs lineage best) and vrs g3l1 (in-base retune at 3x threshold + 2.5x window, recovering only ~14 of 30 lost pp vs g2l1). The shared mechanism is correlation between the flow signal and the spread/chop signals: wide-spread bursts and high-aggressor-flow events overlap heavily on MES, so flow operating on a spread-pre-filtered residual degenerates into noise and cuts informative trades roughly in proportion to adverse ones. Aggressive single-axis retuning cannot rescue a mechanically-redundant axis. The gen-2 migration's chop-retune-per-base prescription (base_specific 1) also failed: chop_neutral=1.5 is base-robust across all three islands (afg g3l1 1.5->1.7 flat, ptg g2l2 1.5 admitted ~1.7k trades, vrs g1l1 1.5 is lineage optimum) -- per-base retuning of this specific knob is not required.",
+    "generalizable": "(1) Axis mechanism, not axis count, is the binding constraint: the gen-2 'three-axis ceiling' hypothesis is FALSIFIED on two bases this generation -- afg cleanly cleared four axes with size-asymmetry as the fourth (+21.59%), and vrs cleared three axes by SWAPPING size-asymmetry for flow (+92.42%). New axes succeed when they encode a mechanistically-distinct market state (quote-distance vs price-path vs trade-pressure vs book-depth) and fail when they correlate with an existing axis on the surviving population. (2) When porting a SKIP axis across bases, the working axis transfers cleanly at the SAME threshold when the mechanism is orthogonal (size-asymmetry ratio=1.5 transferred verbatim from island-1 to island-2); when porting a REDUNDANT axis, no amount of retuning rescues it (flow at 2.0, 3.0, and 6.0 thresholds all regressed across bases). The gen-1 'queue imbalance is null' verdict was wrong as stated -- it is a CONDITIONAL finding governed by composition partner and threshold. (3) Single-knob retunes on a saturated composition produce small monotonic moves that empirically locate the operating-point peak on a plateau (ptg g3l2 confirms q=0.75 is on the peak, not before it) -- continue to use them as low-cost peak-mapping diagnostics. (4) is_weighted_bps regression is acceptable when PnL/sharpe/drawdown improve by wide margins (vrs g3l2: bps +88.1% but pnl +92.42%) -- the gain is in trade SELECTION, not trade EXECUTION, and the realized P&L outcome subsumes the bps story.",
+    "base_specific": "(1) ptg is empirically saturated at the two-axis composition (position-cap + spread-p75): two independent third-axis attempts have now failed (chop in g2, flow in g3l1), and a single-knob spread-quantile retune cannot push above g1l1. The next productive direction on ptg is either a non-quantile knob on the same two-axis stack (spread_window_seconds sweep) or a structurally new mechanism (quantity-modulation rather than skip-axis -- open at partial qty when spread is in the [p50, p75] band). DO NOT continue stacking skip-axes on ptg. (2) afg accepts a fourth orthogonal axis cleanly and is the right island to probe the five-axis frontier next -- the gen-2 three-gate stack survived size-asymmetry addition without regression and operates on a base whose surviving population has the most remaining headroom across the three islands. (3) vrs accepts size-asymmetry strongly but rejects flow mechanically -- the chop+spread two-gate base has substantial headroom (the +92.42% jump used a single 1.5-threshold size-asymmetry gate), and the immediate next move is a ratio retune in [1.25, 2.0] on vrs specifically because the threshold was ported from a four-gate composition into a three-gate composition with more headroom; the marginal gate fires harder here. (4) chop_neutral=1.5 is BASE-AGNOSTIC -- do not retune it per-base in future generations; the gen-2 migration's base_specific (1) prescription was wrong for this specific knob."
+  }
+}

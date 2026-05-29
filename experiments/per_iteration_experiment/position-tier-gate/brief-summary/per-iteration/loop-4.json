@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 4,
+  "algo_id": "ptg-b-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3140.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 15.320778516538454,
+    "max_drawdown_pct": -0.017874910625446872,
+    "win_rate": 0.3707874227358237,
+    "trade_count": 74420,
+    "vs_base_pnl_pct": -11.8819,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 6586,
+  "context_tokens_estimated": 1646,
+  "tokens_used": {
+    "input": 1,
+    "output": 3,
+    "cache_creation": 222,
+    "cache_read": 82092,
+    "total": 82318
+  },
+  "duration_seconds": 398.0,
+  "summary_out": {
+    "changed": "Single mechanical change vs L3: raised adverse_threshold_ticks default from 3.0 to 5.0 ($0.75 -> $1.25 of adverse mid-move required to admit a reversal OPEN through the position cap). All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, diagnostic counters) byte-identical to L3.",
+    "outcome": "pnl +7161.85% vs simple baseline ($3140.75 vs $43.25 over 11 apples-to-apples dates), sharpe 15.32, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -11.88% pnl, +0.84% trade_count (+618 trades, -$423.50 aggregate). Still WORSE than base on 11/11 dates in absolute dollars but the trade_count delta is now well within the +/-1% calibration band that L3's next text identified as the sign the predicate is approaching the right threshold. Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% is monotonic with diminishing-but-positive marginal returns (+33, +19, +10 pp per single-step tightening). No date flipped sign this loop.",
+    "hypothesis": "L3's next text proposed exactly one targeted change: raise adverse_threshold_ticks from 3 to 5 ($1.25 in price, five full-spread displacements). Reasoning given there: 5 ticks demands a meaningfully larger adverse regime than 3 ticks -- a position 5 ticks underwater is likely on the wrong side of a real micro-trend rather than oscillating. I predicted L4 would land with trade_count within ~+/-1% of base and pnl closer to or past base. The trade_count prediction was correct (+0.84% delta, inside the +/-1% band). The pnl-past-base prediction was NOT confirmed: pnl moved +10 pp closer to base ($371 absolute gain L3->L4) but is still -11.88% below. PARTIALLY VINDICATED: the calibration prediction landed cleanly, but the adverse-mid lever's marginal returns are diminishing faster than expected, suggesting the residual +618 admits (after L3's 1,785 -> L4's 618 winnowing) are still net money-losing.",
+    "brief_summary": "ptg-b-l4 (position-tier-gate brief-summary loop 4) raised adverse_threshold_ticks 3->5 ($0.75->$1.25 adverse-mid floor for the reversal-override). Result: PASS vs simple (+7161.85% pnl) and continued recovery from L3 (-22.29% -> -11.88% vs base, +10 pp). Worse than base on 11/11 dates ($-423.50 aggregate). trade_count is now within +/-1% of base (+0.84%, +618 trades), squarely in the calibration band that L3's next text identified as the sign that further single-step tightening will start collapsing trade_count below base rather than reducing the pnl gap. Diminishing marginal returns: $677 (L2->L3) -> $371 (L3->L4). The adverse-mid axis on its own appears to have ~90% closed the gap to base but cannot fully close it -- the residual +618 admits are on average money-losing, so eliminating them via another single-step tightening risks dropping below base in trade_count and losing the small remaining beneficial admits.",
+    "next": "The single-axis sweep is approaching exhaustion. L5 has two natural candidates: (i) one more single-step tightening to 7 ticks ($1.75) to confirm the lever has indeed exhausted (predicted endpoint: trade_count drops materially below base, pnl unchanged or slightly worse than L4) -- a clean diagnostic but low expected upside; or (ii) keep 5 ticks and ADD a structural conditioner on the admitted reversal -- the highest-leverage candidates are a hold-time floor (admit only if position is at least N seconds old AND has moved 5 ticks adversely), a spread-not-widened guard (skip override if current spread > 1 tick, since admitting reversals through wide spreads pays the mid-edge away), or signed aggressor imbalance on recent flow. Pick (ii) with the hold-time floor -- it directly addresses the failure mode that L1 (age-only at 5s) and L4 (adverse-only at 5 ticks) each individually under-perform base in ways that hint at compounding: age was wrong as the SOLE predicate (positions still mid-forecast at 5s), but at 5s AND 5-ticks-adverse the position has both matured AND been wrong, which is exactly the conjunction the base's blanket skip is too coarse to capture. Avoid: any return to single-axis age-only filters; any threshold below 5 ticks; abandoning the L1-L4 lineage."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-26T05:00:00Z"
+}

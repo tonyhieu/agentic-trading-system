@@ -1,0 +1,98 @@
+[
+  {
+    "generation":            1,
+    "loop_in_generation":    1,
+    "algo_id":               "vrs-isl-g1l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       34.12653962462629,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          5.970163363956465,
+    "trade_count":           109424,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T03:30:00Z"
+  },
+  {
+    "generation":            1,
+    "loop_in_generation":    2,
+    "algo_id":               "vrs-isl-g1l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       33.69850746268657,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          5.741744630052873,
+    "trade_count":           111972,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T04:06:30Z"
+  },
+  {
+    "generation":            2,
+    "loop_in_generation":    1,
+    "algo_id":               "vrs-isl-g2l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       223.41625704279975,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          16.95151617405911,
+    "trade_count":           104688,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T11:30:00Z"
+  },
+  {
+    "generation":            2,
+    "loop_in_generation":    2,
+    "algo_id":               "vrs-isl-g2l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       125.73815738985715,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          15.246218662936329,
+    "trade_count":           61418,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T13:50:00Z"
+  },
+  {
+    "generation":            3,
+    "loop_in_generation":    1,
+    "algo_id":               "vrs-isl-g3l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       170.6468305675074,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          15.897192803684781,
+    "trade_count":           76914,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T16:30:00Z"
+  },
+  {
+    "generation":            3,
+    "loop_in_generation":    2,
+    "algo_id":               "vrs-isl-g3l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       522.3050546566888,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          19.10941399224334,
+    "trade_count":           75115,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-24T18:45:00Z"
+  },
+  {
+    "generation":            4,
+    "loop_in_generation":    1,
+    "algo_id":               "vrs-isl-g4l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       490.97844113560674,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          19.663796741110065,
+    "trade_count":           80072,
+    "context_chars_in":      36826,
+    "timestamp":             "2026-05-24T21:30:00Z"
+  },
+  {
+    "generation":            4,
+    "loop_in_generation":    2,
+    "algo_id":               "vrs-isl-g4l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       525.8202122596084,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          19.09503126276296,
+    "trade_count":           71524,
+    "context_chars_in":      38150,
+    "timestamp":             "2026-05-24T23:55:00Z"
+  }
+]
