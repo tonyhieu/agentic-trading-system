@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 7,
+  "algo_id": "afg-b-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 950.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.529771278300076,
+    "max_drawdown_pct": -0.03492479045125729,
+    "win_rate": 0.35129292998976697,
+    "trade_count": 86973,
+    "vs_base_pnl_pct": -2.0103,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 16573,
+  "context_tokens_estimated": 4143,
+  "tokens_used": {
+    "input": 1,
+    "output": 27,
+    "cache_creation": 594,
+    "cache_read": 87824,
+    "total": 88446
+  },
+  "duration_seconds": 507.5,
+  "summary_out": {
+    "changed": "Single ORTHOGONAL parameter change vs L4 (the in-arm leader at $1088): SHORTENED window_seconds from 10.0 -> 5.0 with flow_threshold PINNED at L4's integer optimum 1.0. Ratio leg absent (same as L4/L5/L6), anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly. NOTE: vs L6 (the prior loop), TWO parameters shifted simultaneously: L7 reverted flow_threshold from L6's 3.0 back to 1.0 AND additionally cut window 10s -> 5s. So L7 is 'L4 with a shorter window,' not 'L6 with a shorter window' -- a brief-summary-prescribed pivot to the orthogonal window axis after L6 closed the threshold sweep.",
+    "outcome": "pnl +2097.69% vs simple baseline ($950.50 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 4.530, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by ~419x. BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -2.01% pnl ($950.50 vs $970.00); -787 trades (-0.90%); sharpe 4.530 vs 4.580 essentially tied. AND vs in-arm leaders L4=L5 ($1088.00 / 86,089 / sharpe 5.36): regressed -12.64% pnl ($950.50 vs $1088); +884 trades (+1.03%); sharpe 4.530 vs 5.360 (-15.5%). Refinement targets vs L4: ALL FAIL. PARTIAL recovery vs L6 (L6: -14.23% vs base -> L7: -2.01% vs base), driven almost entirely by reverting flow_threshold from L6's 3.0 back to L4's optimum 1.0; the residual -2.01% gap (vs L4's $1088 -> L7's $950.50 = -$137.50) is the COST of the orthogonal window cut.",
+    "hypothesis": "Pre-loop: I expected shorter window = less stale flow = potentially more selective skips; or alternately, shorter window misses slow-developing flow imbalance with pnl dropping toward base. The strict-subset analysis predicted L7 would admit AT LEAST as many orders as L4 (the 5s deque is a subset of the 10s deque at every decision time). DIRECTIONAL part of the trade-count prediction CONFIRMED: L7 admitted +884 more than L4 (86,973 vs 86,089). PNL prediction direction CONTRADICTED: the newly admitted orders (the ones L4 skipped on 5-10s-stale flow imbalance) were NET ANTI-INFORMATIVE at ~-$155 per 1k extra admits (-$137.50 / 0.884k). This is a steeper destruction rate than L1's +$47/k or L4's +$70.6/k (read inversely) or L6's $98.8/k -- the 5-10s-old flow imbalance is GENUINELY informative for the oracle's 30s forecast horizon, not stale noise as the hypothesis posited. The window-axis lever cuts AGAINST L4 going DOWN: shorter window costs pnl/sharpe with a comparable trade-count delta to threshold changes but a larger pnl impact per delta. The 'stale flow' framing was wrong.",
+    "brief_summary": "afg-b-l7 (aggressor-flow-gate brief-summary loop 7) cut window_seconds from L4's 10.0 -> 5.0 with flow_threshold pinned at L4's integer optimum 1.0. Result: PASS vs simple (+2097.69% pnl) but regressed vs L4 (-12.64% pnl: $950.50 vs $1088; +884 trades; sharpe -15.5%) and slightly vs base (-2.01% pnl). Refinement targets vs L4: ALL FAIL. KEY FINDING: the 5-10s flow memory is GENUINELY informative on this oracle, NOT stale noise as I had hypothesized. Newly admitted orders (those L4 was correctly skipping on 5-10s-old flow imbalance) destroyed ~$155 per 1k -- a STEEPER cost than L1's $47/k or L6's $98.8/k. The window axis at flow=1.0 now has 2 points: 5s:$950.50, 10s:$1088. Gradient at 10s is NEGATIVE going DOWN. To bracket the window-axis optimum, L8 should probe window=20s at flow=1.0 (oracle horizon 30s is the natural ceiling). Threshold axis remains bracketed (1:1088, 2:970, 3:832, monotone optimum at 1) -- no further informative probes there. After L7+L8 the window axis will be triangulated with 3 points (5, 10, 20) mirroring the threshold sweep that closed in L6.",
+    "next": "Probe window_seconds 10.0 -> 20.0 at fixed flow_threshold=1.0 (single-parameter change vs L4 in the OPPOSITE direction from L7's 10 -> 5). Rationale: (1) window axis at flow=1 now has 2 points (5s:950, 10s:1088) with gradient at 10s NEGATIVE going down; the only informative remaining probe is to bracket the other side of the optimum; (2) oracle horizon_seconds=30 (config.yaml) means 20s is ~2/3 of the predictive forecast horizon -- the natural ceiling before flow >= horizon-age stops being predictive and starts being post-hoc; (3) three-point bracketing (5, 10, 20) will close the window axis the same way (1, 2, 3) closed the threshold axis in L6. Expected outcomes: pnl@20s > $1088 -> window optimum on the long side, L8 wins; pnl@20s in ($950, $1088) -> window axis is mildly convex around 10s with L4 as bracketed leader; pnl@20s <= $950 -> window axis is tightly convex around 10s and the window probes are now dead. Either way the window axis closes after L8. Alternatives explicitly considered and rejected: any window in (10, 20) like 15s (less informative than 20s for bracketing the boundary near the oracle horizon); window > 20s (likely degrades because flow > 20s old approaches/exceeds the oracle's 30s predictive horizon); per-side asymmetric thresholds (no brief-summary motivation); reintroducing ratio leg (L1/L2/L3 exhausted); changing anti-cascade flag (highest-risk, save for after both single-axis sweeps are bracketed). The brief-summary-disciplined L8 = window=20s at flow=1.0."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T04:32:21Z"
+}

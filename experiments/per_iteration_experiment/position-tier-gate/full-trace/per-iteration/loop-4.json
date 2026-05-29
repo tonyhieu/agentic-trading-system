@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 4,
+  "algo_id": "ptg-f-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3266.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 15.522355402685402,
+    "max_drawdown_pct": -0.01649989275069712,
+    "win_rate": 0.3658396654597379,
+    "trade_count": 78436,
+    "vs_base_pnl_pct": -23.366568914956012,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 20522,
+  "context_tokens_estimated": 5130,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 4 of the position-tier-gate / full-trace arm. Prior context: loops 1-3 full_reasoning + NOTES.md.\n\nLoops 1-3 findings: cap=2 = simple; streak gate = no-op; flow gate (30s) hurts (-17.28%). Loop 4 hypothesis: shorter flow window (5s) may hurt less than 30s because it's more selective (only skips when very recent flow is adverse, not 30s of accumulated flow).\n\nResult: ptg-f-l4 (5s flow gate + cap=1) pnl=$3,266.50, -23.37% vs base, trades=78,436. Worse than loop 3 (30s flow gate was -17.28%). Shorter window = WORSE. The 5s flow gate is even more aggressive at filtering \u2014 it fires more often because short-window flow is noisier and more often adverse. Both 5s and 30s flow gates degrade the already-optimal ptg base.\n\nKey finding: Flow gates (both short and long windows) degrade the ptg base. The ptg base at cap=1 selects entries through position serialization; the flow gate removes additional trades without P&L benefit. No flow window improves over the base.",
+  "timestamp": "2026-05-23T21:16:44Z"
+}

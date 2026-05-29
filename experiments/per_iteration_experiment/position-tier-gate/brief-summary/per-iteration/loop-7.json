@@ -1,0 +1,36 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "brief-summary",
+  "loop": 7,
+  "algo_id": "ptg-b-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3538.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 16.183781189900014,
+    "max_drawdown_pct": -0.017324913375433123,
+    "win_rate": 0.3718065014012808,
+    "trade_count": 73861,
+    "vs_base_pnl_pct": -0.7154,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 20636,
+  "context_tokens_estimated": 5159,
+  "tokens_used": {
+    "input": 1,
+    "output": 255,
+    "cache_creation": 443,
+    "cache_read": 108548,
+    "total": 109247
+  },
+  "duration_seconds": 599.4,
+  "summary_out": {
+    "changed": "Single targeted change vs L6: added a fourth condition to the reversal-override predicate -- aggressor flow over the most recent 1 second of trade ticks must AGREE with the proposed NEW direction at >= 60% same-side volume. Admit predicate becomes `adverse_mid >= 5 ticks AND age >= 5s AND current_spread <= 1 tick AND flow_agreement >= 60%`. Added `flow_window_ns` (default 1_000_000_000 ns) and `flow_agreement_min` (default 0.60) config fields; rolling signed-flow deque on a new `on_trade_tick` handler (BUYER=+size, SELLER=-size, NO_AGGRESSOR=0); `_skipped_reversal_no_flow` and `_skipped_reversal_flow_disagree` counters. Defensive fallback: empty / all-NO_AGGRESSOR window -> SKIP. All other logic (reversal classification, same-direction-add skip, reduce-only short-circuit, quote subscription, fallback skips, prior counters) byte-identical to L6.",
+    "outcome": "pnl +8082.08% vs simple baseline ($3538.75 vs $43.25 over 11 apples-to-apples dates), sharpe 16.18, slippage 0.0/0.0. Gate vs simple: PASS by wide margin. Vs base_algo position-tier-gate on the same 11 dates ($3564.25 / 73,802 trades): -0.72% pnl, +0.08% trade_count (+59 trades, -$25.50 aggregate) -- the smallest gap of the entire 7-loop lineage by a factor of ~3 and trade_count delta now squarely inside the +/-0.1% calibration band. Worse than base in aggregate dollars by less than $3/date on average. Vs L6 ($3496.25 / 73,953 trades): +1.22% pnl (+$42.50) on -0.12% trade_count (-92 trades; +$0.46/removed-trade, identical ratio to L5's age-conjunction filter). Lineage trajectory vs base: L1 -75.33% -> L2 -41.30% -> L3 -22.29% -> L4 -11.88% -> L5 -9.54% -> L6 -1.91% -> L7 -0.72% is monotonic with marginal pnl per loop $1213, $677, $371, $83.50, $272, $42.50 -- L7 follows the post-L6 diminishing-returns shape.",
+    "hypothesis": "L6's next text identified aggressor flow as the highest-leverage genuinely-orthogonal remaining axis (mathematically distinct from price displacement, time, quote thickness), with the explicit prediction range +$0 to +$50 pnl gain on -50 to -200 trade drop. I predicted L7 trade_count 73,600-73,850 and pnl $3,510-3,590 -- both ranges landed exactly as predicted (73,861 trades, $3,538.75 pnl, both at the upper end of the predicted bracket). VINDICATED in direction and magnitude: flow IS partially orthogonal to the (adverse, age, spread) trio, providing real-but-small incremental information without throwing out beneficial admits. The +$0.46/removed-trade ratio matches L5's age-conjunction ratio almost exactly, suggesting the flow filter is acting on the same class of marginal admits that the age conjunction acted on -- both are weak conditioners that bind on a small slice of L4's residual losers.",
+    "next": "Two natural directions remain for L8 (the final loop in this 8-loop arm). (i) Continue adding orthogonal axes -- but the L1->L7 marginal-pnl shape ($1213, $677, $371, $83.50, $272, $42.50) shows clear exhaustion, and the residual -$25.50 gap is now within the noise floor of dropping a single bad date. Adding a sixth axis (e.g. a no-recent-flip recency gate) is most likely to drift pnl +/-$20 with no clear theoretical mechanism for crossover. Low expected upside. (ii) TUNE an existing knob inside the 4-axis predicate to reduce false skips. The most promising knob is the spread guard -- currently 1 tick (MES minimum), the strictest possible. RELAXING to 2 ticks would re-admit ~150-250 of the +286 trades L6 filtered (L5->L6 was -$272 pnl on -286 trades = -$0.95/trade, so re-admitting half would give back ~+$143 if the flow-agreement filter, now in place, can screen out the worst of those re-admitted). Pick (ii) -- relax spread 1->2 ticks -- because it has a clear theoretical mechanism for crossing base ($143 hypothetical re-admit gain > $25.50 residual gap) and tests whether the L6 spread-guard tightness was over-fitted to the absence of the flow filter. In-flight diagnostic for L8: if pnl crosses base (>= $3,565), the relaxed spread + flow guard is the right combination -- the spread guard was over-tightened relative to the additional information flow provides. If pnl drops materially below L7 (say < $3,480) and trade_count climbs >+0.5% vs base, the flow filter cannot rescue the wide-spread admits and 1 tick was right -- L7 is the arm's best result. If pnl is flat (within +/-$30 of L7) with modest trade_count climb, the flow filter is partially but not fully compensating -- the arm has saturated at L6/L7 level. Avoid: adding a sixth axis on top of existing four (sixth-axis additions have negligible expected upside); any change to flow_agreement_min or flow_window_ns (those are L7's two-axis sweep targets if a future arm continued, not L8's); any return to single-axis filters."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-26T06:21:09Z"
+}

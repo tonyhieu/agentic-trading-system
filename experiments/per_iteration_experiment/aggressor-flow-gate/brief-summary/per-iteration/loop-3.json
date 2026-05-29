@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 3,
+  "algo_id": "afg-b-l3",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 970.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 4.580877323065416,
+    "max_drawdown_pct": -0.03324980050119699,
+    "win_rate": 0.35440975387420237,
+    "trade_count": 87760,
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 4682,
+  "context_tokens_estimated": 1170,
+  "tokens_used": {
+    "input": 1,
+    "output": 21,
+    "cache_creation": 804,
+    "cache_read": 80024,
+    "total": 80850
+  },
+  "duration_seconds": 450.2,
+  "summary_out": {
+    "changed": "Replaced L2's CONJUNCTION with a DISJUNCTION: skip iff (|net_flow| >= 2.0) OR (|r| >= 0.35 AND abs_vol >= 5.0), 10s window. The ratio leg is now gated by a busyness floor (min_busy_abs_vol = 5.0) to avoid the warm-up degenerate where a single 2-contract trade trivially gives r=1.0. Anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly.",
+    "outcome": "pnl +2142.77% vs simple baseline ($970.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 4.58, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by a wide margin. BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): 0.00% pnl diff, 0 trade diff -- algo collapsed to base EXACTLY. Hypothesis CONTRADICTED (expected pnl > base; got pnl = base).",
+    "hypothesis": "I expected the disjunction to add skips strictly on top of base's skip set (skip iff base OR ratio-with-busy-floor adverse), with admitted-trades strictly <= base by construction, and pnl > base under the loop-1-established '$47 per 1k extra skips' rule. The data shows the ratio leg never fires on any order beyond what base already skips: whenever |net_flow| < 2.0 (absolute leg silent) and abs_vol >= 5.0 (busyness floor met), the ratio |net_flow|/abs_vol is structurally < 0.35 (since |net_flow| < 2.0 / 5.0 = 0.4 already; at abs_vol >= ~5.7, |net_flow|=1 or 1.5 gives |r| < 0.35). The disjunction collapsed to base because flow=2, ratio=0.35, busy_floor=5 makes the ratio leg structurally dominated by the absolute leg on this oracle.",
+    "brief_summary": "afg-b-l3 (aggressor-flow-gate brief-summary loop 3) replaced L2's CONJUNCTION with a DISJUNCTION: skip iff (|net_flow| >= 2.0) OR (|r| >= 0.35 AND abs_vol >= 5.0). Result: PASS vs simple (+2142.77% pnl, +5.0% gate cleared by wide margin) but EXACTLY IDENTICAL to base on the same 11 dates (pnl=$970.00=base, trades=87,760=base, 0 differences). The ratio leg with busyness floor (5 contracts) is structurally dominated by the absolute leg (2 contracts): for any order where |net_flow|<2 and abs_vol>=5, the ratio |net_flow|/abs_vol is mechanically <0.35 too. The L1+L2+L3 trio collectively triangulate: the ratio reformulation cannot beat base on this oracle no matter how it is composed -- it is RELAXED in pure form (L1), STRICTLY-RELAXED-UNION in conjunction (L2), and STRUCTURALLY-INERT in disjunction with the chosen busy_floor (L3). To beat base, the next change must instead modify the base's absolute threshold itself or attack an orthogonal axis (window length / per-side thresholds / regime gates).",
+    "next": "Tighten the base's absolute threshold directly: flow_threshold 2.0 -> 3.0 contracts (single-parameter monotone change, drop the ratio leg entirely to isolate the absolute-threshold effect). L1+L2+L3 collectively suggest the base under-skips on this oracle (extra skips beyond base are weakly anti-informative per L1's $47/1k arithmetic), and the most direct way to ADD skips on top of base's set is to raise its own threshold. Expected direction: trade_count drops by O(5-15%) (low-magnitude absolute-imbalance orders now skipped), pnl > base if those orders are weakly anti-informative on average. If pnl regresses, the L1 '$47/1k' rule was an artefact of the particular ratio-gate-admitted-orders distribution rather than a general property of base's near-margin admits, and L5 should pivot structurally (window length / per-side asymmetric thresholds / session-time regime gates). Avoid: any further ratio-based variants (L1+L2+L3 have exhausted the ratio axis on this oracle); raising busy_floor (the structural dominance argument shows it would only collapse to base faster); CONJUNCTIVE constructions (L2 already established the union-of-admits trap)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T01:35:00Z"
+}

@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 2,
+  "algo_id": "ptg-f-l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 4262.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "max_drawdown_pct": -0.017274913625431872,
+    "win_rate": 0.37204339123992347,
+    "trade_count": 90433,
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 7033,
+  "context_tokens_estimated": 1758,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 2 of the position-tier-gate / full-trace arm. Prior context: loop 1 full_reasoning + ptg-f-l1 NOTES.md.\n\nLoop 1 finding (from full_reasoning): position_cap=2 is byte-identical to the simple baseline. The oracle fires simultaneous CLOSE+OPEN. When the OPEN arrives, the cache shows 1 existing position (the one closing). With cap=2, net_qty(=1) < cap(=2) so every OPEN submits unconditionally. Cap=2 = simple = worst. Cap=1 must be preserved.\n\nLoop 2 hypothesis: Add a consecutive-loss streak gate on top of cap=1. After 2 consecutive losing closes (realized_pnl < 0), skip the next open-leg order. Reasoning: losing streaks may correlate with adverse oracle signal quality phases; blocking one re-entry after 2 consecutive losses would filter the highest-adverse-selection moments.\n\nResult: ptg-f-l2 is IDENTICAL to the base algo (pnl=,262.50, trade_count=90,433, sharpe=17.619). The loss-streak gate is a no-op. Post-mortem: the cap=1 gate already serializes all oracle entries \u2014 each CLOSE+OPEN pair is already handled by the cache lag (the simultaneous OPEN sees net_qty=1 and is blocked). The streak gate would only fire for an OPEN that comes AFTER a close has been fully processed, but at that point net_qty=0 < cap=1 so the cap gate allows it anyway. The streak gate never sees an open that would otherwise be submitted during a loss streak \u2014 all such opens are already blocked by cap=1 or already submitted with net_qty=0.\n\nKey finding: Any additional filtering layered ON TOP of the existing cap=1 gate will be a no-op as long as it only affects the open leg at the moment the oracle fires. The cap=1 gate already handles blocking of concurrent opens; and between-oracle opens (next oracle signal) always see a flat position (net_qty=0) regardless of the streak. The streak gate fires only on the between-oracle opens, but those are always allowed by cap=1 anyway.\n\nImplication for loop 3: A mechanism that works during the BETWEEN-ORACLE window (when position is flat and the next signal is expected) must act before the next signal arrives. The cap gate cannot be modified (binary cliff). A useful layer must somehow predict whether the NEXT oracle signal will be adverse BEFORE it fires. This points toward flow-based pre-filtering: subscribe to trade ticks and conditionally submit the NEXT oracle open based on current flow direction.",
+  "timestamp": "2026-05-23T20:09:10Z"
+}

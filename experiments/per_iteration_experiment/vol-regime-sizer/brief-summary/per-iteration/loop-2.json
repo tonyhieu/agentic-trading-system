@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "brief-summary",
+  "loop": 2,
+  "algo_id": "vrs-b-l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 64.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 0.25643941410226306,
+    "max_drawdown_pct": -0.05289973550132249,
+    "win_rate": 0.3501471960939183,
+    "trade_count": 111416,
+    "vs_base_pnl_pct": -88.9129,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 1063,
+  "context_tokens_estimated": 265,
+  "tokens_used": {
+    "input": 1,
+    "output": 24,
+    "cache_creation": 757,
+    "cache_read": 91187,
+    "total": 91969
+  },
+  "duration_seconds": 480.9,
+  "summary_out": {
+    "changed": "Single config-default edit vs vrs-b-l1: drift_threshold 0.05 -> 0.008 (~6x smaller, mid-range of L1's recommended 0.005-0.01 band). All other mechanics (fast/slow halflives, sensitivity, min_prob, drift_halflife=40, gate semantics: skip iff vol elevated AND drift adverse; aligned drift forces p=1.0; reduce-only path; SHA256 deterministic draw) preserved verbatim \u2014 structural copy from L1.",
+    "outcome": "pnl +48.55% vs simple ($64.25 vs $43.25 over 11 apples-to-apples dates), sharpe 0.256, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold). BUT vs base_algo vol-regime-sizer on same 11 dates ($579.50): -88.91% pnl, +6.75% trade_count. Trade_count delta vs L1: -72 (effectively identical) \u2014 the vol-skip path fired on only 72 more orders out of ~111k despite the 6x threshold drop. The override-on-aligned-drift path lets virtually all the base's would-be skip orders through.",
+    "hypothesis": "Lowering threshold from 0.05 to 0.008 will make the drift gate fire on a meaningful fraction (~30-60%) of orders, finally testing the directional-adverse-selection hypothesis. Expected three outcomes: (i) beats base if adverse-selection skips concentrate on directionally-bad subset; (ii) matches base if directional signal is uncorrelated with vol; (iii) worse than base if directional drift doesn't predict adverse fills. Outcome was (iii) but for a structural reason: gate barely fires more (+72 skips), and the asymmetric override semantics (admit on aligned drift, restrict skip to adverse) re-admits ~half of the base's symmetric skips \u2014 observed -89% vs base \u2248 0.5x base's vs-simple gain.",
+    "brief_summary": "vrs-b-l2 (vol-regime-sizer brief-summary loop 2) made a single-config-change vs L1: drift_threshold 0.05 -> 0.008 (~6x smaller). Result: PASS vs simple (+48.55% pnl, $64.25 vs $43.25) but materially WORSE than base on same 11 dates (-88.91% pnl, +6.75% trades). Trade_count near-identical to L1 (-72 trades) \u2014 even at 0.008 the threshold change moved only a sliver of orders, and the L1/L2 architecture (admit override on aligned drift; restrict skip to adverse only) is structurally a strict liability against the base's symmetric vol-skip. The override re-admits ~half the orders the base correctly skips \u2014 observed L2 pnl ($64) is close to 0.5 * (simple $43 + delta to base $579 admitted), consistent with this asymmetric-gate trap. Brief-summary lesson: in this arm, ANY architecture that overrides base's skip on a partial directional signal will lose against base, because base's symmetric skip is correctly removing ~$50/1k of negative-EV orders that the directional gate cannot cleanly identify.",
+    "next": "Invert gate semantics: instead of `override base vol-skip when drift aligned, else apply vol-skip`, make it `ALWAYS apply base vol-skip, with ADDITIONAL skip pressure on adverse drift`. Concretely: p_final = p_vol * (drift_adverse ? 0.5 : 1.0). This is a strict subset of base's admit set (skips everything base skips + a little more on adverse drift) \u2014 analogous to afg-b-l3's DISJUNCTIVE structure that broke the asymmetric-gate trap. Drift_threshold can stay at 0.008 (L1 ~0 firing, L2 ~72 extra skips means current threshold still under-fires; could go to 0.005 to further increase adverse coverage). Alternative if the multiplicative variant is too aggressive: drop the override entirely, revert to base's exact symmetric skip, then add a small drift_threshold-gated extra-skip on top. Avoid: any further variants of `override + adverse-only skip` \u2014 the asymmetric-gate trap is now well-characterized in this arm."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T17:30:00Z"
+}

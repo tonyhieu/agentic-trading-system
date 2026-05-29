@@ -57,8 +57,100 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.afg-m-l8",
         "get_execution_algorithm",
     ),
+    "afg-f-l1": (
+        "execution_algos.afg-f-l1",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l2": (
+        "execution_algos.afg-f-l2",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l3": (
+        "execution_algos.afg-f-l3",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l4": (
+        "execution_algos.afg-f-l4",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l5": (
+        "execution_algos.afg-f-l5",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l6": (
+        "execution_algos.afg-f-l6",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l7": (
+        "execution_algos.afg-f-l7",
+        "get_execution_algorithm",
+    ),
+    "afg-f-l8": (
+        "execution_algos.afg-f-l8",
+        "get_execution_algorithm",
+    ),
     "vrs-m-l1": (
         "execution_algos.vrs-m-l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l2": (
+        "execution_algos.vrs-m-l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l3": (
+        "execution_algos.vrs-m-l3",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l4": (
+        "execution_algos.vrs-m-l4",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l5": (
+        "execution_algos.vrs-m-l5",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l6": (
+        "execution_algos.vrs-m-l6",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l7": (
+        "execution_algos.vrs-m-l7",
+        "get_execution_algorithm",
+    ),
+    "vrs-m-l8": (
+        "execution_algos.vrs-m-l8",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l1": (
+        "execution_algos.vrs-b-l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l2": (
+        "execution_algos.vrs-b-l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l3": (
+        "execution_algos.vrs-b-l3",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l4": (
+        "execution_algos.vrs-b-l4",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l5": (
+        "execution_algos.vrs-b-l5",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l6": (
+        "execution_algos.vrs-b-l6",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l7": (
+        "execution_algos.vrs-b-l7",
+        "get_execution_algorithm",
+    ),
+    "vrs-b-l8": (
+        "execution_algos.vrs-b-l8",
         "get_execution_algorithm",
     ),
     "ptg-m-l1": (
@@ -91,6 +183,134 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
     ),
     "ptg-m-l8": (
         "execution_algos.ptg-m-l8",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l1": (
+        "execution_algos.ptg-f-l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l2": (
+        "execution_algos.ptg-f-l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l3": (
+        "execution_algos.ptg-f-l3",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l4": (
+        "execution_algos.ptg-f-l4",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l5": (
+        "execution_algos.ptg-f-l5",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l6": (
+        "execution_algos.ptg-f-l6",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l7": (
+        "execution_algos.ptg-f-l7",
+        "get_execution_algorithm",
+    ),
+    "ptg-f-l8": (
+        "execution_algos.ptg-f-l8",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l1": (
+        "execution_algos.afg-b-l1",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l2": (
+        "execution_algos.afg-b-l2",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l3": (
+        "execution_algos.afg-b-l3",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l4": (
+        "execution_algos.afg-b-l4",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l5": (
+        "execution_algos.afg-b-l5",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l6": (
+        "execution_algos.afg-b-l6",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l7": (
+        "execution_algos.afg-b-l7",
+        "get_execution_algorithm",
+    ),
+    "afg-b-l8": (
+        "execution_algos.afg-b-l8",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l1": (
+        "execution_algos.vrs-f-l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l2": (
+        "execution_algos.vrs-f-l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l3": (
+        "execution_algos.vrs-f-l3",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l4": (
+        "execution_algos.vrs-f-l4",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l5": (
+        "execution_algos.vrs-f-l5",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l6": (
+        "execution_algos.vrs-f-l6",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l7": (
+        "execution_algos.vrs-f-l7",
+        "get_execution_algorithm",
+    ),
+    "vrs-f-l8": (
+        "execution_algos.vrs-f-l8",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l1": (
+        "execution_algos.ptg-b-l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l2": (
+        "execution_algos.ptg-b-l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l3": (
+        "execution_algos.ptg-b-l3",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l4": (
+        "execution_algos.ptg-b-l4",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l5": (
+        "execution_algos.ptg-b-l5",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l6": (
+        "execution_algos.ptg-b-l6",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l7": (
+        "execution_algos.ptg-b-l7",
+        "get_execution_algorithm",
+    ),
+    "ptg-b-l8": (
+        "execution_algos.ptg-b-l8",
         "get_execution_algorithm",
     ),
 }

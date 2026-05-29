@@ -1,0 +1,52 @@
+{
+  "strategy_name": "oracle",
+  "strategy_kwargs": {
+    "horizon_seconds": 30.0,
+    "sigma": 6.0,
+    "seed": 42,
+    "signal_interval_seconds": 1.0
+  },
+  "execution_algorithm_name": "afg-f-l2",
+  "execution_algorithm_kwargs": {},
+  "symbol": "MESM6",
+  "dataset_name": "glbx-mdp3-market-data",
+  "dataset_version": "v1.0.0",
+  "runs": [
+    {
+      "date": "20260308"
+    },
+    {
+      "date": "20260309"
+    },
+    {
+      "date": "20260310"
+    },
+    {
+      "date": "20260311"
+    },
+    {
+      "date": "20260312"
+    },
+    {
+      "date": "20260313"
+    },
+    {
+      "date": "20260315"
+    },
+    {
+      "date": "20260316"
+    },
+    {
+      "date": "20260317"
+    },
+    {
+      "date": "20260318"
+    },
+    {
+      "date": "20260319"
+    },
+    {
+      "date": "20260320"
+    }
+  ]
+}

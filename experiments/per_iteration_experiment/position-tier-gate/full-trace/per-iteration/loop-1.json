@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 1,
+  "algo_id": "ptg-f-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 156.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 0.5995600402138695,
+    "max_drawdown_pct": -0.05289973550132249,
+    "win_rate": 0.3506443167025027,
+    "trade_count": 136734,
+    "vs_base_pnl_pct": -96.3401759530792,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 0,
+  "context_tokens_estimated": 0,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 1 of the position-tier-gate / full-trace arm. No prior loops \u2014 starting directly from the base algo. context_chars_in = 0.\n\nBase algo (position-tier-gate) with position_cap=1: pnl=,262.50, sharpe=17.62, trade_count=90,433. The base mechanism serializes entry: any open position blocks the next open leg. This works extremely well vs simple baseline (+2,632%), suggesting the oracle signal quality at each individual entry is high, and the main source of edge destruction in the simple algo is simultaneous/rapid re-entries during noisy periods.\n\nHypothesis for loop 1: Try position_cap=2 (allow one additional concurrent position before gating). Reasoning: the base cap=1 is conservative \u2014 if the oracle fires 3 same-direction signals, only the first executes. The 2nd consecutive same-direction entry might carry valid directional information. A cap=2 loosening preserves most of the serialization benefit while allowing one additional concurrent contract.\n\nResult: position_cap=2 is byte-identical to the simple baseline (pnl=, trade_count=136,734 = simple). This is a striking failure. The mechanism: the oracle fires simultaneous CLOSE+OPEN. When the OPEN arrives, the cache already shows 1 open position (the one that just closed but hasn't been processed by the fill engine yet). With cap=2, this OPEN (seeing 1 existing position < cap=2) is always submitted. The effect: cap=2 is a complete no-op \u2014 every OPEN passes through regardless of position state. cap=2 = simple baseline.\n\nKey finding: The position_cap lever has a cliff between cap=1 (position_cap=1 = aggressive serialization = best operating point) and cap=2 (= simple = worst operating point). There is no smooth tradeoff between 1 and 2 for MES oracle with simultaneous CLOSE+OPEN signals. The oracle's simultaneous-signal structure makes any cap >= 2 equivalent to the simple baseline for this dataset.\n\nSuggested next attempt: Since the position_cap lever is binary (1 = best, >=2 = worst), loop 2 should explore an entirely different mechanism. Candidates: (a) loss-streak gate (skip the next open after N consecutive losing closes); (b) time-since-last-close gate (minimum cooldown between close and next open, different from ptg-m-l1's cooldown which failed \u2014 that gated on time-since-last-submitted-open, not time-since-last-close); (c) flow-aware gate layered on top of the position gate (only submit when both position is flat AND flow is favorable).",
+  "timestamp": "2026-05-23T19:56:27Z"
+}

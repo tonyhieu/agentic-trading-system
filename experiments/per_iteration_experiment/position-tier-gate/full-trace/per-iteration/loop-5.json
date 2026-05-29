@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 5,
+  "algo_id": "ptg-f-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 156.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "max_drawdown_pct": -0.05289973550132249,
+    "win_rate": 0.3506443167025027,
+    "trade_count": 136734,
+    "vs_base_pnl_pct": -96.34017595307918,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 22877,
+  "context_tokens_estimated": 5719,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 5 of the position-tier-gate / full-trace arm. Prior context: loops 1-4 full_reasoning + NOTES.md.\n\nLoops 1-4 findings: all cap changes and flow gates either fail or degrade. Loop 5 tries directional-aware position cap: only block same-direction concurrent opens; allow counter-direction opens. The reasoning: oracle CLOSE+OPEN simultaneously sends one CLOSE (reduce-only) and one OPEN. The OPEN's direction is OPPOSITE to the closing position (oracle reverses positions). With directional cap, the OPEN (opposite direction to existing) is always allowed \u2014 this is why the result is identical to simple: every oracle-generated OPEN is counter-direction to the existing position at that moment, so the directional gate never fires. Result: ptg-f-l5 = simple baseline (-96.34% vs base).\n\nKey finding: The oracle signals ALWAYS reverse position direction. The directional-aware cap (allow counter-direction) = allow ALL oracle opens = simple baseline. The cap=1 mechanism works precisely because the CLOSE+OPEN arrive simultaneously \u2014 the OPEN sees the old position (same direction as CLOSE). The directional-aware version sees OPPOSITE direction (because the new OPEN goes the other way) and allows it unconditionally.",
+  "timestamp": "2026-05-23T21:16:44Z"
+}

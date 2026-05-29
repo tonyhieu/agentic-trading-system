@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 7,
+  "algo_id": "ptg-f-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 4262.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "max_drawdown_pct": -0.017274913625431872,
+    "win_rate": 0.37204339123992347,
+    "trade_count": 90433,
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 27165,
+  "context_tokens_estimated": 6791,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 7 of the position-tier-gate / full-trace arm. Prior context: loops 1-6 full_reasoning + NOTES.md.\n\nLoops 1-6: no mechanism improves over the base. Loop 7 tries oracle cluster filter (skip if >= 3 opens in last 5s). Hypothesis: rapid repeated oracle signals in the same window may have diminishing quality. Result: ptg-f-l7 = IDENTICAL to base (pnl=$4,262.50, trades=90,433, sharpe=17.619). The cluster filter is a no-op. Post-mortem: cap=1 already limits trade volume to 90k trades (from 136k simple). The cluster threshold (>=3 in 5s) is never reached in this serialized-entry regime because cap=1 prevents rapid successive entries.\n\nKey finding: The cap=1 mechanism already serializes entries; cluster rate is naturally below 3 per 5s in the serialized regime. The cluster filter never fires.",
+  "timestamp": "2026-05-23T21:16:44Z"
+}
