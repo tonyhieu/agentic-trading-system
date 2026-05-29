@@ -1,0 +1,40 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "vol-regime-sizer",
+  "loop": 5,
+  "algo_id": "sip-vrs-l5",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1471.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 13.718102547189677,
+    "max_drawdown_pct": -0.016374905844291396,
+    "win_rate": 0.3546510344218498,
+    "trade_count": 90582,
+    "vs_base_pnl_pct": 95.25704842172681,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 7283,
+  "trace_path": "reasoning-traces/loop-5-trace.md",
+  "critic_summary": "Targeted failure mode: the previous method's falsification step calibrates on one or two hand-picked train dates, with no check that the candidate's binding feature has the same distribution on the other dates. Loop 5's wide-spread gate was calibrated on dense-trade dates (~6% wide-spread arrivals on 20260316/20260318) but on early-window thin-trade dates wide spreads were >99% of arrivals \u2014 the gate effectively skipped everything there, forgoing ~$871 of parent edge across 20260308-20260311. The win was real but partly coincidental: it came from a dense-day loss tail the test happened to identify, not from a mechanism the calibration showed to be regime-robust. The new method inserts (a) a Step 3 binding-feature regime audit across every train date (cheap pandas per-date, on parent CSVs already on disk), with a HOMOGENEOUS/HETEROGENEOUS verdict stated before falsification; (b) a Step 4 protocol switch \u2014 HETEROGENEOUS candidates require per-date sign-consistency falsification (e.g., \u2265 8 of 12 dates) using every train date, not a hand-picked subset; (c) a Step 5 regime-coverage prediction (how many train dates should fire \u2265 5% of arrivals \u2014 extremes are warning signs); and (d) a Step 6 regime-aware parameter rule that forces thresholds on heterogeneous binding features to be regime-relative (e.g., k \u00d7 rolling_median_in_session) rather than absolute. Gate result: 4/5 metrics improved vs running-best loop 1 (pnl 1471.75 vs 1062.25, sharpe 13.72 vs 4.19, max_dd -0.0164 vs -0.0427, win-rate 0.3547 vs 0.3539; mean_slippage tied at 0). Caveat: the loop-5 aggregate is over 11/12 train dates because 20260319 OOM'd in the runner (Rust allocator 4 GiB cap, a runner-level issue independent of algorithm logic); even if 20260319 had added $0 to l5, the absolute pnl margin over loop 1 is ~$409 and the gate verdict is robust to that missing date. The win-rate margin is thin (~+0.0008) and could plausibly invert with the missing date \u2014 but with 4 of 5 metrics clearly improved, the gate holds. If the new method works, the next reasoning trace will show: a per-train-date table for each candidate's binding feature, an explicit heterogeneity verdict stated before falsification, falsification statistics aggregated across the full train window (not 1-2 dates) for any heterogeneous candidate, a regime-coverage prediction listed in NOTES.md, and either a regime-relative threshold parameterization or an explicit justification that the binding feature was homogeneous enough to permit an absolute threshold.",
+  "prompt_out": "prompts/prompt-l5.md",
+  "prompt_action": "kept",
+  "tokens_used": {
+    "input": 1,
+    "output": 1433,
+    "cache_creation": 1322,
+    "cache_read": 150328,
+    "total": 153084
+  },
+  "duration_seconds": 3517.7,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 1089,
+    "cache_creation": 111,
+    "cache_read": 71617,
+    "total": 72818
+  },
+  "critic_duration_seconds": 335.6,
+  "timestamp": "2026-05-25T04:16:54Z"
+}

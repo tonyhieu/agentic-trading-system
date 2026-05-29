@@ -1,0 +1,40 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 7,
+  "algo_id": "sip-afg-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 669.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 3.066671374956721,
+    "max_drawdown_pct": -0.03979978110120395,
+    "win_rate": 0.35326900682082846,
+    "trade_count": 96176,
+    "vs_base_pnl_pct": -31.030927835051546,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l0.md",
+  "prompt_chars_in": 1488,
+  "trace_path": "reasoning-traces/loop-7-trace.md",
+  "critic_summary": "The single failure mode targeted: goalpost misalignment. The seed prompt-l0 method tells the researcher to read base, identify a base weakness, and predict P&L vs base — but the keep/discard gate evaluates per-metric majority vote vs the running-best (L5, +3.30% over base), not vs base. The L7 trace identifies this exactly (\"the seed prompt's 'vs <base_algo>' framing put the goalpost at base ... I would have benefited from being told upfront that 'kept' requires beating L5, not just base\"). The L7 hypothesis predicted 'small positive vs base'; even if that prediction had succeeded, L5's existing +3.30% edge meant L7 would still have lost the gate. Gate this loop: 0 of 5 metrics improved vs L5 (realized_pnl 669 vs 1002, sharpe 3.07 vs 4.95, mdd -3.98% vs -2.93%, win_rate 0.353 vs 0.354; mean_slippage tied 0.0) → reverted; .current_prompt.md restored to prompt-l0.md (L5's prompt_in). The proposed (but reverted) method — running-best-anchored hypothesis design — forces the researcher to read both base AND the running-best in Step 1, compute and write the running-best's per-metric goalpost values, choose an explicit compose-vs-replace posture in Step 2 (with a terminal escalation if no coherent posture exists), and predict all 5 gate metrics vs the running-best with concrete signed magnitudes plus a hard self-check that ≥3 of 5 are predicted to improve before the implementation step (with a second terminal escalation if not). If this method had been in force this loop, the L7 hypothesis would have failed Step 4's gate-survival self-check at design time (predicting only small +pnl vs base, no movement on sharpe/mdd/win_rate vs L5) and either been revised toward compose-with-L5 or escalated to a null run. If the method works in a future loop, I'd expect the next reasoning trace to (a) cite the running-best's 5-metric values explicitly in a Goalpost section, (b) state an explicit compose-vs-replace posture with a coherence argument, and (c) state all five predicted deltas as concrete signed magnitudes vs the running-best with a survival count of ≥3.",
+  "prompt_out": "prompts/proposed/loop-7-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": {
+    "input": 1,
+    "output": 1,
+    "cache_creation": 503,
+    "cache_read": 154378,
+    "total": 154883
+  },
+  "duration_seconds": 3362.0,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 1,
+    "cache_creation": 805,
+    "cache_read": 50684,
+    "total": 51491
+  },
+  "critic_duration_seconds": 247.7,
+  "timestamp": "2026-05-25T09:06:58Z"
+}

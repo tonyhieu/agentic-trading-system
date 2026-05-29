@@ -1,0 +1,28 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 6,
+  "algo_id": "sip-ptg-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3848.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.09029213591002,
+    "max_drawdown_pct": -0.01744986040111679,
+    "win_rate": 0.37133390746854217,
+    "trade_count": 83604,
+    "vs_base_pnl_pct": -9.724325581395349,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 6410,
+  "trace_path": "reasoning-traces/loop-6-trace.md",
+  "critic_summary": "The active method (prompt-l1.md) required a static artifact count that validated event-class frequency (950/day for post-zero-flip OPENs) but could not capture dynamic cascade effects. The zero-flip gate's static PnL estimate (+$22.50, +0.53%) was wrong by a factor of ~20: actual was -$414.50 (-9.7% vs base PTG). The positions removed by the gate were replaced by other positions with lower realized PnL in the dynamic execution path. The proposed method (loop-6-proposal.md) adds: (1) a mandatory one-date probe backtest before full implementation, (2) requires STRUCTURAL axis changes rather than filtering axes (all filtering approaches exhausted across 6 loops), (3) bans zero-PnL-after-flip and all direction-flip filtering. On revert: running best remains loop 2 (prompt-l1.md), so .current_prompt.md stays as prompt-l1.md.",
+  "prompt_out": "prompts/proposed/loop-6-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": null,
+  "duration_seconds": null,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-26T02:05:00Z"
+}

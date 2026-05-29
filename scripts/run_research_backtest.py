@@ -53,7 +53,7 @@ import os
 import random
 try:
     import resource  # POSIX only — not available on Windows
-except ImportError:
+except ImportError:  # pragma: no cover - Windows-only branch
     resource = None  # type: ignore[assignment]
 import subprocess
 import sys

@@ -65,3 +65,6 @@ docs/oracle_strategy_implementation.md
 research/.meta_cursor.json
 experiments/per_iteration_experiment/.current_loop.json
 experiments/island_experiment/.current_loop.json
+experiments/self_improving_prompt_experiment/.current_loop.json
+# sip-* runtime prompt pointer (each base_algo's "active prompt" for the next loop)
+experiments/self_improving_prompt_experiment/*/prompts/.current_prompt.md

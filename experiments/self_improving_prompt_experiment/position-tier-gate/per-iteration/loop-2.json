@@ -1,0 +1,28 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 2,
+  "algo_id": "sip-ptg-l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3774.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 19.21487648861719,
+    "max_drawdown_pct": -0.005374916688791324,
+    "win_rate": 0.37491570312787376,
+    "trade_count": 81557,
+    "vs_base_pnl_pct": -11.460410557184751,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 6478,
+  "trace_path": "reasoning-traces/loop-2-trace.md",
+  "critic_summary": "The loop-1 method's empirical pre-check validates that the targeted event class is non-empty and negative-EV in the base's *realized* stream — but it never measures the counterfactual, the actual aggregate PnL once those orders are skipped. Loop 2 hit this exact failure mode: 10,785 wide-spread OPENs sum to -$1,017 in the base's positions.csv (correctly identified by the method), but skipping them produced a *net loss* of -$488 because the cache state visible to subsequent CLOSE+OPEN pairs changed and the surviving 81,557 trades earned less than the original 90,433. The researcher self-identified this in the trace. The new method replaces step 4's static event-count with a one-day stub backtest where the proposed gate is actually active, then compares `algo.realized_pnl − base.realized_pnl` on that date to two pre-committed predictions: an isolation estimate from positions.csv and a counterfactual estimate the researcher must reason out separately. If the next reasoning trace works, it should contain three committed numbers (N_fire, delta_pnl_isolated_usd, delta_pnl_counterfactual_usd), an actual single-date PnL delta, and either a passing decision tied to actual_delta_pnl_usd > 0 or a documented abort with a discussion of why isolation and counterfactual diverged — not pure linear extrapolation from a static positions.csv subset.",
+  "prompt_out": "prompts/prompt-l2.md",
+  "prompt_action": "kept",
+  "tokens_used": null,
+  "duration_seconds": null,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T20:22:26Z"
+}

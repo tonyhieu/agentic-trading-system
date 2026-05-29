@@ -1,0 +1,28 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 7,
+  "algo_id": "sip-ptg-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 156.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "max_drawdown_pct": -0.05289973550132249,
+    "win_rate": 0.3506443167025027,
+    "trade_count": 136734,
+    "vs_base_pnl_pct": -96.3402,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 6410,
+  "trace_path": "reasoning-traces/loop-7-trace.md",
+  "critic_summary": "The active method (prompt-l1.md) lets a researcher greenlight a hypothesis on a STUB probe that does not actually execute the proposed mechanism — the loop-7 stub run produced $65.50 == $65.50 (PASS) while the real 12-date backtest produced exact equality with the simple baseline ($156 == $156, vs-base −96.3%), the same degeneration as loop 5. The trace explicitly identifies the gap: 'a 51.4% wrong-direction rate does not straightforwardly imply zero net gain — the magnitude of gains vs losses on each side matters' and 'stub mode is deterministic-synthetic and would not have caught the dynamic cascade.' Static event counts validated non-vacuity but never measured dynamic outcome — the same failure mode in loops 2, 3, 4, 5, 6, and 7. The proposed method makes the real-mechanism single-date probe non-skippable and adds three hard pass conditions: (1) PnL(algo) > PnL(base) on the probe date (or within $50 if variance-reducing), (2) actual delta sign matches the researcher's pre-committed prediction (sign-unknown is grounds to abort), (3) PnL(algo) != PnL(simple) on the probe date — catching exact-simple-degeneration before 12-date commit. On revert: running best stays loop 2 (prompt-l1.md), so .current_prompt.md remains prompt-l1.md. If the proposal had been kept, the next reasoning trace should contain a pre-committed single-date PnL prediction with sign, an actual single-date PnL delta from a real (non-stub) backtest, and either a probe-pass decision tied to all three conditions or a documented abort with the failing condition labeled.",
+  "prompt_out": "prompts/proposed/loop-7-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": null,
+  "duration_seconds": null,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-26T03:31:07Z"
+}

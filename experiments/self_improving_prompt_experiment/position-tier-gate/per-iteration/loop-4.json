@@ -1,0 +1,28 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 4,
+  "algo_id": "sip-ptg-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 2825.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 12.976676703041521,
+    "max_drawdown_pct": -0.021749891250543746,
+    "win_rate": 0.36415996743665413,
+    "trade_count": 98270,
+    "vs_base_pnl_pct": -33.71847507331378,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 6410,
+  "trace_path": "reasoning-traces/loop-4-trace.md",
+  "critic_summary": "The active method's empirical pre-check only validates that the targeted event class is non-empty in cached artifacts — it never measures the aggregate consequence of acting on that class, and it has no architectural-diversity guard. Loops 2, 3, and 4 all conditioned on the on-order quote tick with renamed predicates (wide spread skip, tight spread submit, in-flight unrealized-PnL override) and all lost vs base; the trace explicitly identifies the underlying anti-pattern as 'use the on-order quote tick to filter which flips to honor' and explicitly says a multi-candidate probe with structural-axis diversity would have caught it. The proposed method (kept-but-applied-on-revert reasoning) does four things: (1) reads prior NOTES.md and HARD-BANS conditioning axes already explored, (2) requires four candidates each on a different (object, temporal aspect) with a diversity check, (3) adversarially ranks by hardest-to-dismiss counterargument and runs the top TWO as real algorithms on one median-volume probe date with six pre-committed numbers, (4) tournament-gates with an explicit PROCEED-LESS-BAD escape valve so the loop always produces gate-comparable 12-date metrics rather than aborting (the loop-3 critic's escape-valve idea, retained). On a revert: the running best is loop-2, whose prompt_in was prompt-l1.md, so .current_prompt.md is restored to prompt-l1.md and the proposal sits at prompts/proposed/loop-4-proposal.md. If the proposal had been kept, the next reasoning trace should contain four distinct conditioning-axis labels, an explicit banned-axis list cross-referenced to prior loops, six pre-committed numbers across two probed candidates, an adversarial counterargument ranking, and a tournament-winner selection tied to a single-date PnL delta — not a single-candidate proposal extending the on-order-quote axis.",
+  "prompt_out": "prompts/proposed/loop-4-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": null,
+  "duration_seconds": null,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T21:35:56Z"
+}

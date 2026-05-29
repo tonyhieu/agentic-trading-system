@@ -1,0 +1,98 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "sip-afg-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -15.193150139386699,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.858194548423203,
+    "trade_count": 106967,
+    "prompt_chars_in": 1488,
+    "prompt_action": "kept",
+    "timestamp": "2026-05-24T20:36:00Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "sip-afg-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": -48.626044603742535,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 2.76451379791473,
+    "trade_count": 120966,
+    "prompt_chars_in": 7857,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-24T22:55:00Z"
+  },
+  {
+    "loop": 3,
+    "algo_id": "sip-afg-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": -43.13022700119474,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.0567923750265296,
+    "trade_count": 115099,
+    "prompt_chars_in": 1488,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-25T00:04:57Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "sip-afg-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": -37.853444842692156,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.5476652194662255,
+    "trade_count": 120148,
+    "prompt_chars_in": 1488,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-25T01:12:34Z"
+  },
+  {
+    "loop": 5,
+    "algo_id": "sip-afg-l5",
+    "status": "completed",
+    "vs_base_pnl_pct": 3.2989690721649483,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.9467434982969785,
+    "trade_count": 78442,
+    "prompt_chars_in": 1488,
+    "prompt_action": "kept",
+    "timestamp": "2026-05-25T03:38:16Z"
+  },
+  {
+    "loop": 6,
+    "algo_id": "sip-afg-l6",
+    "status": "completed",
+    "vs_base_pnl_pct": 1.4690721649484535,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 4.834627317489331,
+    "trade_count": 79165,
+    "prompt_chars_in": 7689,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-25T08:05:36Z"
+  },
+  {
+    "loop": 7,
+    "algo_id": "sip-afg-l7",
+    "status": "completed",
+    "vs_base_pnl_pct": -31.030927835051546,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.066671374956721,
+    "trade_count": 96176,
+    "prompt_chars_in": 1488,
+    "prompt_action": "reverted",
+    "timestamp": "2026-05-25T09:06:58Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "sip-afg-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": -33.373158,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 3.8958,
+    "trade_count": 88329,
+    "prompt_chars_in": 1488,
+    "prompt_action": null,
+    "timestamp": "2026-05-25T16:59:43Z"
+  }
+]

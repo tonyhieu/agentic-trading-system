@@ -1,0 +1,40 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "vol-regime-sizer",
+  "loop": 7,
+  "algo_id": "sip-vrs-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1471.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 13.718102547189677,
+    "max_drawdown_pct": -0.016374905844291396,
+    "win_rate": 0.3546510344218498,
+    "trade_count": 90582,
+    "vs_base_pnl_pct": 95.25704872305467,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l5.md",
+  "prompt_chars_in": 7761,
+  "trace_path": "reasoning-traces/loop-7-trace.md",
+  "critic_summary": "Targeted failure mode: the running method's audit and falsification both run on the parent's CSVs, with no machinery to detect that a candidate's binding feature has already been removed by the champion's filter. Loop 7's streak-suppression gate had unanimous direction on the parent (every one of 11 train dates \u03b4 < 0) but fired on zero of sip-vrs-l5's submitted orders across all 11 train dates \u2014 per-date pnl tied L5 exactly, 0/5 metrics improved. This is the same redundancy-with-champion failure mode loop 3's critic warned about, now manifest. The proposed Champion-Anchored Propose-Audit-Falsify-Commit method makes three changes: (a) Step 1 reads the current champion's residual table (per-date realized_pnl) and requires every candidate in Step 2 to be tied to a named champion residual; (b) Steps 3 and 4 audit binding features and run falsification statistics on the champion's CSVs, not the parent's \u2014 the per-date \u03b4 is now (mean champion-pnl in gated bucket) minus (mean champion-pnl in not-gated bucket); (c) a new Step 5 feasibility gate requires every candidate to PASS two absolute, pre-stated thresholds \u2014 champion-trigger fraction \u2265 1% AND |champion-gated-bucket mean \u03b4| \u2265 $0.02 in the predicted direction \u2014 using numbers already computed in Steps 3 and 4. Step 6 adds a Zero-PASS branch whose explicit output is 'revert to the champion as the loop's algorithm and write a method-failure paragraph,' preventing another zero-effect loop. Gate result: 0/5 metrics improved vs running-best loop 5 (pnl tied at 1471.75, sharpe tied at 13.718, max_dd tied at -0.01637, win_rate tied at 0.35465, mean_slippage tied at 0). Action: reverted. If the new method works, the next reasoning trace will show: a champion residual table in NOTES.md, candidates each pinned to a named residual, audit/falsification numbers computed on champion CSVs, an explicit PASS/FAIL feasibility line per candidate, and a hypothesis that either fires on a non-trivial fraction of L5's orders or is honestly recorded as 'all candidates structurally redundant; revert to champion.' The 'Where I felt uncertain' section will no longer name 'champion-redundancy' as the dominant uncertainty.",
+  "prompt_out": "prompts/proposed/loop-7-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": {
+    "input": 1,
+    "output": 725,
+    "cache_creation": 1203,
+    "cache_read": 64818,
+    "total": 66747
+  },
+  "duration_seconds": 267.9,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 1,
+    "cache_creation": 633,
+    "cache_read": 117726,
+    "total": 118361
+  },
+  "critic_duration_seconds": 1229.5,
+  "timestamp": "2026-05-25T09:00:00Z"
+}

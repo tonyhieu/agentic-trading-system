@@ -1,0 +1,28 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 3,
+  "algo_id": "sip-ptg-l3",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3131.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 12.569282715197527,
+    "max_drawdown_pct": -0.02272487501318743,
+    "win_rate": 0.35828636385165535,
+    "trade_count": 126678,
+    "vs_base_pnl_pct": -26.527859237536656,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l2.md",
+  "prompt_chars_in": 7385,
+  "trace_path": "reasoning-traces/loop-3-trace.md",
+  "critic_summary": "The single-candidate probe correctly fired FAIL on loop-3's tight-spread override but left the researcher with no escape valve when no alternative proposal was prepared — forcing a 'deliberate divergence' where the researcher ran the 12-date eval anyway, which is exactly the failure mode the gate was meant to prevent; compounding this, loop-3's hypothesis was a flag-inverted variation on loop-2's spread axis (loop-2 added skips at wide spread, loop-3 removed skips at tight spread), which the trace itself flagged as ambiguous. Both failures share one root cause: sequential single-proposal exploration with no breadth and no architectural diversity guard. The new method front-loads breadth: generate four candidates each on a different conditioning axis (with explicit ban on re-entering prior axes), rank by adversarial score (which counterargument is hardest to dismiss), probe the top two on the SAME single date for fair comparison, and use a tournament gate with an explicit escape valve — if both probes fail, proceed with the less-bad candidate to the 12-date eval rather than aborting, so the loop always produces gate-comparable metrics. If the new method works, the next reasoning trace should contain four distinct conditioning axes in NOTES.md, an adversarial ranking, six pre-committed numbers across the two probed candidates, and an explicit tournament-winner selection — not a single proposal extending the prior loop's axis.",
+  "prompt_out": "prompts/proposed/loop-3-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": null,
+  "duration_seconds": null,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T21:06:00Z"
+}

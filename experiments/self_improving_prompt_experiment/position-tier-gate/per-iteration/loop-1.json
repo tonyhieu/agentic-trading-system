@@ -1,0 +1,34 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "position-tier-gate",
+  "loop": 1,
+  "algo_id": "sip-ptg-l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 4262.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "max_drawdown_pct": -0.017274913625431872,
+    "win_rate": 0.37204339123992347,
+    "trade_count": 90433,
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l0.md",
+  "prompt_chars_in": 1487,
+  "trace_path": "reasoning-traces/loop-1-trace.md",
+  "critic_summary": "The seed method had no empirical pre-check step — the researcher reasoned about the oracle's emission process in pure prose and committed to a hypothesis that conditioned on an event class (same-ts_init CLOSE+OPEN where the new order is same-side as the in-flight position) which turns out to be empty in the data, producing a strict identity transform on the base. The new method makes a propose-then-verify gate mandatory: step 4 requires the researcher to (a) commit to a numeric prediction N for how often the new branch should fire per day, (b) count it from the cheapest available artifact (cached baseline orders.csv / fills.csv, or raw DBN, or a one-day probe), and (c) abort and reselect the weakness if actual < N/5 or actual == 0. If this works, the next reasoning trace should contain a concrete event-count from the verification surface and either a passing decision or a documented abort+reselect — not pure prose about the source process.",
+  "prompt_out": "prompts/prompt-l1.md",
+  "prompt_action": "kept",
+  "tokens_used": {
+    "input": 1,
+    "output": 901,
+    "cache_creation": 985,
+    "cache_read": 82376,
+    "total": 84263
+  },
+  "duration_seconds": 1100.1,
+  "critic_tokens_used": null,
+  "critic_duration_seconds": null,
+  "timestamp": "2026-05-25T18:44:37Z"
+}

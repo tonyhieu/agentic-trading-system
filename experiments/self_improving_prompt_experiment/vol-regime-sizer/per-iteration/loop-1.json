@@ -1,0 +1,28 @@
+{
+  "experiment":             "self_improving_prompt_experiment",
+  "base_algo":              "vol-regime-sizer",
+  "loop":                   1,
+  "algo_id":                "sip-vrs-l1",
+  "status":                 "completed",
+  "metrics": {
+    "realized_pnl":         1062.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         4.185193246517971,
+    "max_drawdown_pct":     -0.04274977556367829,
+    "win_rate":             0.35392384481289524,
+    "trade_count":          127923,
+    "vs_base_pnl_pct":      40.92926824677289,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in":              "prompt-l0.md",
+  "prompt_chars_in":        1485,
+  "trace_path":             "reasoning-traces/loop-1-trace.md",
+  "critic_summary":         "Targeted failure mode: the seed prompt's single-pass shape rewards confidence over evidence — the first plausible weakness becomes the hypothesis with no empirical check before implementation. The researcher's own trace named this explicitly ('I had no way of knowing in advance'). The proposed propose-falsify-commit method requires three substantively different candidate weaknesses, each paired with a cheap falsification test that uses already-on-disk parent artifacts (fills.csv/positions.csv/orders.csv) and a decision rule stated before running the test. Candidate selection is mechanical: implement the candidate with the largest separation margin among survivors. Parameter values must inherit from parent, derive from a step-4 statistic, or follow a principled rule. If this works, the next reasoning trace will show three explicit candidates with prior decision rules, on-disk evidence per candidate, and parameter values traceable to artifacts rather than intuition — and the 'Where I felt uncertain' section will be shorter on inherited-without-justification parameters.",
+  "prompt_out":             "prompts/prompt-l1.md",
+  "prompt_action":          "kept",
+  "tokens_used":            null,
+  "duration_seconds":       null,
+  "critic_tokens_used":     null,
+  "critic_duration_seconds": null,
+  "timestamp":              "2026-05-24T23:33:20Z"
+}

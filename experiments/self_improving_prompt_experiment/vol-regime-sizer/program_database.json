@@ -1,0 +1,98 @@
+[
+  {
+    "loop":                 1,
+    "algo_id":              "sip-vrs-l1",
+    "status":               "completed",
+    "vs_base_pnl_pct":      40.92926824677289,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         4.185193246517971,
+    "trade_count":          127923,
+    "prompt_chars_in":      1485,
+    "prompt_action":        "kept",
+    "timestamp":            "2026-05-24T23:33:20Z"
+  },
+  {
+    "loop":                 2,
+    "algo_id":              "sip-vrs-l2",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -4.046434540417082,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         2.9859656640010135,
+    "trade_count":          126948,
+    "prompt_chars_in":      7324,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T00:13:00Z"
+  },
+  {
+    "loop":                 3,
+    "algo_id":              "sip-vrs-l3",
+    "status":               "completed",
+    "vs_base_pnl_pct":      15.256884349817427,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         3.5359461155850584,
+    "trade_count":          125936,
+    "prompt_chars_in":      7324,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T00:55:00Z"
+  },
+  {
+    "loop":                 4,
+    "algo_id":              "sip-vrs-l4",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -41.7578781858925,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         1.771596364158811,
+    "trade_count":          130227,
+    "prompt_chars_in":      7324,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T17:00:00Z"
+  },
+  {
+    "loop":                 5,
+    "algo_id":              "sip-vrs-l5",
+    "status":               "completed",
+    "vs_base_pnl_pct":      95.25704842172681,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         13.718102547189677,
+    "trade_count":          90582,
+    "prompt_chars_in":      7283,
+    "prompt_action":        "kept",
+    "timestamp":            "2026-05-25T04:16:54Z"
+  },
+  {
+    "loop":                 6,
+    "algo_id":              "sip-vrs-l6",
+    "status":               "completed",
+    "vs_base_pnl_pct":      3.5491865068108925,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         3.3855292716673504,
+    "trade_count":          97186,
+    "prompt_chars_in":      7761,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T05:50:00Z"
+  },
+  {
+    "loop":                 7,
+    "algo_id":              "sip-vrs-l7",
+    "status":               "completed",
+    "vs_base_pnl_pct":      95.25704872305466,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         13.718102547189677,
+    "trade_count":          90582,
+    "prompt_chars_in":      7761,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T09:00:00Z"
+  },
+  {
+    "loop":                 8,
+    "algo_id":              "sip-vrs-l8",
+    "status":               "completed",
+    "vs_base_pnl_pct":      -49.95022912645546,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio":         2.7881261111749738,
+    "trade_count":          61816,
+    "prompt_chars_in":      7761,
+    "prompt_action":        "reverted",
+    "timestamp":            "2026-05-25T11:00:00Z"
+  }
+]

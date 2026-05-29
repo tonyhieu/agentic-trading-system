@@ -1,0 +1,44 @@
+{
+  "dates_analyzed": [
+    "20260309",
+    "20260311"
+  ],
+  "per_date": {
+    "20260309": {
+      "n_trade_ticks": 12663,
+      "n_synthetic_arrivals": 86372,
+      "n_evaluated_for_skip": 75855,
+      "n_base_skips": 10516,
+      "base_skip_rate_of_evaluated": 0.13863291806736536,
+      "n_post_skip_next_arrivals": 10516
+    },
+    "20260311": {
+      "n_trade_ticks": 9818,
+      "n_synthetic_arrivals": 86349,
+      "n_evaluated_for_skip": 77369,
+      "n_base_skips": 8979,
+      "base_skip_rate_of_evaluated": 0.11605423360777573,
+      "n_post_skip_next_arrivals": 8979
+    }
+  },
+  "n_post_skip_samples_total": 19495,
+  "next_abs_net_flow_distribution": {
+    "mean": 6.116799179276738,
+    "p10": 2.0,
+    "p25": 2.0,
+    "p50": 3.0,
+    "p70": 5.0,
+    "p75": 6.0,
+    "p80": 7.0,
+    "p90": 12.0,
+    "p95": 21.0
+  },
+  "current_relaxation_factor": 1.5,
+  "current_effective_threshold": 3.0,
+  "current_firing_rate": 0.6043087971274685,
+  "target_firing_rate": 0.3,
+  "calibrated_effective_threshold": 5.0,
+  "calibrated_relaxation_factor": 2.5,
+  "abs_pct_delta_vs_current": 66.66666666666666,
+  "survival_criterion_passed": true
+}

@@ -1,0 +1,40 @@
+{
+  "experiment": "self_improving_prompt_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "loop": 2,
+  "algo_id": "sip-afg-l2",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 645.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 2.76451379791473,
+    "max_drawdown_pct": -0.04307477385743725,
+    "win_rate": 0.352644544748111,
+    "trade_count": 120966,
+    "vs_base_pnl_pct": -48.626044603742535,
+    "vs_base_slippage_pct": 0.0
+  },
+  "prompt_in": "prompt-l1.md",
+  "prompt_chars_in": 7857,
+  "trace_path": "reasoning-traces/loop-2-trace.md",
+  "critic_summary": "The single failure mode targeted: the loop-2 method's EDA sampled at TradeTick events where |net_v| >= 2 but never re-sampled at the strategy's order-arrival cadence, so the t=-41 SELL-skip-inversion statistic was computed over a distribution (active-window-clustered ticks) that does not match the distribution at which the backtest's gate actually fires (~1Hz uniform arrivals). The researcher flagged this in Attack 2 but the method gave no mechanism to act on it; the pre-registered falsifier ('trade_count rises >3% but P&L falls') was triggered exactly as the tick-vs-arrival sampling gap predicted (trade_count +12.84%, realized_pnl -48.6%). The proposed (but reverted) method adds a mandatory Step 3b 'gate-alignment EDA' pass that recomputes the Step-3 decisive number on a synthetic order-arrival stream at the strategy's cadence, with a hard survival criterion (sign agreement, magnitude >= 50% of tick-level, |t| >= 5); a candidate that loses its signal under arrival-cadence resampling is killed before the critique step, not after the backtest. If this method works in a future loop, I'd expect the next reasoning trace to (a) report two parallel decisive numbers per candidate (tick-level and arrival-aligned) with their delta, (b) show at least one candidate being killed specifically at Step 3b for sampling-distribution shift, and (c) make trade_count predictions in Step 5 that are derivable from the Step-3b firing rate rather than from tick-event counts.",
+  "prompt_out": "prompts/proposed/loop-2-proposal.md",
+  "prompt_action": "reverted",
+  "tokens_used": {
+    "input": 1,
+    "output": 343,
+    "cache_creation": 249,
+    "cache_read": 56064,
+    "total": 56657
+  },
+  "duration_seconds": 136.8,
+  "critic_tokens_used": {
+    "input": 1,
+    "output": 819,
+    "cache_creation": 1135,
+    "cache_read": 77613,
+    "total": 79568
+  },
+  "critic_duration_seconds": 319.1,
+  "timestamp": "2026-05-24T22:55:00Z"
+}
