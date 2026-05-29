@@ -31,7 +31,7 @@ strategy:
 
 data_window:
   # Train/test split (ISO dates, inclusive). Must lie within the dataset's date_range.
-  train: ["2026-03-08", "2026-03-21"]
+  train: ["2026-03-08", "2026-03-20"]  # 12 trading days, matches base algo train window
   test:  ["2026-03-26", "2026-04-06"]
   # Cost cap: max date partitions an agent may download in a single iteration.
   # 10 days × ~330 MB ≈ $0.13 per iteration.
@@ -70,6 +70,10 @@ loop:
   # hours of wall-clock before the iteration completed. Set to 0 or
   # remove to disable.
   iteration_timeout_seconds: 5400   # 90 minutes
+
+proposer_criticizer:
+  max_runs: 8
+  max_debate_rounds: 3
 
 refinement:
   # Used when an iteration builds on a prior passing algorithm (§6). The

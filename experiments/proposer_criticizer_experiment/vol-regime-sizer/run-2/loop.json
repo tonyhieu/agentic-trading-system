@@ -1,0 +1,30 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "vol-regime-sizer",
+  "run": 2,
+  "algo_id": "vrs-pc-r2",
+  "status": "completed",
+  "debate_rounds_used": 3,
+  "debate_outcome": "CONVERGED",
+  "metrics": {
+    "realized_pnl": 441.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 9.373335540331068,
+    "max_drawdown_pct": -0.01714992711280977,
+    "win_rate": 0.34470219582349226,
+    "trade_count": 85526,
+    "vs_base_pnl_pct": -41.39303482587064,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 99,
+  "context_tokens_estimated": 24,
+  "tokens_used": {
+    "input": 1,
+    "output": 2,
+    "cache_creation": 218,
+    "cache_read": 92337,
+    "total": 92558
+  },
+  "duration_seconds": 983.9,
+  "timestamp": "2026-05-28T00:00:00Z"
+}

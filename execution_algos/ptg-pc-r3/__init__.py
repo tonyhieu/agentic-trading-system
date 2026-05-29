@@ -1,0 +1,5 @@
+"""ptg-pc-r3: position-tier-gate + winners-run CLOSE-skip gate."""
+
+from .execution_algorithm import get_execution_algorithm
+
+__all__ = ["get_execution_algorithm"]

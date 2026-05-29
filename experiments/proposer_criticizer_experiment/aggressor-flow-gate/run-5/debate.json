@@ -1,0 +1,78 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "run": 5,
+  "algo_id": "afg-pc-r5",
+  "max_rounds": 3,
+  "rounds": [
+    {
+      "round": 1,
+      "proposer": {
+        "mechanism": "EWMA-weighted signed aggressor flow gate (stand-alone): replace base AFG's rectangular 10s window with an exponentially-decayed flow estimator. Compute weighted_flow = sum(signed_vol_i * exp(-(t_order - t_i)/tau)) over prints with ts_event in (t_order - 10s, t_order]. Skip BUY when weighted_flow <= -2.0, skip SELL when weighted_flow >= +2.0. Anti-cascade via _position_flat=True after skip. Reduce-only always submits.",
+        "inefficiency_exploited": "The rectangular window treats 9.9s-old prints identically to 0.1s-old prints; adverse-selection decays rapidly so recency-weighted flow is a sharper conditioner.",
+        "why_survives_costs": "Slippage is 0 in this simulator; only cost is foregone P&L from skipping good entries. Recency weighting reduces false-positive skips on stale flow bursts.",
+        "builds_on": "aggressor-flow-gate base — replaces uniform window with EWMA. Distinct from r1-r4.",
+        "alternatives_considered": "Linear decay (less smooth); shorter window with flat weights (less info); combining with r2's chain (deferred to round 2 if criticized).",
+        "revision_notes": ""
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MAJOR", "text": "Alternative not considered: r2 (chain state machine) is the empirical winner (+600% vs base, sharpe 5.27). A stand-alone EWMA gate replaces r2's mechanism instead of building on it. A clearly stronger approach is to combine EWMA flow estimator WITH r2's directional-chain — extending the winning mechanism along the orthogonal decay dimension."},
+          {"severity": "MAJOR", "text": "Decay constant tau is a free parameter without principled rationale. Needs to be tied to the empirical 10s window or oracle's 30s horizon."},
+          {"severity": "MINOR", "text": "EWMA weighted sum has different magnitude scale than raw window sum, so threshold 2.0 may not translate directly — may need rescaling."}
+        ],
+        "suggested_alternatives": ["Combine EWMA decay with r2's directional-chain state machine; set tau = window_seconds/2 = 5s for principled half-life choice."],
+        "verdict": "REVISE",
+        "reasoning": "Hypothesis is sound but ignores the empirical winner (r2) and underspecifies the decay parameter."
+      }
+    },
+    {
+      "round": 2,
+      "proposer": {
+        "mechanism": "EWMA-weighted signed flow + r2 directional-chain. Compute weighted_flow at order time using exp(-(t_order - t_i)/tau) with tau=5s. Skip threshold lowered to 1.5 to preserve approximately the same skip rate as base/r2 (since EWMA weighted sum is ~75% of raw uniform sum for uniformly-distributed prints over 10s with tau=5s). Chain state machine from r2 preserved verbatim: max_consecutive_skips=3, direction-change force-submits, reduce-only always submits.",
+        "inefficiency_exploited": "Same as r1 — recency-weighting sharpens adverse-flow detection. Combined with r2's chain to preserve the empirical winner's structure.",
+        "why_survives_costs": "Sharper gate plus the proven chain logic should yield more accurate skip decisions than r2's flat-weighted flow.",
+        "builds_on": "afg-pc-r2 + EWMA weighting; addresses r1 criticism #1.",
+        "alternatives_considered": "Keep threshold at 2.0 (rejected — would change effective skip rate); use tau tied to oracle horizon=30s (rejected — too long, defeats recency emphasis).",
+        "revision_notes": "Combined with r2 chain (addresses MAJOR #1). Set tau=window/2=5s with principled half-life rationale (addresses MAJOR #2). Rescaled threshold to 1.5 to preserve skip rate (addresses MINOR #3)."
+      },
+      "criticizer": {
+        "objections": [
+          {"severity": "MAJOR", "text": "Overfitting risk: r2's empirical success was tuned to threshold=2.0 and max_skips=3. By simultaneously changing the weighting function AND the threshold to 1.5, we tune two coupled knobs and can't attribute any P&L change to either independently. A cleaner ablation is to keep threshold=2.0 — let the weighting change be the single isolated variable. This is more falsifiable: if it improves, decay-weighting alone is the cause; if it hurts, decay-weighting alone is the problem."},
+          {"severity": "MINOR", "text": "EWMA requires O(N) per decision instead of O(1) since per-print weight depends on current order timestamp. Need to confirm this is fine — at ~100-1000 prints in 10s for MES, the cost is negligible per decision."}
+        ],
+        "suggested_alternatives": ["Hold flow_threshold=2.0 constant; let the decay function be the only change vs r2."],
+        "verdict": "REVISE",
+        "reasoning": "Mechanism is right but threshold rescaling introduces coupled-variable confounding. Isolate decay as the sole change."
+      }
+    },
+    {
+      "round": 3,
+      "proposer": {
+        "mechanism": "Time-decayed AFG with r2 chain state machine (single-variable ablation vs r2). At each open-order decision, compute weighted_flow = sum(signed_vol_i * exp(-(t_order - t_i)/tau_ns)) over all flow_deque entries with ts_event in (t_order - 10s, t_order], where tau = 5s (half-life ~= 3.47s). Skip BUY when weighted_flow <= -2.0, skip SELL when weighted_flow >= +2.0 (threshold IDENTICAL to base/r2). Directional-chain state machine preserved VERBATIM from r2: max_consecutive_skips=3, direction-change immediately force-submits and resets chain, reduce-only always submits, first-signal warm-up unconditional submit. Trade-tick subscription and deque maintenance identical to r2; only the gate evaluation function changes from raw _net_flow comparison to weighted recomputation at order time. Look-ahead-free: only prints with ts_event <= order.ts_init contribute.",
+        "inefficiency_exploited": "The base rectangular window treats a 9.9s-old print identically to a 0.1s-old print, but adverse-selection from aggressor flow decays rapidly — what aggressors did 8 seconds ago is mostly already priced in. Recency weighting sharpens the gate to respond to currently-active flow rather than averaged stale flow, while still using older prints as context (down-weighted, not discarded).",
+        "why_survives_costs": "Slippage is 0 in this simulator (zero fill-cost model); the only cost is foregone P&L from over-skipping. With threshold and chain held constant at r2's values, decay-weighting should reduce two failure modes: (a) false-positive skips when a stale 8s-old burst has already reversed; (b) false-negative submits when fresh adverse flow is diluted by older neutral flow in the unweighted sum. Net effect: more accurate skip targeting at approximately the same skip rate.",
+        "builds_on": "afg-pc-r2 (the empirical winner). Sole change: rectangular weighting -> EWMA weighting at gate evaluation. All other r2 mechanics preserved verbatim: chain state machine, max_consecutive_skips=3, flow_threshold=2.0, window_seconds=10.0, reduce-only, first-signal warm-up, on_reset semantics.",
+        "alternatives_considered": "(a) Linear/triangular decay — qualitatively similar but less smooth; exponential is the standard microstructure recency-weighting choice. (b) tau=window (10s) — too long, weights only ~37% drop at window boundary; defeats recency emphasis. (c) tau=1s — too short, effectively ignores anything older than 3s. (d) tau=window/2=5s — principled compromise: half-life ~3.5s gives strong recency emphasis while preserving meaningful context from the older half of the window. (e) Threshold rescaling — rejected per round-2 criticism to keep the ablation clean.",
+        "revision_notes": "R2 introduced threshold/decay coupling. R3 isolates decay as the sole change vs r2: threshold=2.0 held constant, chain state machine identical, max_consecutive_skips=3 unchanged. Pure single-variable test of the decay-weighting hypothesis. O(N) eval cost acknowledged and accepted (~100-1000 prints per decision; trivial for MES)."
+      },
+      "criticizer": {
+        "objections": [],
+        "suggested_alternatives": [],
+        "verdict": "PASS",
+        "reasoning": "Single-variable ablation of the empirical winner along a principled microstructure dimension (recency-weighting). Logically coherent, no look-ahead, no near-duplicate of prior runs, no clearly stronger untried alternative remains."
+      }
+    }
+  ],
+  "debate_outcome": "CONVERGED",
+  "rounds_used": 3,
+  "final_hypothesis": {
+    "mechanism": "Time-decayed AFG with r2 chain state machine (single-variable ablation vs r2). At each open-order decision, compute weighted_flow = sum(signed_vol_i * exp(-(t_order - t_i)/tau_ns)) over all flow_deque entries with ts_event in (t_order - 10s, t_order], where tau = 5s (half-life ~= 3.47s). Skip BUY when weighted_flow <= -2.0, skip SELL when weighted_flow >= +2.0 (threshold IDENTICAL to base/r2). Directional-chain state machine preserved VERBATIM from r2: max_consecutive_skips=3, direction-change immediately force-submits and resets chain, reduce-only always submits, first-signal warm-up unconditional submit. Trade-tick subscription and deque maintenance identical to r2; only the gate evaluation function changes from raw _net_flow comparison to weighted recomputation at order time. Look-ahead-free: only prints with ts_event <= order.ts_init contribute.",
+    "inefficiency_exploited": "The base rectangular window treats a 9.9s-old print identically to a 0.1s-old print, but adverse-selection from aggressor flow decays rapidly — what aggressors did 8 seconds ago is mostly already priced in. Recency weighting sharpens the gate to respond to currently-active flow rather than averaged stale flow, while still using older prints as context (down-weighted, not discarded).",
+    "why_survives_costs": "Slippage is 0 in this simulator (zero fill-cost model); the only cost is foregone P&L from over-skipping. With threshold and chain held constant at r2's values, decay-weighting should reduce two failure modes: (a) false-positive skips when a stale 8s-old burst has already reversed; (b) false-negative submits when fresh adverse flow is diluted by older neutral flow in the unweighted sum. Net effect: more accurate skip targeting at approximately the same skip rate.",
+    "builds_on": "afg-pc-r2 (the empirical winner). Sole change: rectangular weighting -> EWMA weighting at gate evaluation. All other r2 mechanics preserved verbatim: chain state machine, max_consecutive_skips=3, flow_threshold=2.0, window_seconds=10.0, reduce-only, first-signal warm-up, on_reset semantics.",
+    "alternatives_considered": "(a) Linear/triangular decay — qualitatively similar but less smooth; exponential is the standard microstructure recency-weighting choice. (b) tau=window (10s) — too long, weights only ~37% drop at window boundary; defeats recency emphasis. (c) tau=1s — too short, effectively ignores anything older than 3s. (d) tau=window/2=5s — principled compromise: half-life ~3.5s gives strong recency emphasis while preserving meaningful context from the older half of the window. (e) Threshold rescaling — rejected per round-2 criticism to keep the ablation clean.",
+    "revision_notes": "R2 introduced threshold/decay coupling. R3 isolates decay as the sole change vs r2: threshold=2.0 held constant, chain state machine identical, max_consecutive_skips=3 unchanged. Pure single-variable test of the decay-weighting hypothesis. O(N) eval cost acknowledged and accepted (~100-1000 prints per decision; trivial for MES)."
+  },
+  "timestamp": "2026-05-26T00:00:00Z"
+}

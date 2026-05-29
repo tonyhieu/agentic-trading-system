@@ -64,6 +64,7 @@ docs/oracle_strategy_implementation.md
 # Local hook state (per-iteration metadata cursor) -- machine-local, do not commit
 research/.meta_cursor.json
 experiments/per_iteration_experiment/.current_loop.json
+experiments/proposer_criticizer_experiment/.current_loop.json
 experiments/island_experiment/.current_loop.json
 experiments/self_improving_prompt_experiment/.current_loop.json
 # sip-* runtime prompt pointer (each base_algo's "active prompt" for the next loop)

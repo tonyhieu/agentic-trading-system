@@ -185,6 +185,102 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-m-l8",
         "get_execution_algorithm",
     ),
+    "afg-pc-r1": (
+        "execution_algos.afg-pc-r1",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r2": (
+        "execution_algos.afg-pc-r2",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r3": (
+        "execution_algos.afg-pc-r3",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r4": (
+        "execution_algos.afg-pc-r4",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r5": (
+        "execution_algos.afg-pc-r5",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r6": (
+        "execution_algos.afg-pc-r6",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r7": (
+        "execution_algos.afg-pc-r7",
+        "get_execution_algorithm",
+    ),
+    "afg-pc-r8": (
+        "execution_algos.afg-pc-r8",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r1": (
+        "execution_algos.ptg-pc-r1",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r2": (
+        "execution_algos.ptg-pc-r2",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r3": (
+        "execution_algos.ptg-pc-r3",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r4": (
+        "execution_algos.ptg-pc-r4",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r5": (
+        "execution_algos.ptg-pc-r5",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r6": (
+        "execution_algos.ptg-pc-r6",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r7": (
+        "execution_algos.ptg-pc-r7",
+        "get_execution_algorithm",
+    ),
+    "ptg-pc-r8": (
+        "execution_algos.ptg-pc-r8",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r1": (
+        "execution_algos.vrs-pc-r1",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r2": (
+        "execution_algos.vrs-pc-r2",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r3": (
+        "execution_algos.vrs-pc-r3",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r4": (
+        "execution_algos.vrs-pc-r4",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r5": (
+        "execution_algos.vrs-pc-r5",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r6": (
+        "execution_algos.vrs-pc-r6",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r7": (
+        "execution_algos.vrs-pc-r7",
+        "get_execution_algorithm",
+    ),
+    "vrs-pc-r8": (
+        "execution_algos.vrs-pc-r8",
+        "get_execution_algorithm",
+    ),
     "ptg-isl-g1l1": (
         "execution_algos.ptg-isl-g1l1",
         "get_execution_algorithm",

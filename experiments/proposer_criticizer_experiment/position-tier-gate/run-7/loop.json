@@ -1,0 +1,24 @@
+{
+  "experiment": "proposer_criticizer_experiment",
+  "base_algo": "position-tier-gate",
+  "run": 7,
+  "algo_id": "ptg-pc-r7",
+  "status": "completed",
+  "debate_rounds_used": 2,
+  "debate_outcome": "CONVERGED",
+  "metrics": {
+    "realized_pnl": 4467.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 19.079121961189994,
+    "max_drawdown_pct": -0.010924945375273123,
+    "win_rate": 0.3757022723206298,
+    "trade_count": 83835,
+    "vs_base_pnl_pct": 4.803519061583773,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 594,
+  "context_tokens_estimated": 148,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "timestamp": "2026-05-28T00:00:00Z"
+}
