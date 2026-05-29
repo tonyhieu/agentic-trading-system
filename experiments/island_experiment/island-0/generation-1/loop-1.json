@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-0",
+  "base_algo":           "position-tier-gate",
+  "generation":          1,
+  "loop_in_generation":  1,
+  "algo_id":             "ptg-isl-g1l1",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         5394.25,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         23.168155462598747,
+    "max_drawdown_pct":     -0.006099905451465502,
+    "win_rate":             0.3805929980874724,
+    "trade_count":          87319,
+    "vs_base_pnl_pct":      26.551320046946274,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Layered a second OPEN-gate on top of the position-tier-gate base: skip new entries when the latest top-of-book spread exceeds the p75 of a 60s rolling spread distribution (min 50 samples).",
+    "outcome":    "pnl +26.55% vs position-tier-gate (5394.25 vs 4262.50), sharpe 23.17 vs 17.62, trade_count -3.4% (87319 vs 90433), is_weighted_bps -26.8% (0.0285 vs 0.0389), max_drawdown_pct tightened to -0.0061 vs -0.0173; mean_slippage 0.0 on both sides (sim fills at top-of-book — slippage delta undefined, reported as 0.0).",
+    "hypothesis": "Wide-spread moments coincide with brief liquidity vacuums where the oracle's 30s forward signal is more likely to reverse before the CLOSE leg fires; filtering the upper quartile of recent spreads should remove the highest-adverse-selection slice while preserving most entries.",
+    "next":       "Try a multiplicative-quantile combo (e.g. p60 + an absolute floor in ticks) to remove the warm-up dependency on a min_samples threshold; also test whether the gate transfers when applied to other islands' bases — it should generalize to any algo that does not already condition on spread."
+  },
+  "timestamp": "2026-05-24T02:30:00Z"
+}

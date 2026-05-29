@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-2",
+  "base_algo":           "vol-regime-sizer",
+  "generation":          1,
+  "loop_in_generation":  2,
+  "algo_id":             "vrs-isl-g1l2",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         1007.75,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         5.741744630052873,
+    "max_drawdown_pct":     -0.04127481426333581,
+    "win_rate":             0.34788161326045797,
+    "trade_count":          111972,
+    "vs_base_pnl_pct":      33.69850746268657,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Added a directional-efficiency reinforcer on top of vrs-isl-g1l1's choppiness gate: computes signed trend = signed_sum / path_length over the same 30-tick window, then widens the effective neutral threshold as effective_neutral = chop_neutral + trend_boost * |trend| (trend_boost = 1.0), so chop spikes inside confirmed trends no longer gate participation.",
+    "outcome":    "pnl +33.70% vs vol-regime-sizer (1007.75 vs 753.75) but -0.32% vs g1l1 parent (1007.75 vs 1011.0); sharpe 5.74 vs 3.06 base / 5.97 g1l1; max_drawdown_pct -0.0413 (tighter than both); trade_count 111972 = +2.33% vs g1l1 (boost recovered ~2548 submissions as designed) but those incremental trades added ~-$3 pnl, so per-trade EV of recovered orders is ~zero; is_weighted_bps 0.0420 (marginally worse per-trade execution than g1l1); mean_slippage 0.0 both sides.",
+    "hypothesis": "g1l1's chop gate can only skip, never lift; brief chop spikes during clean trends were skipping high-EV directional orders. Widening the neutral zone proportional to |signed trend| should recover that directional EV while preserving whipsaw savings (boundary collapses to g1l1 at trend_boost=0 or |trend|=0).",
+    "next":       "The mechanism works (extra participation recovered) but the economic assumption fails — chop-during-trend orders carry near-zero marginal EV, consistent with early-reversal noise canceling residual directional EV. Do not stack trend_boost. More promising: (i) compose chop gate with island-0's spread-quantile gate (orthogonal whipsaw vs liquidity axes), (ii) session-adaptive calibration of chop_neutral since chop scale tracks realized vol, (iii) invert the sign — try trend_boost < 0 to TIGHTEN the gate during noisy-trend windows since non-noisy trends may be the higher-EV bucket."
+  },
+  "timestamp": "2026-05-24T04:06:30Z"
+}

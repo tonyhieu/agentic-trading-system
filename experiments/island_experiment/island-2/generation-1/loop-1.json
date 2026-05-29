@@ -1,0 +1,30 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-2",
+  "base_algo":           "vol-regime-sizer",
+  "generation":          1,
+  "loop_in_generation":  1,
+  "algo_id":             "vrs-isl-g1l1",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         1011.0,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         5.970163363956465,
+    "max_drawdown_pct":     -0.042024810888351,
+    "win_rate":             0.3472638543646732,
+    "trade_count":          109424,
+    "vs_base_pnl_pct":      34.12653962462629,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Replaced vol-regime-sizer's fast/slow volatility-ratio gate with a choppiness-ratio gate (path_length / displacement on a 30-tick window); skip probability decays exponentially when chop_ratio exceeds 1.5, separating whipsaw regimes (high chop) from trending breakouts (chop near 1.0) that the magnitude-only base treats identically.",
+    "outcome":    "pnl +34.13% vs vol-regime-sizer (1011.0 vs 753.75), sharpe 5.97 vs 3.06, max_drawdown_pct -0.0420 vs -0.0460 (tighter), trade_count -14.5% (109424 vs 127991), win_rate -0.0056 (0.3473 vs 0.3529); mean_slippage 0.0 on both sides (sim fills at top-of-book — slippage delta undefined, reported as 0.0); is_weighted_bps marginally worse (+0.0047) — gains come from skip selection, not per-trade execution quality.",
+    "hypothesis": "Whipsaw regimes (where consecutive ticks reverse) drive a disproportionate share of oracle losses; the base sizer's magnitude-only fast/slow ratio cannot distinguish them from directional breakouts and skips both. A path-length/displacement ratio identifies whipsaws while leaving trending motion untouched, preserving adverse-day savings AND recovering forfeited directional upside.",
+    "next":       "Combine chop-gating with island-0's spread-quantile gate (they should be near-orthogonal — chop measures whipsaw frequency in price space, spread measures liquidity-vacuum risk in book space); separately, add a trend-strength reinforcer (signed sum of delta_mid) so confirmed trends LIFT p_submit instead of just not skipping them; calibrate chop_neutral/sensitivity per session since chop's natural scale tracks realized vol."
+  },
+  "timestamp": "2026-05-24T03:30:00Z"
+}

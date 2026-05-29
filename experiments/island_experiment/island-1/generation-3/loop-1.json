@@ -1,0 +1,36 @@
+{
+  "experiment": "island_experiment",
+  "island_id": "island-1",
+  "base_algo": "aggressor-flow-gate",
+  "generation": 3,
+  "loop_in_generation": 1,
+  "algo_id": "afg-isl-g3l1",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3399.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 14.424513354188813,
+    "max_drawdown_pct": -0.018674892619367438,
+    "win_rate": 0.3633813502640432,
+    "trade_count": 100173,
+    "vs_base_pnl_pct": 170.7686180804461,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 5400,
+  "context_tokens_estimated": 1350,
+  "tokens_used": {
+    "input": 1,
+    "output": 864,
+    "cache_creation": 887,
+    "cache_read": 49293,
+    "total": 51045
+  },
+  "duration_seconds": 175.9,
+  "summary_out": {
+    "changed": "Single-parameter retune on the g2l2 three-gate stack: raised chop_neutral 1.5 \u2192 1.7 on the binary chop hard-skip gate. All other parameters and the spread \u2192 chop \u2192 flow AND-skip composition on the unmodified base aggressor-flow gate are preserved verbatim from g2l2. This loop tests the gen-2 migration's `base_specific` (1) directive that ported gate thresholds need per-base retuning against the new pre-filter surviving population.",
+    "outcome": "pnl=3399.50 vs base afg 1255.50 (+170.77%) and vs prior g2l2 3439.50 (-1.16%, essentially flat); sharpe=14.4245 vs g2l2 14.4452 (-0.02 abs, indistinguishable); max_drawdown=-0.018675 identical to g2l2 to 6 decimals; trade_count=100173 vs g2l2 100125 (+48 trades, +0.048%); win_rate=0.36338 vs g2l2 0.36335 (indistinguishable); mean_slippage=0.0; is_weighted_bps=0.03980 vs g2l2 0.03970 (+0.25%, indistinguishable). The 48 incremental admitted trades carry -40.0 cumulative pnl (-0.83 per trade) vs the prior cohort's +34.35/trade \u2014 admitted near-choppy trades are mildly negative-EV but too few to separate from noise.",
+    "hypothesis": "Threshold sweep variant (1.5 \u2192 1.7) to test whether chop_neutral=1.5 \u2014 verbatim from vrs-isl-g1l1's surviving-population calibration \u2014 is the right operating point on this base's spread-pre-filtered chop_ratio distribution. The pre-stated hypothesis was that the spread pre-filter narrows the surviving distribution so 1.5 sits in the body and the optimum is higher. The data falsifies that: between 1.5 and 1.7 the surviving chop_ratio distribution has near-zero mass on this composed stack, so neither threshold dominates. Combined with island-0 g2l2 (porting 1.5 to ptg admitted only ~1.7k trades) and island-2 g1l1 (1.5 is its lineage optimum), the chop_neutral=1.5 operating point appears base-robust \u2014 falsifying the gen-2 migration `base_specific` (1) claim for the chop gate specifically.",
+    "next": "Chop calibration is exhausted on this base \u2014 neither tightening (1.3, risky given g2l2 was already -6.6% trade_count) nor loosening (this loop, 1.7, flat) opens headroom. The g3l1 hypothesis explicitly partitioned the next direction into three options: (a) probabilistic chop dosage (per island-2 g1l1's exponential decay form) replacing the binary, (b) top-of-book size asymmetry as a structurally distinct fourth orthogonal SKIP axis on top of the unmodified spread+chop(1.5)+flow stack, (c) a different fourth axis from the gen-2 migration's named candidates. Recommendation for g3l2: option (b) \u2014 top-of-book bid_size/ask_size ratio is the most independent-from-existing candidate (book-DEPTH imbalance is structurally distinct from spread's quote-DISTANCE and from flow's signed-trade pressure; volume bursts correlate with flow; time-of-day correlates with spread). Composition rule: binary AND-skip (consistent with g2l2's working composition). Falsification for g3l2: if trade_count drops >10% OR pnl regresses, the three-axis ceiling is real on this base and the alternative direction is probabilistic chop (option a). Note for cross-island migration: this null result is itself evidence that chop_neutral=1.5 is base-robust across all three island bases \u2014 a falsification of the gen-2 migration `base_specific` (1) chop-specific retuning claim, which other islands' g3 loops should also see corroborated."
+  },
+  "timestamp": "2026-05-24T15:20:20Z"
+}

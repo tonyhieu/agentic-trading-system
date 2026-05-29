@@ -64,3 +64,4 @@ docs/oracle_strategy_implementation.md
 # Local hook state (per-iteration metadata cursor) -- machine-local, do not commit
 research/.meta_cursor.json
 experiments/per_iteration_experiment/.current_loop.json
+experiments/island_experiment/.current_loop.json

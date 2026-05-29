@@ -19,7 +19,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:ssrn.com)",
       "Bash(git add research/overview.csv)",
-      "Bash(git add experiments/*)"
+      "Bash(git add experiments/*)",
+      "Bash(git add execution_algos/*)"
     ],
     "deny": [
       "Read(./strategies)",

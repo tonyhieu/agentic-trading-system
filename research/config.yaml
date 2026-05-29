@@ -83,3 +83,21 @@ refinement:
     max_slippage_delta_pct: -1.0   # negative = less slippage (improvement)
     min_winrate_delta_pp:   2.0    # percentage points
     min_mdd_delta_pp:      -1.0    # negative = less drawdown
+
+island_experiment:
+  # Island model: each island evolves independently from its own base algo,
+  # then shares what worked via migration reports after each generation.
+  # Algo ID format: <base_abbrev>-isl-g<G>l<L>  (e.g. ptg-isl-g1l2)
+  islands:
+    - id: island-0
+      base_algo: position-tier-gate
+      abbrev: ptg
+    - id: island-1
+      base_algo: aggressor-flow-gate
+      abbrev: afg
+    - id: island-2
+      base_algo: vol-regime-sizer
+      abbrev: vrs
+  generation_size: 2      # loops per island per generation before migration is due
+  max_generations: 4      # refuse new research loops beyond this generation (4 × 2 = 8 loops per island, comparable to per_iteration_experiment)
+  migration_top_k: 2      # best loops each island highlights in the migration summary

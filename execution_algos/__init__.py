@@ -185,6 +185,102 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
         "execution_algos.ptg-m-l8",
         "get_execution_algorithm",
     ),
+    "ptg-isl-g1l1": (
+        "execution_algos.ptg-isl-g1l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g1l2": (
+        "execution_algos.ptg-isl-g1l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g2l1": (
+        "execution_algos.ptg-isl-g2l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g2l2": (
+        "execution_algos.ptg-isl-g2l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g3l1": (
+        "execution_algos.ptg-isl-g3l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g3l2": (
+        "execution_algos.ptg-isl-g3l2",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g1l1": (
+        "execution_algos.afg-isl-g1l1",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g1l2": (
+        "execution_algos.afg-isl-g1l2",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g2l1": (
+        "execution_algos.afg-isl-g2l1",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g2l2": (
+        "execution_algos.afg-isl-g2l2",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g3l1": (
+        "execution_algos.afg-isl-g3l1",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g3l2": (
+        "execution_algos.afg-isl-g3l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g1l1": (
+        "execution_algos.vrs-isl-g1l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g1l2": (
+        "execution_algos.vrs-isl-g1l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g2l1": (
+        "execution_algos.vrs-isl-g2l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g2l2": (
+        "execution_algos.vrs-isl-g2l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g3l1": (
+        "execution_algos.vrs-isl-g3l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g3l2": (
+        "execution_algos.vrs-isl-g3l2",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g4l1": (
+        "execution_algos.ptg-isl-g4l1",
+        "get_execution_algorithm",
+    ),
+    "ptg-isl-g4l2": (
+        "execution_algos.ptg-isl-g4l2",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g4l1": (
+        "execution_algos.afg-isl-g4l1",
+        "get_execution_algorithm",
+    ),
+    "afg-isl-g4l2": (
+        "execution_algos.afg-isl-g4l2",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g4l1": (
+        "execution_algos.vrs-isl-g4l1",
+        "get_execution_algorithm",
+    ),
+    "vrs-isl-g4l2": (
+        "execution_algos.vrs-isl-g4l2",
+        "get_execution_algorithm",
+    ),
     "ptg-f-l1": (
         "execution_algos.ptg-f-l1",
         "get_execution_algorithm",
@@ -311,6 +407,10 @@ _EXEC_ALGORITHM_FACTORIES: dict[str, tuple[str, str]] = {
     ),
     "ptg-b-l8": (
         "execution_algos.ptg-b-l8",
+        "get_execution_algorithm",
+    ),
+    "sip-afg-l1": (
+        "execution_algos.sip-afg-l1",
         "get_execution_algorithm",
     ),
 }
