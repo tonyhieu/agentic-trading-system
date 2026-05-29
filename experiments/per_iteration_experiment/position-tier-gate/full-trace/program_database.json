@@ -1,0 +1,90 @@
+[
+  {
+    "loop": 1,
+    "algo_id": "ptg-f-l1",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.3401759530792,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.5995600402138695,
+    "trade_count": 136734,
+    "context_chars_in": 0,
+    "timestamp": "2026-05-23T19:56:27Z"
+  },
+  {
+    "loop": 2,
+    "algo_id": "ptg-f-l2",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "trade_count": 90433,
+    "context_chars_in": 7033,
+    "timestamp": "2026-05-23T20:09:10Z"
+  },
+  {
+    "loop": 3,
+    "algo_id": "ptg-f-l3",
+    "status": "completed",
+    "vs_base_pnl_pct": -17.284457478005866,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.400602735308254,
+    "trade_count": 78238,
+    "context_chars_in": 13981,
+    "timestamp": "2026-05-23T20:20:30Z"
+  },
+  {
+    "loop": 4,
+    "algo_id": "ptg-f-l4",
+    "status": "completed",
+    "vs_base_pnl_pct": -23.366568914956012,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 15.522355402685402,
+    "trade_count": 78436,
+    "context_chars_in": 20522,
+    "timestamp": "2026-05-23T21:16:44Z"
+  },
+  {
+    "loop": 5,
+    "algo_id": "ptg-f-l5",
+    "status": "completed",
+    "vs_base_pnl_pct": -96.34017595307918,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 0.599560040213869,
+    "trade_count": 136734,
+    "context_chars_in": 22877,
+    "timestamp": "2026-05-23T21:16:44Z"
+  },
+  {
+    "loop": 6,
+    "algo_id": "ptg-f-l6",
+    "status": "completed",
+    "vs_base_pnl_pct": -9.079178885630498,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.43341780298068,
+    "trade_count": 74784,
+    "context_chars_in": 25765,
+    "timestamp": "2026-05-23T21:16:44Z"
+  },
+  {
+    "loop": 7,
+    "algo_id": "ptg-f-l7",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "trade_count": 90433,
+    "context_chars_in": 27165,
+    "timestamp": "2026-05-23T21:16:44Z"
+  },
+  {
+    "loop": 8,
+    "algo_id": "ptg-f-l8",
+    "status": "completed",
+    "vs_base_pnl_pct": 0.0,
+    "vs_base_slippage_pct": 0.0,
+    "sharpe_ratio": 17.619000880006382,
+    "trade_count": 90433,
+    "context_chars_in": 29067,
+    "timestamp": "2026-05-23T21:16:44Z"
+  }
+]

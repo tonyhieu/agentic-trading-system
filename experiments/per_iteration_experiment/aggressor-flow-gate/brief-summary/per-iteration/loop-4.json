@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 4,
+  "algo_id": "afg-b-l4",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1088.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 5.360031757285958,
+    "max_drawdown_pct": -0.03234982207597858,
+    "win_rate": 0.35399412236174194,
+    "trade_count": 86089,
+    "vs_base_pnl_pct": 12.1649,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 7532,
+  "context_tokens_estimated": 1883,
+  "tokens_used": {
+    "input": 1,
+    "output": 43,
+    "cache_creation": 833,
+    "cache_read": 75523,
+    "total": 76400
+  },
+  "duration_seconds": 371.2,
+  "summary_out": {
+    "changed": "Removed the ratio leg entirely from afg-b-l3 and TIGHTENED the absolute threshold from 2.0 -> 1.0 contracts (10s window unchanged). The gate is now simply: skip iff |net_flow_window| >= 1.0. Anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly.",
+    "outcome": "pnl +2415.61% vs simple baseline ($1088.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 5.36, slippage 0.0/0.0. Gate vs simple: PASS (+5.0% threshold) by very wide margin. AND vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): +12.16% pnl ($1088.00 vs $970.00), -1,671 trades (-1.90%), sharpe 5.36 vs 4.58. This is the FIRST loop in the afg-b lineage to GENUINELY BEAT the base. Hypothesis CONFIRMED.",
+    "hypothesis": "I expected the L1 monotone arithmetic (~$47 per 1k extra admits beyond base costs pnl) to generalize to the INVERSE direction: ~$47 per 1k extra SKIPS beyond base should YIELD pnl, provided the newly-skipped orders (|net_flow| in [1, 2)) are weakly anti-informative on average -- same distribution as L1's marginal admits, observed from the other side. The data confirms: 1,671 fewer admits yielded +$118 pnl = ~$70.6 per 1k extra skips (slightly above the L1 rate, possibly because the lowest-|net|-imbalance orders are slightly more discriminating to skip than higher-|net| orders are to admit). Sharpe rose from 4.58 -> 5.36 with comparable max_dd, indicating not just higher pnl but smoother equity curve; gains concentrate on fewer, better-selected trades.",
+    "brief_summary": "afg-b-l4 (aggressor-flow-gate brief-summary loop 4) REMOVED the ratio leg entirely and TIGHTENED the absolute threshold from 2.0 -> 1.0 contracts. Result: PASS vs simple (+2415.61% pnl) AND genuinely beats base on the same 11 dates (+12.16% pnl: $1088 vs $970; -1,671 trades; sharpe 5.36 vs 4.58). This is the FIRST loop in the afg-b lineage to beat base (L1: -53%, L2: -52%, L3: 0%, L4: +12.16%). Validates the L1 monotone arithmetic in the inverse direction: ~$70.6 per 1k extra skips beyond base. Methodological lesson: brief-summary mode worked here even though my L3 'next' had textually prescribed RAISING the threshold (which would have ADMITTED more orders -- wrong direction by the L1 rule). The surrounding hypothesis/outcome content in the L3 summary carried enough information to infer the LOGICALLY CORRECT direction (lower 2->1), and the data validated that interpretation. The search axis is now firmly the absolute-threshold sweep; ratio reformulations are dead on this oracle.",
+    "next": "Test FURTHER tightening: flow_threshold 1.0 -> 0.5 (with the same 10s window, ratio leg still removed). Probes: (a) is the monotone-yield rule monotone DOWN to 0.5, or do we hit decelerating returns / a sign flip indicating we have crossed the optimum? (b) if pnl rises further with similar Sharpe, we have not yet reached the optimum and L6 should test 0.25 or 0.1; if pnl drops or Sharpe declines while pnl rises, we have bracketed the optimum between [0.5, 1.0] and L6 should test 0.75. The brief-summary stream now has 4 points along the threshold axis (L1/L2 effective threshold ~loose, L3 = base at 2.0, L4 at 1.0), enough to extrapolate the local gradient. Avoid: changing window length in the same loop (would confound the threshold sweep -- save for L6+ once the optimum is bracketed); reintroducing the ratio leg (L1+L2+L3 exhausted that axis); per-side asymmetric thresholds (not yet motivated by the brief-summary evidence)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T02:30:00Z"
+}

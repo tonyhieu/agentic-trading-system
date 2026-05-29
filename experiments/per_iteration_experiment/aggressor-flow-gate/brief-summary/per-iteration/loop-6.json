@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "brief-summary",
+  "loop": 6,
+  "algo_id": "afg-b-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 832.0,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 3.827320152939977,
+    "max_drawdown_pct": -0.036074810607244316,
+    "win_rate": 0.3543187859618426,
+    "trade_count": 89157,
+    "vs_base_pnl_pct": -14.2268,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 11783,
+  "context_tokens_estimated": 2945,
+  "tokens_used": {
+    "input": 1,
+    "output": 24,
+    "cache_creation": 197,
+    "cache_read": 86161,
+    "total": 86383
+  },
+  "duration_seconds": 428.1,
+  "summary_out": {
+    "changed": "Single-parameter change vs L5 (effective L4): LOOSENED the absolute threshold from 1.0 -> 3.0 contracts (one integer step BEYOND base's 2.0 in the loose direction; 10s window, ratio leg absent, anti-cascade flat-flag and reduce-only-always-submit semantics preserved exactly). Admit set is a strict superset of base's: orders with |net_flow|=2 (which base would skip) are now ADMITTED.",
+    "outcome": "pnl +1823.70% vs simple baseline ($832.00 vs $43.25 over 11 apples-to-apples dates; 20260319 OOM-dropped from both sides), sharpe 3.83, slippage 0.0/0.0. Gate vs simple: PASS by very wide margin. BUT vs base_algo aggressor-flow-gate on the same 11 dates ($970.00 / 87,760 trades): -14.23% pnl ($832 vs $970), +1,397 trades (+1.59%), sharpe 3.83 vs 4.58. AND vs L4=L5 (the in-arm leaders, $1088 / 86,089 / sharpe 5.36): regressed -23.5% pnl, +3,068 trades, -28.6% sharpe. Refinement targets vs L4: ALL FAIL.",
+    "hypothesis": "Per the L1 monotone-yield rule, marginal admits beyond base's set should COST pnl at ~$47-$70 per 1k extra admits (the same arithmetic that made L4 win on the tight side should make L6 lose on the loose side). Expected pnl < $970 base, expected trade_count > 87,760 base. Actual: pnl=$832 (-$138 vs base), trades=89,157 (+1,397 vs base), giving ~$98.8/k extra admits -- same sign and similar magnitude to the L1/L4 inverse readings. CONFIRMED. The absolute-threshold curve is now fully bracketed and confirmed MONOTONE across the three sampled integer points: threshold=1 (L4: $1088), threshold=2 (base: $970), threshold=3 (L6: $832). Integer optimum is L4=1.0. Further sweeps along this axis (threshold=4, 5, ...) would extrapolate the monotone decline -- no informative value remaining on the absolute-threshold axis.",
+    "brief_summary": "afg-b-l6 (aggressor-flow-gate brief-summary loop 6) LOOSENED flow_threshold from L4's effective 1.0 -> 3.0 (10s window, ratio leg absent). Result: PASS vs simple (+1823.70% pnl) BUT regressed vs base (-14.23% pnl) and vs L4 (-23.5% pnl, -28.6% sharpe). Trade count rose +1,397 vs base (orders at |net|=2 newly admitted). Hypothesis CONFIRMED at meta level: the L1 monotone-yield rule extrapolates to the loose side, with newly-admitted near-margin orders costing ~$98.8 per 1k. Three sampled threshold points (1.0:1088, 2.0:970, 3.0:832) form a smooth monotone curve with integer optimum at L4=1.0. The absolute-threshold axis is now fully bracketed and exhausted. Critical update for L7+: do NOT continue sweeping flow_threshold -- pivot to an orthogonal lever. The window_seconds parameter (10s in all of base + L1..L6) is the most obvious untouched axis.",
+    "next": "Pivot to the ORTHOGONAL window_seconds axis at fixed flow_threshold=1.0 (L4's optimum). Single change: window_seconds 10.0 -> 5.0. Rationale: (1) threshold axis fully bracketed and monotone, no informative value remaining; (2) window axis never touched across base + L1..L6; (3) oracle signal horizon is 30s per config.yaml, so a window comparable to signal half-life (~5s) is plausibly more responsive than the current 10s; (4) shorter window = less stale flow info = potentially more selective skips. Alternative if pnl_L7 < L4's $1088 (i.e. 5s is too short, missing actual flow imbalance): L8 should test 20s in the other direction to bracket the window-length optimum. Avoid: any further threshold tweak (sweep complete and monotone), reintroducing the ratio leg (L1+L2+L3 exhausted), per-side asymmetric thresholds (no brief-summary motivation), changing the anti-cascade flag (orthogonal but high-risk, save for after the window sweep is bracketed)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T04:00:00Z"
+}

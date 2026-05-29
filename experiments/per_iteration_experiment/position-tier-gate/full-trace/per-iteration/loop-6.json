@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "position-tier-gate",
+  "context_mode": "full-trace",
+  "loop": 6,
+  "algo_id": "ptg-f-l6",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 3875.5,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 17.43341780298068,
+    "max_drawdown_pct": -0.013124931094111756,
+    "win_rate": 0.3729808515190415,
+    "trade_count": 74784,
+    "vs_base_pnl_pct": -9.079178885630498,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 25765,
+  "context_tokens_estimated": 6441,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 6 of the position-tier-gate / full-trace arm. Prior context: loops 1-5 full_reasoning + NOTES.md.\n\nLoops 1-5: all cap changes = simple or no-op; streak = no-op; flow gates = hurt; directional cap = simple. Loop 6 tries minimum reentry time (2s after close). Hypothesis: very rapid oracle re-entry within 2s of a close may have higher adverse selection risk. Result: ptg-f-l6 pnl=$3,875.50, -9.08% vs base, trades=74,784. Worse than base but the best of the 'filter on top of cap' approaches (better than flow gates). The 2s cooldown cuts some trades without proportional P&L benefit.",
+  "timestamp": "2026-05-23T21:16:44Z"
+}

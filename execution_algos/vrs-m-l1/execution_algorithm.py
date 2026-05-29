@@ -1,28 +1,32 @@
-"""vrs-m-l1 — per-iteration experiment loop-1 variant of `vol-regime-sizer`.
+"""Volatility-regime trade-size scaling execution algorithm (vrs-m-l1).
 
-Context mode: metrics-only. Base algo: `vol-regime-sizer`.
+Per-iteration experiment loop 1 — base `vol-regime-sizer`, metrics-only mode.
 
-Single targeted change vs the base algo: the volatility-decay `sensitivity`
-parameter is raised from 2.0 to 3.0. Every other parameter and all algorithm
-structure is identical to `vol-regime-sizer`.
-
-Core idea (unchanged from base): estimate short-term realized mid-price
-volatility from recent quote ticks using two exponentially-weighted moving
-averages (fast and slow). Map the vol regime to a submission probability
-p in [min_prob, 1.0]:
+Core idea: estimate short-term realized mid-price volatility from recent
+quote ticks using two exponentially-weighted moving averages (fast and slow).
+Map the vol regime to a submission probability p in [min_prob, 1.0] — calm
+regimes give p=1.0 (always submit), high-vol regimes give p=min_prob (rarely
+submit):
 
     vol_ratio = fast_vol / slow_vol   (clipped to [0, max_vol_ratio])
     p_submit  = max(min_prob, exp(-sensitivity * max(0, vol_ratio - 1)))
 
-With sensitivity=3.0 the decay is steeper than the base (2.0): at
-vol_ratio=2, p=exp(-3)~0.050 (the min_prob floor) vs the base's
-exp(-2)~0.135. Calm regimes (vol_ratio <= 1) are unaffected — p=1.0
-regardless of sensitivity, because the excess term max(0, vol_ratio-1)
-is zero there.
+Since the oracle strategy always generates 1-contract parent orders, true
+fractional sizing is not representable. The continuous sizing is realized
+as **probabilistic submission**: p_submit is the probability that an order
+is executed, varying smoothly with vol. A deterministic hash of each order's
+client_order_id serves as the "random" seed — reproducible without
+randomness-seeding.
 
-Continuous sizing is realized as probabilistic submission: p_submit is the
-probability that an order is executed. A deterministic hash of each order's
-client_order_id serves as the reproducible "random" seed.
+Change vs base `vol-regime-sizer`: `sensitivity` raised 2.0 -> 3.0. This
+steepens the probability decay so the high-vol tail is skipped harder while
+calm- and moderate-vol participation stay essentially intact (the min_prob
+floor and the vol_ratio <= 1 pass-through are unchanged). All other
+parameters are identical to base.
+
+In calm regimes (vol_ratio = 1): p=1.0 -> always submit.
+In elevated vol (vol_ratio = 2, sensitivity=3): p=exp(-3)~0.05 -> floor.
+In extreme vol: p=min_prob (floor).
 
 Reduce-only orders (position closes) are always submitted unconditionally at
 full quantity — intraday_flat compliance.
@@ -42,7 +46,7 @@ from nautilus_trader.model.identifiers import ExecAlgorithmId
 
 
 class VrsML1Config(ExecAlgorithmConfig, frozen=True):
-    """Configuration for the vrs-m-l1 volatility-regime probabilistic sizer.
+    """Configuration for the volatility-regime probabilistic sizer (vrs-m-l1).
 
     Parameters
     ----------
@@ -56,8 +60,8 @@ class VrsML1Config(ExecAlgorithmConfig, frozen=True):
     sensitivity : float
         Controls how aggressively submission probability shrinks with vol.
         p = exp(-sensitivity * max(0, vol_ratio - 1))
-        Default 3.0 (steeper decay than the base vol-regime-sizer's 2.0).
-        At sensitivity=3.0, vol_ratio=2 gives p~0.050 (the min_prob floor).
+        At sensitivity=3.0, vol_ratio=2 gives p~0.050 (floor).
+        Default 3.0 (raised from base 2.0).
     min_prob : float
         Floor on submission probability. Even at extreme vol, submit at
         least this fraction of open orders. In [0, 1]. Default 0.05.
@@ -281,9 +285,7 @@ def get_execution_algorithm(
     slow_halflife : int
         Slow EWM half-life in ticks (vol baseline). Default 120.
     sensitivity : float
-        Decay rate mapping vol excess to submission probability. Default 3.0
-        (steeper than the base vol-regime-sizer's 2.0 — the single targeted
-        change for this loop-1 metrics-only variant).
+        Decay rate mapping vol excess to submission probability. Default 3.0.
     min_prob : float
         Floor on submission probability. Default 0.05.
     min_ticks : int

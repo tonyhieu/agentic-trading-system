@@ -1,0 +1,58 @@
+{
+  "algo_name": "vrs-f-l8",
+  "backtest_date": "2026-05-26T08:42:31Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance": {
+    "realized_pnl": 1437.0,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 6.07493136039713,
+    "sharpe_n_days": 12,
+    "max_drawdown_pct": -0.034524879162922927,
+    "win_rate": 0.3547311379741559,
+    "trade_count": 122349,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.1437,
+    "is_weighted_bps": 0.03576359263349307,
+    "is_total_price": 5776.875,
+    "vs_baseline_pnl_pct": 821.1538461538462,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -8.021264522257358
+  },
+  "performance_oos": null,
+  "period": {
+    "train_dates": [
+      "2026-03-08",
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-15",
+      "2026-03-16",
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20"
+    ],
+    "test_dates": []
+  },
+  "run_dirs": [
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260308",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260309",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260310",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260311",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260312",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260313",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260315",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260316",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260317",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260318",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260319",
+    "/Users/franklinliu/Projects/agentic-trading-system-feature/execution_algos/vrs-f-l8/results/20260320"
+  ]
+}

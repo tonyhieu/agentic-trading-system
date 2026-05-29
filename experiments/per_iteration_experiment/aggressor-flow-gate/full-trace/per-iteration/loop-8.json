@@ -1,0 +1,25 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "aggressor-flow-gate",
+  "context_mode": "full-trace",
+  "loop": 8,
+  "algo_id": "afg-f-l8",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1672.75,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 7.36558093540625,
+    "max_drawdown_pct": -0.032299806201162795,
+    "win_rate": 0.3573371662293564,
+    "trade_count": 103664,
+    "vs_base_pnl_pct": 33.228515625,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 159057,
+  "context_tokens_estimated": 39764,
+  "tokens_used": null,
+  "duration_seconds": null,
+  "summary_out": null,
+  "full_reasoning": "Loop 8 (final) of the aggressor-flow-gate / full-trace arm. Full prior context loaded: loops 1-7 full_reasoning + metrics, plus full text of execution_algos/afg-f-l1 through afg-f-l7 NOTES.md. Total context_chars_in = 159,057 (~39,764 tokens). This is the largest context window in the arm.\n\nPrior context recap (compressed). Loop 7 lengthened window_seconds from 20s (l6) to 30s (l7) with a deliberate 10s step (not 5s), motivated by loop 6's accelerating-marginal-gain diagnosis (+1.41%/5s from l5->l6 vs +0.51%/5s from l3->l5). Result: pnl +32.59% vs base (best-in-arm), sharpe 7.407 (+1.81 vs base, +0.54 vs l6), trade_count 104,138 (-2.86% vs base, -0.36% vs l6 -- still firmly selective). IS -4.58% vs base (improved). Loop 7's forward-looking note priority-1'd a DOUBLING step to window=60s for the final loop, reasoning: (a) per-5s marginal P&L pace flat-to-rising across three consecutive steps; (b) trade_count headroom; (c) this is the final loop, so the test should bound the lever; (d) even a negative result at 60s brackets the boundary within [30, 60] for future arms.\n\nTargeted change for loop 8: window_seconds 30.0 -> 60.0 (doubling step). flow_threshold=1.0 and min_gross_volume=0.0 preserved unchanged.\n\nPredicted outcomes (from loop 7's NOTES): (i) durability continues (pnl > l7, trade_count >= ~100k); (ii) saturation in [30, 60] (pnl ~= l7, trade_count ~= l7); (iii) degeneracy onset (pnl < l7, trade_count materially below 95k).\n\nActual result: pnl=1672.75 (+33.23% vs base), sharpe=7.366, trade_count=103,664 (-3.30% vs base), vs_l7: pnl delta +0.48%, trade_count delta -0.46%. This is unambiguously **outcome (ii) saturation in [30, 60]**. The P&L is essentially flat vs loop 7 (1672.75 vs 1664.75, a +0.48% gain within noise), sharpe is slightly lower (7.366 vs 7.407), and trade_count is slightly lower (103,664 vs 104,138). The 30s window is the practical operating point of the window-length lever; the extra 30s of look-back (going from 30s to 60s) adds no incremental value.\n\nKey findings: (1) Window-lever saturation confirmed between 30s and 60s. The lever's productive operating range is [15, 30] seconds; the optimum is at 30s. (2) trade_count at 60s is still 96.7% of base (103,664/107,198), firmly in the selective-gate regime -- degeneracy did NOT onset between 30s and 60s. This means even longer windows (90s, 120s) are unlikely to be useful, as the selective regime is clearly saturating in P&L well before trade_count collapses. (3) The arm closes with the best-in-arm result at afg-f-l7 (window=30s, threshold=1.0, floor=0.0): pnl +32.59% vs base, sharpe 7.407, IS -4.58% vs base. (4) The doubling-step choice was correct: a 45s step would have confirmed continuation or saturation but left [45, inf) unprobed; the 60s result definitively bounds the window lever's useful range, which is the most valuable information available on the final loop.",
+  "timestamp": "2026-05-23T19:30:59Z"
+}

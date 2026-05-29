@@ -1,0 +1,37 @@
+{
+  "experiment": "per_iteration_experiment",
+  "base_algo": "vol-regime-sizer",
+  "context_mode": "brief-summary",
+  "loop": 7,
+  "algo_id": "vrs-b-l7",
+  "status": "completed",
+  "metrics": {
+    "realized_pnl": 1403.25,
+    "mean_slippage": 0.0,
+    "sharpe_ratio": 6.063523638749462,
+    "max_drawdown_pct": -0.03609984657565206,
+    "win_rate": 0.35421314570104684,
+    "trade_count": 99059,
+    "vs_base_pnl_pct": 142.1484,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in": 16527,
+  "context_tokens_estimated": 4131,
+  "tokens_used": {
+    "input": 1,
+    "output": 38,
+    "cache_creation": 652,
+    "cache_read": 100124,
+    "total": 100815
+  },
+  "duration_seconds": 513.4,
+  "summary_out": {
+    "changed": "Single config-default edit vs L6: drift_threshold 0.005 -> 0.003 (one-knob WIDENING of the adverse-drift subset per L6's `next` text). adverse_multiplier held at L6's 0.025; all other mechanics preserved verbatim from L6: same gate topology (always apply base vol-skip + multiplicative skip on adverse-drift), drift_halflife=40, fast/slow halflives 20/120, sensitivity=2.0, min_prob=0.05 floor on base_p only (p_final may dip to 0.00125 on adverse-drift floor cases, same as L6). Mechanical structural copy from L6; class names VrsBL6* -> VrsBL7*. This is the first knob change OFF the multiplier-depth dimension since L3 -- a fresh orthogonal lever (subset width vs subset depth).",
+    "outcome": "Continued breakthrough; new arm leader by the LARGEST single-step margin since L3 -> L4. Pnl $1403.25 on 11 dates: +3144.51% vs simple ($43.25), +142.15% vs base_algo vol-regime-sizer ($579.50), +14.95% vs L6 ($1220.75). Sharpe 6.06 (vs L6 5.05, L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best, with the largest sharpe jump in the lineage (+1.01 vs L6's +0.24 over L5). Trade_count 99,059 = -5.09% vs base (-5,313 trades), -2.41% vs L6 (-2,446 marginal extra skips at borderline drift). Marginal per-borderline-skip EV vs L6: $182.50 / 2,446 = $0.0746/skip -- landed inside L6's predicted weak-subset band of $0.04-0.08/skip, but the borderline subset turned out ~10x LARGER than L6's full-mult-deepening subset (2,446 vs 242 marginal skips), so total pnl contribution +$182.50 exceeded L6's predicted best-case band ($1,230-1,310) by ~$93. L7 beat L6 on 8/11 dates, lost on 3 (20260308 -$12.50, 20260309 -$14.00, 20260318 -$16.00) -- losses scattered/small. Max drawdown improved to -3.61% (vs L6 -3.90%). Slippage 0.0/0.0 (no regression). PASS by both formal gate (vs simple) and arm-level objective (vs base); improvement-on-improvement vs L6.",
+    "hypothesis": "L6's `next` explicitly prescribed widening the adverse subset by lowering drift_threshold 0.005 -> 0.003 in L7, holding adverse_multiplier=0.025 (L6's value). Reasoning: L5->L6 marginal per-skip EV dropped 0.21 -> 0.117 $/skip (the mult-deepening slope finally bent), so pushing the mult further (0.025 -> ~0.006) risked crossing into negative marginal EV; instead bring NEW borderline-drift orders into the multiplier zone -- a different subset of admits than the saturated mult-deepening dimension. L6's predictions: (i) best case marginal EV ~$0.117/skip comparable to L6 -> incremental pnl $40-90 -> total $1,260-1,310; (ii) weak-subset case marginal EV $0.04-0.08/skip -> incremental pnl $20-60 -> total $1,240-1,280; (iii) failure case per-skip EV inverts -> regress to L6 $1,220 or modestly below. Outcome: per-skip EV landed in band (ii) at $0.0746/skip (mid-band), but the borderline subset was ~10x larger than L6 predicted (2,446 vs implicit ~340 if comparable size to L6's marginal), driving total pnl ABOVE band (i) at $1,403.25. The breakthrough architecture L3 established (always apply base skip + multiplicative skip on adverse-drift, strict subset of base admits) continues to hold; opening a fresh orthogonal lever (subset width vs subset depth) delivered the largest single-step pnl gain in the lineage since L3 -> L4 ($143.25) AND the largest sharpe jump (+1.01).",
+    "brief_summary": "vrs-b-l7 (vol-regime-sizer brief-summary loop 7) made a single-knob WIDENING per L6's `next`: drift_threshold 0.005 -> 0.003, adverse_multiplier held at L6's 0.025, nothing else changed. Result is PASS and NEW ARM LEADER by the largest margin since L3 -> L4: $1403.25 over 11 dates = +3144.51% vs simple ($43.25), +142.15% vs base ($579.50), +14.95% vs L6 ($1220.75). Sharpe 6.06 (vs L6 5.05, L5 4.81, L4 4.43, L3 3.83, base ~3.06) -- new arm best with +1.01 jump (largest in lineage). Max drawdown improved to -3.61% (vs L6 -3.90%). Trade_count 99,059 (-2,446 vs L6, -5,313 vs base) -- marginal per-borderline-skip EV vs L6 is $0.0746/skip, landing inside L6's predicted weak-subset band of $0.04-0.08/skip. BUT the borderline-drift subset (|drift_ewm| in [0.003, 0.005]) turned out ~10x LARGER than L6's mult-deepening marginal subset (2,446 vs 242 skips), so total pnl contribution +$182.50 exceeded L6's best-case predicted band ($1,230-1,310) by ~$93. L7 beat L6 on 8/11 dates, lost on 3 (20260308 -$12.50, 20260309 -$14.00, 20260318 -$16.00). The structural breakthrough architecture from L3 (always apply base skip + multiplicative skip on adverse-drift) continues to hold; opening a fresh orthogonal lever (subset width vs subset depth) was the most productive single change in the lineage since L3 -> L4.",
+    "next": "L8 (FINAL LOOP): two candidate single-knob directions: (a) CONTINUE widening the same fresh dimension: drift_threshold 0.003 -> 0.002 (a 33% reduction, same proportional step as 0.005 -> 0.003 was relative to L6's 0.005). The threshold dimension just delivered the largest pnl/sharpe jump in the lineage and has only ONE data point so far -- it is more informative to extend a fresh-and-productive lever than to open a third dimension. Predicted L8 marginal subset size ~50% of L7's borderline (~1,200 new skips at |drift_ewm| in [0.002, 0.003]); per-skip EV could drop further toward $0.04-0.05/skip as the drift signal weakens at smaller magnitudes, yielding incremental pnl ~$50-80 -> total ~$1,450-1,490. Failure case: per-skip EV inverts on the new tail at |drift_ewm| in [0.002, 0.003] -> regression toward L7's $1,403 (strict-subset architecture caps the downside on the new borderline subset only). (b) Open a vol-conditional multiplier (apply mult only when vol_ratio > 1.5) -- orthogonal to both depth and width, but adds complexity and a new knob with no prior signal. CHOICE for L8: (a) -- extend the fresh-and-productive lever for one more probe; it gives a sharper signal on where the threshold dimension's productive region ends. Avoid: changing multiple knobs at once; further mult deepening (saturated at L6); vol-conditional multipliers (adds complexity, save for a future arm); changing vol EWM halflives (orthogonal lever, save for a future arm)."
+  },
+  "full_reasoning": null,
+  "timestamp": "2026-05-25T20:30:00Z"
+}
