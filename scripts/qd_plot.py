@@ -110,20 +110,31 @@ greedy = next(p for p in pts if p["algo"] == "afg-qd-l8")
 axR.scatter([greedy["sel"]], [greedy["pnl"]], marker="s", s=130, facecolor="none",
             edgecolor="red", linewidth=2, zorder=4)
 axR.annotate(f"greedy optimum\n(param pass, l8)\nsel {greedy['sel']:.2f}, +{greedy['vs']:.0f}%",
-             (greedy["sel"], greedy["pnl"]), xytext=(greedy["sel"]+0.05, greedy["pnl"]-700),
-             fontsize=8, color="red", arrowprops=dict(arrowstyle="->", color="red"))
+             (greedy["sel"], greedy["pnl"]), xytext=(greedy["sel"] - 0.40, greedy["pnl"] + 600),
+             fontsize=8, color="red", ha="left",
+             bbox=dict(boxstyle="round", fc="white", ec="red", alpha=0.85),
+             arrowprops=dict(arrowstyle="->", color="red"))
 bestpt = max(pts, key=lambda p: p["pnl"])
 axR.scatter([bestpt["sel"]], [bestpt["pnl"]], marker="*", s=420, c="gold", edgecolor="red", linewidth=1.6, zorder=5)
 axR.annotate(f"QD best ({bestpt['algo'].replace('afg-qd-','')})\nsel {bestpt['sel']:.2f}, +{bestpt['vs']:.0f}%",
-             (bestpt["sel"], bestpt["pnl"]), xytext=(bestpt["sel"]-0.02, bestpt["pnl"]+250), fontsize=9)
+             (bestpt["sel"], bestpt["pnl"]),
+             xytext=(bestpt["sel"] + 0.16, bestpt["pnl"] - 250),
+             fontsize=9, ha="left", va="top",
+             bbox=dict(boxstyle="round", fc="white", ec="0.6", alpha=0.9),
+             arrowprops=dict(arrowstyle="->", color="0.4"))
 axR.axhline(0, color="k", lw=0.8)
+axR.set_xlim(-0.02, 1.05)
+# headroom above the tallest point so annotations never collide with the title
+_ymax = max(p["pnl"] for p in pts)
+_ymin = min(0, min(p["pnl"] for p in pts))
+axR.set_ylim(_ymin - 250, _ymax * 1.18)
 axR.set_xlabel("selectivity  (trade_count / simple_trade_count)")
 axR.set_ylabel("realized P&L (train)")
-axR.set_title("P&L vs selectivity (all 23 variants)\ncolor = timing concentration", fontsize=10)
+axR.set_title("P&L vs selectivity (all 23 variants)\ncolor = timing concentration", fontsize=10, pad=12)
 axR.grid(alpha=0.3)
 cb2 = fig.colorbar(sc, ax=axR, fraction=0.046, pad=0.04); cb2.set_label("timing concentration")
 
 fig.tight_layout(rect=[0, 0, 1, 0.94])
-fig.savefig(OUT, dpi=130, bbox_inches="tight")
+fig.savefig(OUT, dpi=200, bbox_inches="tight")
 print("wrote", OUT)
 print(f"cells filled {len(cells)}/{SB*TB} | best {best['algo_id']} pnl={best['fitness']:.1f}")
