@@ -1,0 +1,53 @@
+{
+  "algo_name": "ptg-pc-r7",
+  "evaluation_type": "oos_local",
+  "backtest_date": "2026-05-29T04:44:14Z",
+  "baseline": "simple",
+  "sharpe_metric_version": "v2",
+  "strategy_used": "oracle",
+  "symbol": "MESM6",
+  "performance_oos": {
+    "realized_pnl": 4377.5,
+    "unrealized_pnl": 0.0,
+    "sharpe_ratio": 22.26390821088981,
+    "sharpe_n_days": 10,
+    "max_drawdown_pct": -0.006948445285367399,
+    "win_rate": 0.374643076114566,
+    "trade_count": 114170,
+    "mean_slippage": 0.0,
+    "max_abs_slippage": 0.0,
+    "total_commissions": 0.0,
+    "total_return_pct": 0.43775000000000003,
+    "is_weighted_bps": 0.015550675323624379,
+    "is_total_price": 2315.625,
+    "vs_baseline_pnl_pct": 185.27207559465623,
+    "vs_baseline_slippage_pct": 0.0,
+    "vs_baseline_is_bps": -2.0139518324054544
+  },
+  "period": {
+    "test_dates": [
+      "2026-03-26",
+      "2026-03-27",
+      "2026-03-29",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-01",
+      "2026-04-02",
+      "2026-04-03",
+      "2026-04-05",
+      "2026-04-06"
+    ]
+  },
+  "run_dirs": [
+    "execution_algos/ptg-pc-r7/results/20260326",
+    "execution_algos/ptg-pc-r7/results/20260327",
+    "execution_algos/ptg-pc-r7/results/20260329",
+    "execution_algos/ptg-pc-r7/results/20260330",
+    "execution_algos/ptg-pc-r7/results/20260331",
+    "execution_algos/ptg-pc-r7/results/20260401",
+    "execution_algos/ptg-pc-r7/results/20260402",
+    "execution_algos/ptg-pc-r7/results/20260403",
+    "execution_algos/ptg-pc-r7/results/20260405",
+    "execution_algos/ptg-pc-r7/results/20260406"
+  ]
+}
