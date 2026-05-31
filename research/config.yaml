@@ -12,6 +12,16 @@ dataset:
   name: glbx-mdp3-market-data
   version: v1.0.0
 
+# Market-data source backend used by backtest_engine/data_loader.py.
+# - s3:        legacy multi-instrument daily partitions from S3 (requires
+#              S3_BUCKET_NAME + AWS credentials).
+# - databento: direct single-symbol fetches from the Databento Historical
+#              API (requires DATABENTO_API_KEY). Cheaper per backtest day
+#              and skips the dbn_filter step.
+# The runner (scripts/run_research_backtest.py) reads this value and sets
+# DATA_SOURCE in the subprocess env before each backtest.
+data_source: s3
+
 strategy:
   # The trading strategy is held FIXED across all execution-algorithm research.
   # Must be a registered name in strategies/__init__.py → _STRATEGY_FACTORIES.
