@@ -354,7 +354,8 @@ Two note files, different purposes:
 | File | Purpose |
 |---|---|
 | `execution_algos/<algo-id>/NOTES.md` | Algorithm reasoning (template in §10). Read by future agents via the program database. |
-| `research/NOTES.md` | Ambiguity alerts that require a **human decision**. |
+| `research/NOTES.md` | Ambiguity alerts that require a **human decision** — cross-experiment scope only. |
+| `experiments/island_experiment/<island_id>/NOTES.md` | Per-island operator alerts for the island experiment. Keeps island-specific noise out of the global notes file so multiple concurrent island sessions don't trample each other. |
 
 ### Honesty rules — non-negotiable
 
