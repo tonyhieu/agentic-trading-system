@@ -1,0 +1,14 @@
+[
+  {
+    "generation":            1,
+    "loop_in_generation":    1,
+    "algo_id":               "sig-isl-g1l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       -452.8846153846154,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          -1.9691060934980986,
+    "trade_count":           126931,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-31T04:10:00Z"
+  }
+]
