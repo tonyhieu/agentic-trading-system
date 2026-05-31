@@ -119,8 +119,12 @@ experiments/island_experiment/
    - `vs_base_pnl_pct = (algo_pnl - base_pnl) / abs(base_pnl) * 100`
    - `vs_base_slippage_pct = (algo_slippage - base_slippage) / abs(base_slippage) * 100`
    where `pnl = performance.realized_pnl` and `slippage = performance.mean_slippage`. Append Backtest Observations to `execution_algos/<algo-id>/NOTES.md`.
-9. **Write** loop file per §Loop File Schema. `summary_out` is always filled — it feeds migration synthesis. Populate `seed_paper` (g1l1 only) and `parent_id` (all other loops).
-10. **Append** entry to `experiments/island_experiment/<island_id>/program_database.json`. Create with `[]` if absent.
+9. **Write** loop file per §Loop File Schema. `summary_out` is always filled — it feeds migration synthesis. **Schema reminder — these fields are mandatory on every loop file and the schema changed recently; do not copy from older loop files**:
+   - `theme` — your island's theme string from config (e.g., `"Microstructure signals"`).
+   - `seed_papers` — your island's full `seed_papers` list from config, on every loop (not just g1l1). Identifies the intellectual origin of the lineage.
+   - `parent_id` — `null` on g1l1; the prior loop's `algo_id` (e.g., `"sig-isl-g1l1"`) on every other loop.
+   - **Do not write a `base_algo` field** — it was removed when islands moved to literature seeding.
+10. **Append** entry to `experiments/island_experiment/<island_id>/program_database.json`. Create with `[]` if absent. The entry must include `parent_id` (same value as in the loop file) — see §Output: Program Database Entry.
 11. **Write pointer** `experiments/island_experiment/.current_loop.json`:
     ```json
     {"loop_file": "experiments/island_experiment/<island_id>/generation-<G>/loop-<L>.json"}

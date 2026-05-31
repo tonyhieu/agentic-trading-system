@@ -3,6 +3,7 @@
     "generation":            1,
     "loop_in_generation":    1,
     "algo_id":               "sig-isl-g1l1",
+    "parent_id":             null,
     "status":                "completed",
     "vs_base_pnl_pct":       -452.8846153846154,
     "vs_base_slippage_pct":  0.0,

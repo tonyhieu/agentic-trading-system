@@ -1,10 +1,12 @@
 {
   "experiment":          "island_experiment",
   "island_id":           "island-sig",
-  "base_algo":           "simple",
+  "theme":               "Microstructure signals",
   "generation":          1,
   "loop_in_generation":  1,
   "algo_id":             "sig-isl-g1l1",
+  "seed_papers":         ["BookImbalance__Lipton.md", "PredictionFromOrderFlowImbalance__Kolm.md"],
+  "parent_id":           null,
   "status":              "completed",
   "metrics": {
     "realized_pnl":         -550.5,
