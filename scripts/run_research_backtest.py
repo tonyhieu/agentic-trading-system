@@ -253,6 +253,22 @@ def load_config(path: Path) -> dict:
         return yaml.safe_load(f)
 
 
+def propagate_data_source_env(cfg: dict) -> None:
+    """Mirror cfg['data_source'] into the DATA_SOURCE env var.
+
+    backtest_engine/data_loader.py reads DATA_SOURCE to pick its source
+    backend ('s3' or 'databento'). Subprocesses spawned by run_one()
+    inherit os.environ, so setting it once on the parent flows through.
+    An explicit DATA_SOURCE already in the env wins — useful for one-off
+    overrides without editing config.yaml.
+    """
+    if "DATA_SOURCE" in os.environ:
+        return
+    src = cfg.get("data_source")
+    if src:
+        os.environ["DATA_SOURCE"] = str(src)
+
+
 def train_dates_from_config(cfg: dict) -> list[str]:
     """Calendar-day YYYYMMDD list, both endpoints inclusive, weekends-aware.
 
@@ -912,6 +928,7 @@ def _do_internal_single_run(args: argparse.Namespace) -> int:
         return 2
 
     cfg = load_config(args.config)
+    propagate_data_source_env(cfg)
     try:
         metrics = _run_one_in_process(
             algo_name=args.algo,
@@ -1018,6 +1035,7 @@ def main() -> int:
         return 2
 
     cfg = load_config(args.config)
+    propagate_data_source_env(cfg)
     baseline = cfg["pass_gate"]["baseline"]
 
     dates = (
