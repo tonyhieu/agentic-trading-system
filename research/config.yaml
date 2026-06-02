@@ -20,7 +20,7 @@ dataset:
 #              and skips the dbn_filter step.
 # The runner (scripts/run_research_backtest.py) reads this value and sets
 # DATA_SOURCE in the subprocess env before each backtest.
-data_source: s3
+data_source: databento
 
 strategy:
   # The trading strategy is held FIXED across all execution-algorithm research.
