@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -59,28 +60,41 @@ class DatabentoRetriever:
         start, end = _day_bounds_utc(date)
         out.parent.mkdir(parents=True, exist_ok=True)
         # Stream to a temp file then atomically rename, so a crash mid-download
-        # cannot leave a half-written `*.dbn.zst` in the cache.
-        tmp = out.with_suffix(out.suffix + ".download")
+        # cannot leave a half-written `*.dbn.zst` in the cache. The temp name is
+        # unique per process+thread so concurrent workers fetching the SAME
+        # (dataset, schema, symbol, date) — e.g. the algo and baseline backtests
+        # for one date under the parallel runner — don't collide on it.
+        tmp = out.with_name(
+            f"{out.name}.{os.getpid()}.{threading.get_ident()}.download"
+        )
 
         if verbose:
             print(
                 f"Fetching {dataset} {schema} {symbol} {date} "
                 f"({start.isoformat()} → {end.isoformat()}) → {out}"
             )
-        self.client.timeseries.get_range(
-            dataset=dataset,
-            schema=schema,
-            symbols=[symbol],
-            stype_in="raw_symbol",
-            start=start,
-            end=end,
-            path=str(tmp),
-        )
-        if not tmp.exists() or tmp.stat().st_size == 0:
-            raise RuntimeError(
-                f"Databento returned empty file for {dataset} {schema} {symbol} {date}"
+        try:
+            self.client.timeseries.get_range(
+                dataset=dataset,
+                schema=schema,
+                symbols=[symbol],
+                stype_in="raw_symbol",
+                start=start,
+                end=end,
+                path=str(tmp),
             )
-        os.replace(tmp, out)
+            if not tmp.exists() or tmp.stat().st_size == 0:
+                raise RuntimeError(
+                    f"Databento returned empty file for {dataset} {schema} {symbol} {date}"
+                )
+            # Another worker may have produced `out` while we were downloading;
+            # os.replace is atomic and the payload is identical, so last writer
+            # wins harmlessly either way.
+            os.replace(tmp, out)
+        finally:
+            # Drop our own temp if it survived (download error, or os.replace
+            # never ran). Never touches another worker's distinctly-named temp.
+            tmp.unlink(missing_ok=True)
         return out
 
     def _cache_path(self, dataset: str, schema: str, symbol: str, date: str) -> Path:
