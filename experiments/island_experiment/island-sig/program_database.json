@@ -24,5 +24,18 @@
     "trade_count":           126216,
     "context_chars_in":      922,
     "timestamp":             "2026-05-31T04:32:00Z"
+  },
+  {
+    "generation":            1,
+    "loop_in_generation":    3,
+    "algo_id":               "sig-isl-g1l3",
+    "parent_id":             "sig-isl-g1l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       1992.9487179487178,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          13.451019641409584,
+    "trade_count":           121024,
+    "context_chars_in":      18432,
+    "timestamp":             "2026-06-01T00:00:00Z"
   }
 ]
