@@ -55,9 +55,19 @@ try:
     import resource  # POSIX only — not available on Windows
 except ImportError:  # pragma: no cover - Windows-only branch
     resource = None  # type: ignore[assignment]
+try:
+    import fcntl  # POSIX only — used for the cross-session backtest mutex
+except ImportError:  # pragma: no cover - Windows-only branch
+    fcntl = None  # type: ignore[assignment]
 import subprocess
 import sys
 import time
+from concurrent.futures import (
+    CancelledError,
+    ThreadPoolExecutor,
+    as_completed,
+)
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -76,6 +86,27 @@ from backtest_engine.backtest_low_level import (  # noqa: E402
 
 DEFAULT_CONFIG = REPO_ROOT / "research" / "config.yaml"
 DEFAULT_SYMBOL = "MESM6"
+
+# Cross-session backtest mutex location. Independently-launched runs (e.g.
+# per-island /loop sessions) serialize on this flock instead of racing on
+# S3 sync, the data-cache directory, and shared host RAM. POSIX only;
+# Windows degrades to no-op with a warning. See plan: Phase 1B.
+DATA_CACHE_DIR = REPO_ROOT / "data-cache"
+BACKTEST_LOCK_PATH = DATA_CACHE_DIR / ".backtest.lock"
+
+# Shared baseline metrics cache, keyed by (baseline, strategy_kwargs_hash, date).
+# Promotes the per-algo --use-cached-baseline path into a cross-algo cache so
+# every island/researcher invocation can hit the same precomputed baseline
+# instead of re-running it. See plan: Phase 1C.
+SHARED_BASELINE_CACHE_DIR = DATA_CACHE_DIR / "baseline-results"
+
+# Default concurrency for the date-parallel ThreadPoolExecutor. Each worker
+# thread spawns one subprocess that can peak near the 16 GB RLIMIT_AS cap;
+# 6 concurrent subprocesses ≈ 60-90 GB resident at worst case on the busiest
+# dates. Override via --max-workers. See plan: Phase 1A.
+def _default_max_workers() -> int:
+    cores = os.cpu_count() or 4
+    return min(6, max(2, cores // 2))
 
 # Per-backtest timeout for subprocess isolation. A 1-day backtest should
 # complete in well under 60s; this is a sanity ceiling, not a normal-case
@@ -192,6 +223,13 @@ def parse_args() -> argparse.Namespace:
         help="Print the (date, algo) backtest plan and exit without running.",
     )
     p.add_argument(
+        "--max-workers", type=int, default=_default_max_workers(),
+        help="Concurrent backtest subprocesses across the train window. "
+             "Each worker peaks near the 16 GB RLIMIT_AS cap on busy dates; "
+             "default %(default)s respects ~96 GB headroom. Set to 1 to "
+             "force the legacy serial behavior.",
+    )
+    p.add_argument(
         "--smoke", action="store_true",
         help="Bypass Nautilus entirely; generate deterministic synthetic "
              "metrics for the algo and baseline (seeded by algo_name+date). "
@@ -213,6 +251,22 @@ def parse_args() -> argparse.Namespace:
 def load_config(path: Path) -> dict:
     with path.open() as f:
         return yaml.safe_load(f)
+
+
+def propagate_data_source_env(cfg: dict) -> None:
+    """Mirror cfg['data_source'] into the DATA_SOURCE env var.
+
+    backtest_engine/data_loader.py reads DATA_SOURCE to pick its source
+    backend ('s3' or 'databento'). Subprocesses spawned by run_one()
+    inherit os.environ, so setting it once on the parent flows through.
+    An explicit DATA_SOURCE already in the env wins — useful for one-off
+    overrides without editing config.yaml.
+    """
+    if "DATA_SOURCE" in os.environ:
+        return
+    src = cfg.get("data_source")
+    if src:
+        os.environ["DATA_SOURCE"] = str(src)
 
 
 def train_dates_from_config(cfg: dict) -> list[str]:
@@ -272,6 +326,96 @@ def load_cached_baseline_metrics(baseline_name: str, date: str) -> dict:
     metrics["_run_dir"] = str(run_dir.relative_to(REPO_ROOT))
     metrics["_date"] = date
     return metrics
+
+
+def strategy_kwargs_hash(cfg: dict) -> str:
+    """Stable short hash of the strategy block, used to key the shared
+    baseline cache so a sigma/seed/horizon change auto-invalidates stale
+    cached metrics. Mirrors the program_database `strategy_kwargs_hash`
+    field convention (sha256, first 12 hex chars).
+    """
+    blob = json.dumps(cfg["strategy"], sort_keys=True).encode()
+    return hashlib.sha256(blob).hexdigest()[:12]
+
+
+def shared_baseline_cache_path(baseline: str, kwargs_hash: str, date: str) -> Path:
+    return SHARED_BASELINE_CACHE_DIR / baseline / kwargs_hash / f"{date}.json"
+
+
+def shared_baseline_cache_get(baseline: str, kwargs_hash: str, date: str) -> dict | None:
+    """Return cached baseline metrics if present, else None.
+
+    Cross-algo cache shared across every researcher/island invocation —
+    avoids re-running the same baseline once per loop. Caller falls back
+    to the per-algo path on miss.
+    """
+    path = shared_baseline_cache_path(baseline, kwargs_hash, date)
+    if not path.exists():
+        return None
+    metrics = json.loads(path.read_text())
+    metrics["_run_dir"] = str(path.relative_to(REPO_ROOT))
+    metrics["_date"] = date
+    return metrics
+
+
+def shared_baseline_cache_put(
+    baseline: str, kwargs_hash: str, date: str, metrics: dict
+) -> None:
+    """Persist baseline metrics to the shared cache. Best-effort; failures
+    log and continue (the per-algo path remains the source of truth)."""
+    try:
+        path = shared_baseline_cache_path(baseline, kwargs_hash, date)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Strip transient fields before persisting — _run_dir is recomputed on read.
+        payload = {k: v for k, v in metrics.items() if not k.startswith("_")}
+        path.write_text(json.dumps(payload, indent=2) + "\n")
+    except OSError as exc:
+        print(
+            f"WARN: failed to write shared baseline cache for "
+            f"({baseline}, {date}): {exc}",
+            file=sys.stderr,
+        )
+
+
+@contextmanager
+def backtest_lock():
+    """Cross-session mutex on data-cache/.backtest.lock.
+
+    Independently-launched runs (e.g. per-island /loop sessions) queue on
+    this flock instead of racing on S3 sync, the data-cache directory,
+    and the shared 16 GB host RAM. POSIX only; on Windows/no-fcntl we
+    log a warning and proceed unlocked (degrades to the pre-mutex
+    behavior, which is no worse than before).
+    """
+    if fcntl is None:
+        print(
+            "WARN: fcntl unavailable; running without cross-session backtest lock",
+            file=sys.stderr,
+        )
+        yield
+        return
+
+    BACKTEST_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+    lock_fd = open(BACKTEST_LOCK_PATH, "w")
+    try:
+        try:
+            fcntl.flock(lock_fd.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print(
+                f"⏳ Another backtest holds {BACKTEST_LOCK_PATH.relative_to(REPO_ROOT)}; "
+                f"waiting for it to finish...",
+                file=sys.stderr,
+                flush=True,
+            )
+            fcntl.flock(lock_fd.fileno(), fcntl.LOCK_EX)
+        lock_fd.write(f"{os.getpid()}\n")
+        lock_fd.flush()
+        yield
+    finally:
+        try:
+            fcntl.flock(lock_fd.fileno(), fcntl.LOCK_UN)
+        finally:
+            lock_fd.close()
 
 
 def newest_run_dir_excluding(results_dir: Path, exclude: set[Path]) -> Path | None:
@@ -784,6 +928,7 @@ def _do_internal_single_run(args: argparse.Namespace) -> int:
         return 2
 
     cfg = load_config(args.config)
+    propagate_data_source_env(cfg)
     try:
         metrics = _run_one_in_process(
             algo_name=args.algo,
@@ -890,6 +1035,7 @@ def main() -> int:
         return 2
 
     cfg = load_config(args.config)
+    propagate_data_source_env(cfg)
     baseline = cfg["pass_gate"]["baseline"]
 
     dates = (
@@ -953,7 +1099,15 @@ def main() -> int:
         print("(dry-run: no backtests executed)")
         return 0
 
-    # ----- execute date-major (so we can pair algo + baseline cleanly) -----
+    # ----- execute date-parallel (so each independent date can run in its
+    # own subprocess on a worker thread; subprocess isolation per Nautilus
+    # remains untouched).
+    #
+    # Cross-session backtest mutex: serialize concurrent invocations from
+    # independently-launched sessions (e.g. per-island /loop drivers) so
+    # they don't race on S3 sync / data-cache / host RAM. The per-process
+    # ThreadPoolExecutor below still runs N subprocesses in parallel
+    # *within* a single invocation — only invocations themselves serialize.
     algo_metrics: dict[str, dict] = {}
     base_metrics: dict[str, dict] = {}
     failures: list[tuple[str, str, str]] = []  # (algo_name, date, error)
@@ -961,65 +1115,112 @@ def main() -> int:
     # Iteration wall-clock budget (issue #61). Guards against the per-date
     # cascade where a wedged algorithm + 600s subprocess timeout could burn
     # ~2 hours of wall-clock before the iteration completed. 0 / missing
-    # disables. Checked at the *start* of each date — the in-flight
-    # subprocess (if any) is allowed to finish so we don't lose work that
-    # was about to land.
+    # disables. Pending tasks are cancelled once exceeded; in-flight ones
+    # are allowed to finish so we don't lose work that was about to land.
     budget_sec = float(cfg.get("loop", {}).get("iteration_timeout_seconds", 0) or 0)
     loop_start = time.monotonic()
     budget_exceeded = False
 
-    for date in dates:
-        if budget_sec > 0 and (time.monotonic() - loop_start) > budget_sec:
-            remaining = [d for d in dates[dates.index(date):]]
-            print(
-                f"\n⚠ ITERATION BUDGET EXCEEDED ({budget_sec:.0f}s). "
-                f"Skipping {len(remaining)} remaining date(s): "
-                f"{', '.join(remaining)}",
-                file=sys.stderr,
-            )
-            budget_exceeded = True
-            break
+    # Precompute the strategy_kwargs hash for shared-baseline-cache keying.
+    kwargs_hash = strategy_kwargs_hash(cfg)
 
+    with backtest_lock():
+        # Build the parallel-runnable task list: each task is one (name, date)
+        # backtest subprocess. Cached baseline reads are handled separately
+        # below — they're fast disk reads that don't benefit from threading.
+        parallel_tasks: list[tuple[str, str]] = []
         if not args.baseline_only:
-            print(f"\n>>> run_backtest({args.algo}, {date}) ...", flush=True)
-            try:
-                m = run_one(
-                    algo_name=args.algo, date=date,
-                    symbol=args.symbol, config_path=args.config,
-                )
-                algo_metrics[date] = m
-                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
-                print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={s_ratio:.2f}")
-            except Exception as exc:  # noqa: BLE001 — surface any failure to the agent
-                print(f"    FAIL {exc}", file=sys.stderr)
-                failures.append((args.algo, date, str(exc)))
+            parallel_tasks.extend((args.algo, d) for d in dates)
+        if not args.use_cached_baseline:
+            parallel_tasks.extend((baseline, d) for d in dates)
 
+        max_workers = max(1, min(args.max_workers, len(parallel_tasks) or 1))
+        if parallel_tasks:
+            print(
+                f"\n>>> running {len(parallel_tasks)} backtest(s) across "
+                f"{max_workers} worker(s) (subprocess-isolated per date)",
+                flush=True,
+            )
+
+        if parallel_tasks:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures: dict = {
+                    executor.submit(
+                        run_one,
+                        algo_name=name, date=date,
+                        symbol=args.symbol, config_path=args.config,
+                    ): (name, date)
+                    for name, date in parallel_tasks
+                }
+                budget_warning_printed = False
+                for fut in as_completed(futures):
+                    if (
+                        budget_sec > 0
+                        and (time.monotonic() - loop_start) > budget_sec
+                        and not budget_warning_printed
+                    ):
+                        # Cancel pending (not-yet-started) tasks; in-flight
+                        # subprocesses are allowed to finish naturally.
+                        for f in list(futures.keys()):
+                            if not f.running() and not f.done():
+                                f.cancel()
+                        n_cancelled = sum(1 for f in futures if f.cancelled())
+                        print(
+                            f"\n⚠ ITERATION BUDGET EXCEEDED ({budget_sec:.0f}s). "
+                            f"Cancelled {n_cancelled} pending task(s); waiting "
+                            f"for in-flight to finish.",
+                            file=sys.stderr,
+                            flush=True,
+                        )
+                        budget_warning_printed = True
+                        budget_exceeded = True
+
+                    name, date = futures[fut]
+                    try:
+                        m = fut.result()
+                    except CancelledError:
+                        continue
+                    except Exception as exc:  # noqa: BLE001 — surface to agent
+                        print(f"    FAIL {name}@{date}: {exc}", file=sys.stderr, flush=True)
+                        failures.append((name, date, str(exc)))
+                        continue
+
+                    if name == baseline:
+                        base_metrics[date] = m
+                        # Populate shared cache so future --use-cached-baseline
+                        # runs (across islands/researchers) hit it.
+                        shared_baseline_cache_put(baseline, kwargs_hash, date, m)
+                    else:
+                        algo_metrics[date] = m
+                    s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
+                    print(
+                        f"    OK   {name}@{date} trades={m['trade_count']} "
+                        f"pnl={m['realized_pnl']:.2f} sharpe={s_ratio:.2f}",
+                        flush=True,
+                    )
+
+        # Cached baseline reads (sequential — disk-only, ~1ms each).
         if args.use_cached_baseline:
-            print(f"\n>>> cached baseline({baseline}, {date}) ...", flush=True)
-            try:
-                m = load_cached_baseline_metrics(baseline, date)
+            for date in dates:
+                m = shared_baseline_cache_get(baseline, kwargs_hash, date)
+                source = "SHARED"
+                if m is None:
+                    try:
+                        m = load_cached_baseline_metrics(baseline, date)
+                        source = "PER-ALGO"
+                    except Exception as exc:  # noqa: BLE001
+                        print(f"    FAIL cached {baseline}@{date}: {exc}",
+                              file=sys.stderr, flush=True)
+                        failures.append((baseline, date, str(exc)))
+                        continue
                 base_metrics[date] = m
                 s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
-                print(f"    CACHE trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={s_ratio:.2f}")
-            except Exception as exc:  # noqa: BLE001
-                print(f"    FAIL {exc}", file=sys.stderr)
-                failures.append((baseline, date, str(exc)))
-        else:
-            print(f"\n>>> run_backtest({baseline}, {date}) ...", flush=True)
-            try:
-                m = run_one(
-                    algo_name=baseline, date=date,
-                    symbol=args.symbol, config_path=args.config,
+                print(
+                    f"    CACHE[{source}] {baseline}@{date} "
+                    f"trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
+                    f"sharpe={s_ratio:.2f}",
+                    flush=True,
                 )
-                base_metrics[date] = m
-                s_ratio = m.get("sharpe_ratio_intraday", m.get("sharpe_ratio", 0.0))
-                print(f"    OK   trades={m['trade_count']} pnl={m['realized_pnl']:.2f} "
-                      f"sharpe={s_ratio:.2f}")
-            except Exception as exc:  # noqa: BLE001
-                print(f"    FAIL {exc}", file=sys.stderr)
-                failures.append((baseline, date, str(exc)))
 
     # ----- report failures -----
     if failures:

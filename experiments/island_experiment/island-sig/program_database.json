@@ -1,0 +1,41 @@
+[
+  {
+    "generation":            1,
+    "loop_in_generation":    1,
+    "algo_id":               "sig-isl-g1l1",
+    "parent_id":             null,
+    "status":                "completed",
+    "vs_base_pnl_pct":       -452.8846153846154,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          -1.9691060934980986,
+    "trade_count":           126931,
+    "context_chars_in":      0,
+    "timestamp":             "2026-05-31T04:10:00Z"
+  },
+  {
+    "generation":            1,
+    "loop_in_generation":    2,
+    "algo_id":               "sig-isl-g1l2",
+    "parent_id":             "sig-isl-g1l1",
+    "status":                "completed",
+    "vs_base_pnl_pct":       863.3012820512821,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          5.828311129968837,
+    "trade_count":           126216,
+    "context_chars_in":      922,
+    "timestamp":             "2026-05-31T04:32:00Z"
+  },
+  {
+    "generation":            1,
+    "loop_in_generation":    3,
+    "algo_id":               "sig-isl-g1l3",
+    "parent_id":             "sig-isl-g1l2",
+    "status":                "completed",
+    "vs_base_pnl_pct":       1992.9487179487178,
+    "vs_base_slippage_pct":  0.0,
+    "sharpe_ratio":          13.451019641409584,
+    "trade_count":           121024,
+    "context_chars_in":      18432,
+    "timestamp":             "2026-06-01T00:00:00Z"
+  }
+]

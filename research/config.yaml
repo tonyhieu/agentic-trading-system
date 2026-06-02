@@ -12,6 +12,16 @@ dataset:
   name: glbx-mdp3-market-data
   version: v1.0.0
 
+# Market-data source backend used by backtest_engine/data_loader.py.
+# - s3:        legacy multi-instrument daily partitions from S3 (requires
+#              S3_BUCKET_NAME + AWS credentials).
+# - databento: direct single-symbol fetches from the Databento Historical
+#              API (requires DATABENTO_API_KEY). Cheaper per backtest day
+#              and skips the dbn_filter step.
+# The runner (scripts/run_research_backtest.py) reads this value and sets
+# DATA_SOURCE in the subprocess env before each backtest.
+data_source: databento
+
 strategy:
   # The trading strategy is held FIXED across all execution-algorithm research.
   # Must be a registered name in strategies/__init__.py → _STRATEGY_FACTORIES.
@@ -89,19 +99,55 @@ refinement:
     min_mdd_delta_pp:      -1.0    # negative = less drawdown
 
 island_experiment:
-  # Island model: each island evolves independently from its own base algo,
-  # then shares what worked via migration reports after each generation.
-  # Algo ID format: <base_abbrev>-isl-g<G>l<L>  (e.g. ptg-isl-g1l2)
+  # Island model: each island evolves independently from a literature-derived
+  # theme, then shares what worked via migration reports after each
+  # generation. Generation 1 loop 1 implements from scratch using only the
+  # assigned `seed_papers` for inspiration (cold-start). Subsequent loops
+  # refine from the prior loop in the island's own lineage. Migration
+  # synthesizes cross-island insights after every `generation_size` loops.
+  #
+  # Algo ID format: <abbrev>-isl-g<G>l<L>  (e.g. tim-isl-g1l2)
   islands:
-    - id: island-0
-      base_algo: position-tier-gate
-      abbrev: ptg
-    - id: island-1
-      base_algo: aggressor-flow-gate
-      abbrev: afg
-    - id: island-2
-      base_algo: vol-regime-sizer
-      abbrev: vrs
-  generation_size: 2      # loops per island per generation before migration is due
-  max_generations: 4      # refuse new research loops beyond this generation (4 × 2 = 8 loops per island, comparable to per_iteration_experiment)
-  migration_top_k: 2      # best loops each island highlights in the migration summary
+    - id: island-time
+      abbrev: tim
+      theme: "Optimal scheduling"
+      seed_papers:
+        - OptimalTransactions__Almgren_and_Chriss.md
+        - LiquidatingBaskets__Cartea.md
+        - Diverse_Approaces_Optimal_Execution2026.md
+    - id: island-sig
+      abbrev: sig
+      theme: "Microstructure signals"
+      seed_papers:
+        - BookImbalance__Lipton.md
+        - PredictionFromOrderFlowImbalance__Kolm.md
+    - id: island-vol
+      abbrev: vol
+      theme: "Volatility estimation"
+      seed_papers:
+        - TickwiseVolaEstim__Dahlhaus.md
+        - EvalVolaEstimators_Slides__Almgren.md
+    - id: island-lead
+      abbrev: lld
+      theme: "Lead-lag / cross-asset"
+      seed_papers:
+        - LeadLagEstimation__Hoffman.md
+        - LeadLagRatio__Huth.md
+    - id: island-inv
+      abbrev: inv
+      theme: "Inventory and sizing"
+      seed_papers:
+        - InvariantsOfOrderSizeByVolm__Kyle.md
+        - OptimalHighFreqQuoting__Avellaneda.md
+        - FXFillRatioAndLatency__Cartea.md
+  # Shared context available to every island, but not the primary seed for
+  # any one — diagnostic/foundational papers that don't directly map to an
+  # executable rule. Islands may skim these on g1l1; not required.
+  reference_papers:
+    - HighFreqRaceProfits__Budish.md
+    - HighFreqPricesSlides__Rosenbaum.md
+    - MarketBehaviorModel__Farmer.md
+  generation_size: 3        # loops per island per generation before migration is due
+  generation_one_size: 4    # cold-start generation gets more loops to find footing
+  max_generations: 4        # refuse new research loops beyond this generation
+  migration_top_k: 2        # best loops each island highlights in the migration summary

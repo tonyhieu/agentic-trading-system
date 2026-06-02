@@ -1,0 +1,32 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-sig",
+  "theme":               "Microstructure signals",
+  "generation":          1,
+  "loop_in_generation":  2,
+  "algo_id":             "sig-isl-g1l2",
+  "seed_papers":         ["BookImbalance__Lipton.md", "PredictionFromOrderFlowImbalance__Kolm.md"],
+  "parent_id":           "sig-isl-g1l1",
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         1502.75,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         5.828311129968837,
+    "max_drawdown_pct":     -0.04719970500184374,
+    "win_rate":             0.35996228687329657,
+    "trade_count":          126216,
+    "vs_base_pnl_pct":      863.3012820512821,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         922,
+  "context_tokens_estimated": 230,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Sign-flipped fork of sig-isl-g1l1: SKIP an opening order only when BOTH Lipton's static imbalance I AND Kolm's rolling OFI point AGAINST the trade direction (opposite-tape gate). Predicate inverted from G1L1's (empirically-falsified) same-direction adverse hypothesis; thresholds (imbalance=0.33, ofi_window=2.0s, ofi=5.0) preserved for clean A/B. Added per-side evaluated/skipped counters (per G1 migration's instrumentation rule).",
+    "outcome":    "pnl +863.30% vs simple base (+$1502.75 vs +$156.00 over 12 train dates), sharpe 5.83 vs 0.60, max_drawdown_pct tightened -0.0472 vs -0.0529 (+10.78%), win_rate +2.66pp, trade_count -7.69% (126216 vs 136734) — gate fires on ~7.7% of opens, comparable to G1L1's ~7.2%. is_weighted_bps WORSENED +21.48% while PnL improved dramatically (reproduces G1 migration's IS-vs-PnL dissonance finding). PASS by wide margin.",
+    "hypothesis": "Against a multi-second oracle alpha, strong same-direction microstructure is a CONTINUATION signal (G1L1's failure mode), so the mechanism-correct skip set is the opposite-tape extreme — when both I and OFI signal fresh, observable directional flow AGAINST the trade, the trader pays an adverse arrival print AND fights an early position drawdown that chews through the 30s alpha before it can assert. Filtering this slice should remove the highest-cost entries while preserving the favorable continuation trades that G1L1 incorrectly suppressed.",
+    "next":       "Two high-leverage G1L3 directions: (1) STACK with island-0's rolling-spread-p75 OPEN gate (book-state axis) or island-2's choppiness-ratio gate (whipsaw axis) — per G1 migration's 'compose spread+chop+(third axis)' rule, the signed-flow opposite-tape gate is a third orthogonal SKIP axis and the composition should be additive if axes are independent; (2) revisit G1L1's deferred passive-child-placement branch (Lipton's actual recommendation) — now that the binary SKIP works, routing the borderline opposite-tape entries as LIMIT children at the near side may recover some small-EV trades the binary version discards. Defer threshold tuning until composition is tested. Cross-island: signed-flow opposite-tape is a third confirmed adverse-microstructure SKIP axis (alongside spread-quantile and choppiness); the sign-flip recipe (audit predicate direction against alpha horizon, not against the literature's native passive-posting horizon) is reusable by any island considering importing passive-posting intuitions for marketable execution."
+  },
+  "timestamp": "2026-05-31T04:32:00Z"
+}

@@ -1,0 +1,32 @@
+{
+  "experiment":          "island_experiment",
+  "island_id":           "island-sig",
+  "theme":               "Microstructure signals",
+  "generation":          1,
+  "loop_in_generation":  1,
+  "algo_id":             "sig-isl-g1l1",
+  "seed_papers":         ["BookImbalance__Lipton.md", "PredictionFromOrderFlowImbalance__Kolm.md"],
+  "parent_id":           null,
+  "status":              "completed",
+  "metrics": {
+    "realized_pnl":         -550.5,
+    "mean_slippage":        0.0,
+    "sharpe_ratio":         -1.9691060934980986,
+    "max_drawdown_pct":     -0.06632465179557807,
+    "win_rate":             0.345510552977602,
+    "trade_count":          126931,
+    "vs_base_pnl_pct":      -452.8846153846154,
+    "vs_base_slippage_pct": 0.0
+  },
+  "context_chars_in":         0,
+  "context_tokens_estimated": 0,
+  "tokens_used":              null,
+  "duration_seconds":         null,
+  "summary_out": {
+    "changed":    "Cold-start G1L1 from the `simple` template: added a two-signal microstructure SKIP gate combining Lipton's static top-of-book imbalance I=(q_b-q_a)/(q_b+q_a) with Kolm's rolling per-quote-tick Order Flow Imbalance (OFI, level 1) — skip an opening BUY only when both I>0.33 AND OFI summed over the last 2.0s is >+5 contracts (mirror for SELL). Closing orders always submit; standard anti-cascade flag.",
+    "outcome":    "pnl -452.88% vs simple base (-$550.50 vs +$156.00 over 12 train dates), sharpe -1.97 vs +0.60, is_weighted_bps -16.18% (genuinely lower arrival-mid IS cost on the entries that DID fire), trade_count -7.17% (126931 vs 136734) — gate fired on ~7% of opens. mean_slippage 0.0 on both sides (artifact: pure marketable arrival-mid). FAIL — far below the +5.0% pass gate.",
+    "hypothesis": "Passive-posting literature's notion of 'adverse selection at high imbalance' (Lipton's calibrated curves showing ~90% unfavorable-tick probability at |I|≈0.8) should transfer to marketable execution: skipping the moments when both static imbalance and recent OFI agree against the trade direction should improve net PnL by avoiding the worst arrival prices.",
+    "next":       "The hypothesis was sign-inverted for marketable orders against a 30s-horizon oracle: strong same-direction I+OFI is *favorable* over 30s (the oracle's actual horizon), not adverse — Lipton's adverse-selection framing is about *passive posting at the near side*, where queue depletion hurts you while you wait. Two strictly better G1L2 candidates: (1) flip the sign — treat strong same-direction I+OFI as a 'must-fire' signal and only skip when the local tape opposes the trade direction; (2) move from binary skip to passive child placement (post LIMIT at near side when |I| moderate, cross spread when |I| extreme in trade direction). Cross-island corollary: 'microstructure signal → SKIP' rules from the passive-posting literature do not transfer to marketable execution against multi-second alphas — other islands should be wary of importing them naively."
+  },
+  "timestamp": "2026-05-31T04:10:00Z"
+}
